@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      // Catch chunk loading / asset fetching errors (common with cached HTML referencing old deploys)
+      window.addEventListener('error', function(e) {
+        const target = e.target;
+        if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+          if (!window.location.search.includes('reload=true')) {
+            console.warn("Static asset failed to load. Auto-refreshing to fetch latest build.");
+            window.location.href = window.location.pathname + '?reload=true';
+          }
+        }
+      }, true);
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WJRN • Jacewon Radio Network</title>
+    <meta name="description" content="Welcome to WJRN! A 24/7 broadcast of The Rock Garden, Bridge City Hang Suite, and The Golden Boombox." />
+    <link rel="icon" type="image/jpeg" href="/assets/images/jacewon-thumbnail.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    
+    <!-- OpenGraph/Facebook/Text message metadata -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WJRN • Jacewon Radio Network" />
+    <meta property="og:description" content="Welcome to WJRN! A 24/7 broadcast of The Rock Garden, Bridge City Hang Suite, and The Golden Boombox." />
+    <meta property="og:image" content="https://radio.jacewonmusic.com/assets/images/wjrn-thumbnail.jpg" />
+    <meta property="og:url" content="https://radio.jacewonmusic.com" />
+
+    <!-- Twitter metadata -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="WJRN • Jacewon Radio Network" />
+    <meta name="twitter:description" content="Welcome to WJRN! A 24/7 broadcast of The Rock Garden, Bridge City Hang Suite, and The Golden Boombox." />
+    <meta name="twitter:image" content="https://radio.jacewonmusic.com/assets/images/wjrn-thumbnail.jpg" />
+  </head>
+  <body>
+    <!-- Hidden SVG filter bank — shared across all pages -->
+    <svg style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <!-- Radio wave / RF interference displacement filter for logo hover -->
+        <filter id="logo-interference" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+          <!-- fractalNoise is smoother than turbulence; low X freq keeps displacement horizontal -->
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.42" numOctaves="2" seed="3" result="wave">
+            <animate attributeName="baseFrequency"
+              values="0.008 0.42; 0.013 0.58; 0.005 0.32; 0.011 0.5; 0.008 0.42"
+              dur="1.6s" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="wave" scale="4" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
+          <!-- Clip displaced output back to original bounds so the logo never shifts position -->
+          <feComposite in="displaced" in2="SourceGraphic" operator="in"/>
+        </filter>
+      </defs>
+    </svg>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

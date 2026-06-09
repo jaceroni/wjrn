@@ -1,0 +1,6 @@
+{
+  "name": "WJRN Radio Network",
+  "description": "Interactive landing page for the WJRN Azuracast stations featuring live ambient stream players, dynamic audio visualizers, and real-time metadata display.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

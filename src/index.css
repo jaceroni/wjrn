@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Montserrat", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Station-specific color overrides */
+  --color-emerald-500: #74b338;
+  --color-emerald-400: #8ecf4f;
+  --color-pink-500: #ff0066;
+  --color-pink-400: #ff3385;
+  --color-yellow-500: #e2ac00;
+  --color-yellow-400: #f5c21a;
+  --color-yellow-300: #ffd133;
+}
+
+/* Custom glow effects and keyframes */
+@keyframes pulseGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.glow-active {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
+
+/* Hide standard audio players but keep accessibility */
+.audio-player-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Seamless infinite text marquee styles */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee 14s linear infinite;
+}
+
+.mask-marquee {
+  mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+}
+
+/* Slower glowing pulse for CTA components */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.8; filter: brightness(1.0); }
+  50% { opacity: 1; filter: brightness(1.2) drop-shadow(0 0 4px rgba(168, 85, 247, 0.4)); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+
+/* Retro Hardware Wave Animation */
+@keyframes verticalWave {
+  0%, 100% {
+    transform: translateY(40%);
+  }
+  50% {
+    transform: translateY(-40%);
+  }
+}
+
+.animate-wave-glow {
+  animation: verticalWave 7s ease-in-out infinite;
+}
+
+@keyframes performantPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.95); }
+  50%       { opacity: 0.55; transform: scale(1.05); }
+}
+
+.animate-performant-pulse {
+  animation: performantPulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+
+/* ---- Logo: always white, RF interference distortion on hover & page load ---- */
+.logo-base {
+  filter: brightness(0) invert(1); /* permanently white */
+}
+.logo-white-reveal {
+  display: none; /* no longer needed — logo is white by default */
+}
+
+@keyframes logoLoadDistort {
+  0%, 99.9% {
+    filter: url(#logo-interference);
+  }
+  100% {
+    filter: none;
+  }
+}
+
+.logo-load-distortion {
+  animation: logoLoadDistort 3s ease-out forwards;
+}
+
+@media (hover: hover) {
+  .group-logo:hover {
+    filter: url(#logo-interference) !important;
+  }
+}
