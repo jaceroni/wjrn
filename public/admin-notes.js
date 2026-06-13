@@ -47,7 +47,7 @@
 
         container.setAttribute(ATTR, "1");
         const p = document.createElement("p");
-        p.style.cssText = "margin: 8px 0 0; font-weight: 600;";
+        p.style.cssText = "flex-basis: 100%; width: 100%; margin: 8px 0 0; font-weight: 600;";
         p.textContent = note;
         container.appendChild(p);
         break;
