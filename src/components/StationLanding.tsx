@@ -326,6 +326,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
 
         const doc = new DOMParser().parseFromString(xml, "text/xml");
         const ITUNES = "http://www.itunes.com/dtds/podcast-1.0.dtd";
+
+        // Channel-level artwork as fallback for episodes without their own art
+        const channel = doc.querySelector("channel");
+        const channelArt =
+          channel?.getElementsByTagNameNS(ITUNES, "image")[0]?.getAttribute("href") ??
+          channel?.querySelector("image > url")?.textContent ??
+          djBoothBg;
+
         const items = Array.from(doc.querySelectorAll("channel > item"));
 
         const parsed: PodcastEpisode[] = items.map((item) => {
@@ -335,7 +343,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           const guid = item.querySelector("guid")?.textContent ?? crypto.randomUUID();
           const art =
             item.getElementsByTagNameNS(ITUNES, "image")[0]?.getAttribute("href") ??
-            djBoothBg;
+            channelArt; // fall back to podcast-level art before using placeholder
           const created_at = pubDateStr
             ? Math.floor(new Date(pubDateStr).getTime() / 1000)
             : 0;
