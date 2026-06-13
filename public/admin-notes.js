@@ -46,6 +46,8 @@
         if (container.hasAttribute(ATTR)) break;
 
         container.setAttribute(ATTR, "1");
+        // Allow flex children to wrap so our note gets its own line
+        container.style.flexWrap = "wrap";
         const p = document.createElement("p");
         p.style.cssText = "flex-basis: 100%; width: 100%; margin: 8px 0 0; font-weight: 600;";
         p.textContent = note;
