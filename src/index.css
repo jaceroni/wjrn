@@ -131,7 +131,7 @@
 
 @keyframes textLoadDistort {
   0%, 90% {
-    filter: url(#logo-interference);
+    filter: url(#text-interference);
   }
   100% {
     filter: none;
