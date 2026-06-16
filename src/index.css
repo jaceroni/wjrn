@@ -116,38 +116,89 @@
   display: none; /* no longer needed — logo is white by default */
 }
 
+/* Logo: glitch in → hold → glitch out */
 @keyframes logoLoadDistort {
-  0%, 99.9% {
-    filter: url(#logo-interference);
-  }
-  100% {
-    filter: none;
-  }
+  0%    { filter: none; }
+  4%    { filter: url(#logo-interference); }
+  7%    { filter: none; }
+  12%   { filter: url(#logo-interference); }
+  16%   { filter: none; }
+  21%   { filter: url(#logo-interference); }
+  25%   { filter: none; }
+  30%   { filter: url(#logo-interference); }
+  /* hold */
+  34%   { filter: url(#logo-interference); }
+  68%   { filter: url(#logo-interference); }
+  /* glitch out */
+  73%   { filter: none; }
+  78%   { filter: url(#logo-interference); }
+  84%   { filter: none; }
+  89%   { filter: url(#logo-interference); }
+  95%   { filter: none; }
+  98%   { filter: url(#logo-interference); }
+  100%  { filter: none; }
 }
 
 .logo-load-distortion {
-  animation: logoLoadDistort 3s ease-out forwards;
+  animation: logoLoadDistort 3s linear forwards;
 }
 
+/* Text: glitch in → hold → glitch out */
 @keyframes textLoadDistort {
-  0%, 90% {
-    filter: url(#text-interference);
-  }
-  100% {
-    filter: none;
-  }
+  0%    { filter: none; }
+  5%    { filter: url(#text-interference); }
+  8%    { filter: none; }
+  14%   { filter: url(#text-interference); }
+  18%   { filter: none; }
+  23%   { filter: url(#text-interference); }
+  27%   { filter: none; }
+  32%   { filter: url(#text-interference); }
+  /* hold */
+  36%   { filter: url(#text-interference); }
+  66%   { filter: url(#text-interference); }
+  /* glitch out */
+  71%   { filter: none; }
+  76%   { filter: url(#text-interference); }
+  82%   { filter: none; }
+  88%   { filter: url(#text-interference); }
+  94%   { filter: none; }
+  97%   { filter: url(#text-interference); }
+  100%  { filter: none; }
 }
 
 .text-load-distortion {
-  animation: textLoadDistort 2.5s ease-out forwards;
+  animation: textLoadDistort 2.5s linear forwards;
+}
+
+/* Glitch-in animation for hover entry */
+@keyframes glitchHoverIn {
+  0%   { filter: none; }
+  12%  { filter: url(#text-interference); }
+  22%  { filter: none; }
+  38%  { filter: url(#text-interference); }
+  52%  { filter: none; }
+  66%  { filter: url(#text-interference); }
+  80%  { filter: none; }
+  100% { filter: url(#text-interference); }
+}
+
+@keyframes logoGlitchHoverIn {
+  0%   { filter: none; }
+  12%  { filter: url(#logo-interference); }
+  22%  { filter: none; }
+  38%  { filter: url(#logo-interference); }
+  52%  { filter: none; }
+  66%  { filter: url(#logo-interference); }
+  80%  { filter: none; }
+  100% { filter: url(#logo-interference); }
 }
 
 @media (hover: hover) {
   .group-logo:hover {
-    filter: url(#logo-interference) !important;
+    animation: logoGlitchHoverIn 0.35s linear forwards !important;
   }
   .text-load-distortion:hover {
-    filter: url(#text-interference) !important;
+    animation: glitchHoverIn 0.35s linear forwards !important;
     cursor: default;
   }
 }
