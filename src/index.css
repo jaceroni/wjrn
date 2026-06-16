@@ -146,4 +146,8 @@
   .group-logo:hover {
     filter: url(#logo-interference) !important;
   }
+  .text-load-distortion:hover {
+    filter: url(#text-interference) !important;
+    cursor: default;
+  }
 }
