@@ -6,9 +6,9 @@ import { NowPlaying } from "../types";
 import { usePlayer } from "../context/PlayerContext";
 import wjrnLogoCubed from "../assets/images/wjrn-logo-cubed.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
-import logoRockGarden from "../assets/images/logo_rock_garden_1780773794371.png";
-import logoBridgeCity from "../assets/images/logo_bridge_city_1780773808381.png";
-import logoGoldenBoombox from "../assets/images/logo_golden_boombox_1780773822452.png";
+import logoRockGarden from "../assets/images/miniplayer-logo-trg.svg";
+import logoBridgeCity from "../assets/images/miniplayer-logo-bchs.svg";
+import logoGoldenBoombox from "../assets/images/miniplayer-logo-gbs.svg";
 import djBoothBg from "../assets/images/dj_booth_background_1780773779828.png";
 
 // ---------------------------------------------------------------------------
