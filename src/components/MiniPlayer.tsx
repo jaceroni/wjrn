@@ -2,6 +2,17 @@ import { useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, X, Radio, ArrowRight, RotateCcw } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { navigate } from "../navigate";
+import logoWjrn from "../assets/images/miniplayer-logo-wjrn.svg";
+import logoTrg  from "../assets/images/miniplayer-logo-trg.svg";
+import logoBchs from "../assets/images/miniplayer-logo-bchs.svg";
+import logoGbs  from "../assets/images/miniplayer-logo-gbs.svg";
+
+const STATION_LOGOS: Record<string, string> = {
+  wjrn:          logoWjrn,
+  rock_garden:   logoTrg,
+  bridge_city:   logoBchs,
+  golden_boombox: logoGbs,
+};
 
 // Station display metadata used only for the mini-player bar
 const STATION_NAMES: Record<string, string> = {
@@ -91,7 +102,15 @@ export default function MiniPlayer() {
       />
 
       {/* Main bar */}
-      <div className="bg-[#080808]/96 backdrop-blur-2xl border-t border-white/[0.07] px-4 md:px-8 h-16 flex items-center gap-4">
+      <div className="relative bg-[#080808]/96 backdrop-blur-2xl border-t border-white/[0.07] px-4 md:px-8 h-20 flex items-center gap-4">
+        {/* Station Logo — dead center */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 hidden md:block">
+          <img
+            src={STATION_LOGOS[displayStationId || "wjrn"] || logoWjrn}
+            alt="Active Station Logo"
+            className="h-10 w-auto object-contain"
+          />
+        </div>
 
         {/* Album art — episode art when on-demand, otherwise live station art */}
         <div className="w-9 h-9 rounded-md overflow-hidden border border-white/10 shrink-0 bg-neutral-900 flex items-center justify-center">

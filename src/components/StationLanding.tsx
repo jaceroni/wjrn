@@ -775,7 +775,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* ------------------------------------------------------------------ */}
       {/* Footer                                                              */}
       {/* ------------------------------------------------------------------ */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-8 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/95 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/95 uppercase tracking-widest gap-4">
         <div className="flex items-center gap-1.5 uppercase">
           <span>Broadcasted with</span>
           <span className="animate-pulse text-[23px] leading-none">❤</span>

@@ -78,46 +78,20 @@ export default function NebulaHomepage({
     golden_boombox: "the-golden-boombox",
   };
 
-  // Remember the last station that was played so the smartphone
-  // component doesn't snap back to Rock Garden when playback is paused.
-  const lastActiveStationIdRef = useRef<string>(STATIONS[0]?.id ?? "rock_garden");
-  if (activeStationId) lastActiveStationIdRef.current = activeStationId;
-
-  // Resolve the displayed station: playing station > last played station > first station
-  const displayStationId = activeStationId ?? lastActiveStationIdRef.current;
-  const activeStation = STATIONS.find(s => s.id === displayStationId) || STATIONS[0] || { id: "rock_garden", name: "THE ROCK GARDEN", genre: "", logoUrl: "", streamUrl: "", shortcode: "", showUrl: "" };
-  const activeMeta = metadata[activeStation.id] || {
-    trackTitle: "OFFLINE",
-    trackArtist: "WJRN Broadcast Network",
-    album: "Offline",
-    artUrl: defaultArt,
-    listeners: 0,
-    isOnline: false,
-    isPlayingLive: false,
-    nextTrack: null
-  };
-
-  // Helper to go to next station
   const { isOnDemand, onDemandItem, togglePlayback } = usePlayer();
+
+  // Phone player is locked to the WJRN master stream — station cards are independent
+  const wjrnMeta = metadata["wjrn"] || {
+    trackTitle: "OFFLINE", trackArtist: "WJRN Broadcast Network", album: "Offline",
+    artUrl: defaultArt, listeners: 0, isOnline: false, isPlayingLive: false, nextTrack: null,
+  };
+  const wjrnIsPlaying = activeStationId === "wjrn" && audioState === "playing";
 
   const cycleViz = () => {
     setVisualizerType(
       visualizerType === "bars" ? "wave" :
       visualizerType === "wave" ? "retro" : "bars"
     );
-  };
-
-  const playNextStation = () => {
-    const currentIndex = STATIONS.findIndex(s => s.id === (activeStationId || STATIONS[0].id));
-    const nextIndex = (currentIndex + 1) % STATIONS.length;
-    toggleStation(STATIONS[nextIndex].id);
-  };
-
-  // Helper to go to previous station
-  const playPrevStation = () => {
-    const currentIndex = STATIONS.findIndex(s => s.id === (activeStationId || STATIONS[0].id));
-    const prevIndex = (currentIndex - 1 + STATIONS.length) % STATIONS.length;
-    toggleStation(STATIONS[prevIndex].id);
   };
 
   // Parallax refs — DOM mutation on scroll, no re-render
@@ -315,7 +289,7 @@ export default function NebulaHomepage({
                   }`}
                 >
                   <img
-                    src={(isOnDemand ? onDemandItem?.art : activeMeta.artUrl) || defaultArt}
+                    src={(isOnDemand ? onDemandItem?.art : wjrnMeta.artUrl) || defaultArt}
                     alt="Current station art"
                     className="w-full h-full object-cover transition-all duration-700 ease-in-out"
                     referrerPolicy="no-referrer"
@@ -340,9 +314,9 @@ export default function NebulaHomepage({
 
                 {/* Station + track meta */}
                 <div className="text-center">
-                  <h4 className="text-[13px] font-bold text-white truncate uppercase font-mono tracking-wider">{activeStation.name}</h4>
-                  <p className="text-[11px] text-[#b5945b] font-mono mt-0.5 tracking-wider truncate uppercase">{isOnDemand ? (onDemandItem?.title ?? "") : activeMeta.trackTitle}</p>
-                  <p className="text-[9.5px] text-white/50 font-mono tracking-wide truncate mt-0.5">{isOnDemand ? "ON DEMAND" : `by ${activeMeta.trackArtist}`}</p>
+                  <h4 className="text-[13px] font-bold text-white truncate uppercase font-mono tracking-wider">WJRN</h4>
+                  <p className="text-[11px] text-[#b5945b] font-mono mt-0.5 tracking-wider truncate uppercase">{isOnDemand ? (onDemandItem?.title ?? "") : wjrnMeta.trackTitle}</p>
+                  <p className="text-[9.5px] text-white/50 font-mono tracking-wide truncate mt-0.5">{isOnDemand ? "ON DEMAND" : `by ${wjrnMeta.trackArtist}`}</p>
                 </div>
 
                 {/* Controls — stopPropagation so clicks don't cycle viz */}
@@ -350,14 +324,8 @@ export default function NebulaHomepage({
                   className="flex items-center justify-center gap-4 py-1.5 border-t border-b border-white/5"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
-                  <button onClick={playPrevStation} className="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-full flex items-center justify-center text-white transition-all cursor-pointer" title="Previous Channel">
-                    <svg className="w-4 h-4 fill-current text-white/90" viewBox="0 0 24 24"><path d="M6 19h2V5H6v14zm3.5-7L18 19V5l-8.5 7z" /></svg>
-                  </button>
-                  <button onClick={() => isOnDemand ? togglePlayback() : toggleStation(activeStation.id)} className="w-12 h-12 bg-[#b5945b] hover:bg-[#cbb085] active:scale-95 rounded-full flex items-center justify-center text-black shadow-lg shadow-[#b5945b]/20 transition-all cursor-pointer animate-[pulse_6s_infinite]" title="Play / Pause">
-                    {audioState === "playing" ? <Pause className="w-5 h-5 text-black fill-current" /> : <Play className="w-5 h-5 text-black fill-current translate-x-0.5" />}
-                  </button>
-                  <button onClick={playNextStation} className="w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 border border-white/10 rounded-full flex items-center justify-center text-white transition-all cursor-pointer" title="Next Channel">
-                    <svg className="w-4 h-4 fill-current text-white/90" viewBox="0 0 24 24"><path d="M6 5v14l8.5-7L6 5zm10 0v14h2V5h-2z" /></svg>
+                  <button onClick={() => isOnDemand ? togglePlayback() : toggleStation("wjrn")} className="w-12 h-12 bg-[#b5945b] hover:bg-[#cbb085] active:scale-95 rounded-full flex items-center justify-center text-black shadow-lg shadow-[#b5945b]/20 transition-all cursor-pointer animate-[pulse_6s_infinite]" title="Play / Pause">
+                    {wjrnIsPlaying ? <Pause className="w-5 h-5 text-black fill-current" /> : <Play className="w-5 h-5 text-black fill-current translate-x-0.5" />}
                   </button>
                 </div>
 
