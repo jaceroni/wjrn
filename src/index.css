@@ -129,6 +129,19 @@
   animation: logoLoadDistort 3s ease-out forwards;
 }
 
+@keyframes textLoadDistort {
+  0%, 90% {
+    filter: url(#logo-interference);
+  }
+  100% {
+    filter: none;
+  }
+}
+
+.text-load-distortion {
+  animation: textLoadDistort 2.5s ease-out forwards;
+}
+
 @media (hover: hover) {
   .group-logo:hover {
     filter: url(#logo-interference) !important;

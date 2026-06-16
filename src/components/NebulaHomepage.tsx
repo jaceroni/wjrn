@@ -207,7 +207,7 @@ export default function NebulaHomepage({
           <div className="flex items-center justify-center lg:justify-start mb-3">
             <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#b5945b]">WJRN - JACEWON RADIO NETWORK</span>
           </div>
-          <h2 className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left">
+          <h2 className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left text-load-distortion">
             STATIONS THAT DON'T ASK FOR PERMISSION
           </h2>
         </div>
@@ -276,7 +276,7 @@ export default function NebulaHomepage({
 
               {/* TOP VISUALIZER BAND — fills space above content */}
               <div className="relative z-10 flex-1 overflow-hidden px-[18px] pt-2 pb-1 min-h-[44px] opacity-60">
-                <AudioVisualizer isPlaying={audioState === "playing" || audioState === "connecting"} type={visualizerType} accentColor="#b5945b" audioRef={audioRef} isFlipped={true} />
+                <AudioVisualizer isPlaying={wjrnIsPlaying} type={visualizerType} accentColor="#b5945b" audioRef={audioRef} isFlipped={true} />
               </div>
 
               {/* CONTENT GROUP — art + status + meta + controls + volume */}
@@ -285,7 +285,7 @@ export default function NebulaHomepage({
                 {/* Album Cover Art — full width, clicking cycles viz */}
                 <div
                   className={`w-full aspect-square rounded-xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.9)] relative border border-white/15 transition-all duration-500 ease-out ${
-                    audioState === "playing" ? "scale-[1.01]" : "scale-[0.99]"
+                    wjrnIsPlaying ? "scale-[1.01]" : "scale-[0.99]"
                   }`}
                 >
                   <img
@@ -299,7 +299,7 @@ export default function NebulaHomepage({
 
                 {/* Soundwave / status */}
                 <div className="h-4 flex items-end justify-center gap-[3px]">
-                  {audioState === "playing" ? (
+                  {wjrnIsPlaying ? (
                     Array.from({ length: 9 }).map((_, idx) => {
                       const delays = [0.1,0.4,0.2,0.6,0.3,0.5,0.2,0.4,0.1];
                       const heights = ["h-3","h-2","h-4","h-2.5","h-3.5","h-2","h-4","h-3","h-1.5"];
@@ -349,7 +349,7 @@ export default function NebulaHomepage({
 
               {/* BOTTOM VISUALIZER BAND — fills space below content */}
               <div className="relative z-10 flex-1 overflow-hidden px-[18px] pb-2 pt-1 min-h-[44px] opacity-60">
-                <AudioVisualizer isPlaying={audioState === "playing" || audioState === "connecting"} type={visualizerType} accentColor="#b5945b" audioRef={audioRef} />
+                <AudioVisualizer isPlaying={wjrnIsPlaying} type={visualizerType} accentColor="#b5945b" audioRef={audioRef} />
               </div>
 
             </div>
