@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { NowPlaying } from "../types";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
+import wjrnThumbnail from "../assets/images/wjrn-thumbnail.jpg";
 
 // ---------------------------------------------------------------------------
 // Internal station map — stream URLs & shortcodes only (no visual assets)
@@ -9,6 +10,11 @@ import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 const AZURACAST_HOST = "https://radio.jacewonmusic.com";
 
 const STATION_STREAM_MAP: Record<string, { streamUrl: string; shortcode: string; name: string }> = {
+  wjrn: {
+    streamUrl: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",
+    shortcode: "wjrn",
+    name: "WJRN",
+  },
   rock_garden: {
     streamUrl: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
     shortcode: "the_rock_garden",
@@ -28,6 +34,9 @@ const STATION_STREAM_MAP: Record<string, { streamUrl: string; shortcode: string;
 
 // Fallback mock track data for when Azuracast is unreachable
 const MOCK_PLAYLISTS: Record<string, Array<{ title: string; artist: string; album: string; nextTitle: string; nextArtist: string }>> = {
+  wjrn: [
+    { title: "Instrumental Groove", artist: "WJRN", album: "Work/Lurk", nextTitle: "Funk Session", nextArtist: "WJRN" }
+  ],
   rock_garden: [
     { title: "Riders on the Storm", artist: "The Doors", album: "L.A. Woman", nextTitle: "Sunshine of Your Love", nextArtist: "Cream" },
     { title: "Whole Lotta Love", artist: "Led Zeppelin", album: "Led Zeppelin II", nextTitle: "Purple Haze", nextArtist: "Jimi Hendrix" },
@@ -50,6 +59,16 @@ const MOCK_PLAYLISTS: Record<string, Array<{ title: string; artist: string; albu
 
 // Initial mock metadata shown before the Azuracast API responds
 const INITIAL_METADATA: Record<string, NowPlaying> = {
+  wjrn: {
+    trackTitle: "Lurk and Work Soundtrack",
+    trackArtist: "WJRN",
+    album: "Instrumental 24/7",
+    artUrl: wjrnThumbnail,
+    listeners: 50,
+    isPlayingLive: false,
+    isOnline: true,
+    nextTrack: null,
+  },
   rock_garden: {
     trackTitle: "Riders on the Storm",
     trackArtist: "The Doors",

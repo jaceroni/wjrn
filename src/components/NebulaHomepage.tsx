@@ -420,7 +420,7 @@ export default function NebulaHomepage({
           <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {STATIONS.map((station) => {
+            {STATIONS.filter((s) => s.id !== "wjrn").map((station) => {
               const isActive = activeStationId === station.id;
               const meta = metadata[station.id] || {
                 trackTitle: "OFFLINE",

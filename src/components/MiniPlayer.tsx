@@ -5,18 +5,21 @@ import { navigate } from "../navigate";
 
 // Station display metadata used only for the mini-player bar
 const STATION_NAMES: Record<string, string> = {
+  wjrn: "WJRN",
   rock_garden: "THE ROCK GARDEN",
   bridge_city: "BRIDGE CITY HANG SUITE",
   golden_boombox: "THE GOLDEN BOOMBOX",
 };
 
 const STATION_SLUGS: Record<string, string> = {
+  wjrn: "/",
   rock_garden: "/the-rock-garden",
   bridge_city: "/bridge-city-hang-suite",
   golden_boombox: "/the-golden-boombox",
 };
 
 const STATION_COLORS: Record<string, string> = {
+  wjrn: "#b5945b",
   rock_garden: "#74b338",
   bridge_city: "#ff0066",
   golden_boombox: "#e2ac00",
@@ -133,7 +136,7 @@ export default function MiniPlayer() {
         {/* Controls */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Station page link */}
-          {displayStationId && (
+          {displayStationId && displayStationId !== "wjrn" && (
             <a
               href={STATION_SLUGS[displayStationId]}
               onClick={(e) => {

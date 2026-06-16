@@ -15,6 +15,17 @@ import wjrnLogo from "./assets/images/wjrn-logo.svg";
 // Setup stable static structures
 const STATIONS: Station[] = [
   {
+    id: "wjrn",
+    name: "WJRN",
+    subtitle: "",
+    genre: "INSTRUMENTAL FUNK, JAZZ, SOUL",
+    description: "Lurk and work soundtrack",
+    logoUrl: wjrnLogo,
+    streamUrl: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",
+    shortcode: "wjrn",
+    showUrl: "/"
+  },
+  {
     id: "rock_garden",
     name: "THE ROCK GARDEN",
     subtitle: "",
@@ -51,6 +62,9 @@ const STATIONS: Station[] = [
 
 // Fallback tracks when Azuracast is offline or still resolving cross-domain APIs
 const MOCK_PLAYLISTS: { [key: string]: Array<{ title: string; artist: string; album: string; nextTitle: string; nextArtist: string }> } = {
+  wjrn: [
+    { title: "Lurk & Work Session", artist: "WJRN", album: "Instrumental Funk", nextTitle: "Late Night Groove", nextArtist: "WJRN" }
+  ],
   rock_garden: [
     { title: "Riders on the Storm", artist: "The Doors", album: "L.A. Woman", nextTitle: "Sunshine of Your Love", nextArtist: "Cream" },
     { title: "Whole Lotta Love", artist: "Led Zeppelin", album: "Led Zeppelin II", nextTitle: "Purple Haze", nextArtist: "Jimi Hendrix" },
@@ -78,6 +92,10 @@ const DEFAULT_CONFIG: RadioConfig = {
   twitchChannel: "jacewonmusic",
   twitchLiveSchedule: "LIVE on Twitch.tv Tues, Weds, & Fridays @ 7PM Pacific",
   stations: {
+    wjrn: {
+      streamUrl: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",
+      shortcode: "wjrn"
+    },
     rock_garden: {
       streamUrl: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
       shortcode: "the_rock_garden"
