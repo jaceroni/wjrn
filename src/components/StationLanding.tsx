@@ -9,7 +9,7 @@ import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 import logoRockGarden from "../assets/images/miniplayer-logo-trg.svg";
 import logoBridgeCity from "../assets/images/miniplayer-logo-bchs.svg";
 import logoGoldenBoombox from "../assets/images/miniplayer-logo-gbs.svg";
-import djBoothBg from "../assets/images/dj_booth_background_1780773779828.png";
+import djBoothBg from "../assets/images/wjrn-thumbnail.jpg";
 
 // ---------------------------------------------------------------------------
 // Types
