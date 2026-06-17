@@ -20,6 +20,11 @@
       overflow-x: hidden;
     }
 
+    #player-scaler {
+      width: 100%;
+      overflow: hidden;
+    }
+
     #player {
       position: relative;
       width: 1280px;
@@ -61,7 +66,7 @@
     }
 
     #art-a {
-      opacity: 0;
+      opacity: 1;
     }
 
     #art-b {
@@ -175,12 +180,13 @@
   </style>
 </head>
 <body oncontextmenu="return false;">
+  <div id="player-scaler">
   <div id="player">
     <!-- Album art — z-index:1, behind faceplate -->
     <div id="art-container">
       <div id="art-pause-overlay"><div id="art-pause-icon">&#9654;</div></div>
-      <img id="art-a" src="" alt="" onerror="this.style.display='none'">
-      <img id="art-b" src="" alt="" onerror="this.style.display='none'">
+      <img id="art-a" src="/assets/images/jacewon-thumbnail.jpg" alt="">
+      <img id="art-b" src="" alt="">
     </div>
 
     <!-- VU meter canvas — z-index:3 -->
@@ -648,9 +654,7 @@
       }
     });
 
-    // ─── Placeholder art on load, replaced by live art if available ──────────────
-    artA.src = 'https://radio.jacewonmusic.com/assets/images/jacewon-thumbnail.jpg';
-    artA.style.opacity = '1';
+    // ─── Fetch live art on load, falls back to placeholder already in HTML ───────
     fetch('https://radio.jacewonmusic.com/api/nowplaying/wjrn')
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -662,14 +666,8 @@
     // ─── Responsive scaling ───────────────────────────────────────────────────────
     function scalePlayer() {
       var scale = window.innerWidth / 1280;
-      var player = document.getElementById('player');
-      // zoom reflows the document so page height matches scaled player height
-      player.style.zoom = scale;
-      // fallback for browsers that don't support zoom (e.g. older Firefox)
-      if (player.style.zoom == '') {
-        player.style.transform = 'scale(' + scale + ')';
-        document.body.style.height = Math.round(443 * scale) + 'px';
-      }
+      document.getElementById('player').style.transform = 'scale(' + scale + ')';
+      document.getElementById('player-scaler').style.height = Math.ceil(443 * scale) + 'px';
     }
     scalePlayer();
     window.addEventListener('resize', scalePlayer);
