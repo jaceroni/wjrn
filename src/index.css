@@ -166,33 +166,14 @@
   animation-delay: 0.4s; /* staggered after logo */
 }
 
-/* Hover glitch-in animations (1s, with position shake) */
-@keyframes glitchHoverIn {
-  0%   { filter: none;                    transform: translate(0,0); }
-  18%  { filter: url(#text-interference); transform: translate(-1px, 1px); }
-  32%  { filter: none;                    transform: translate(0,0); }
-  50%  { filter: url(#text-interference); transform: translate(2px, -1px); }
-  65%  { filter: none;                    transform: translate(1px, 0); }
-  82%  { filter: url(#text-interference); transform: translate(-1px, -1px); }
-  100% { filter: url(#text-interference); transform: translate(0,0); }
-}
-
-@keyframes logoGlitchHoverIn {
-  0%   { filter: none;                    transform: translate(0,0); }
-  18%  { filter: url(#logo-interference); transform: translate(1px, -1px); }
-  32%  { filter: none;                    transform: translate(0,0); }
-  50%  { filter: url(#logo-interference); transform: translate(-2px, 1px); }
-  65%  { filter: none;                    transform: translate(-1px, 0); }
-  82%  { filter: url(#logo-interference); transform: translate(1px, 2px); }
-  100% { filter: url(#logo-interference); transform: translate(0,0); }
-}
-
 @media (hover: hover) {
+  /* Logo: instant filter on/off once load animation has played (class stays after swap) */
   .group-logo:hover {
-    animation: logoGlitchHoverIn 1s linear forwards !important;
+    filter: url(#logo-interference) !important;
   }
-  .text-load-distortion:hover {
-    animation: glitchHoverIn 1s linear forwards !important;
+  /* Text: instant filter on/off after JS swaps text-load-distortion → text-hover-static */
+  .text-hover-static:hover {
+    filter: url(#text-interference) !important;
     cursor: default;
   }
 }

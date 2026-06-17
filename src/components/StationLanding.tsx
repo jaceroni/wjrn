@@ -433,7 +433,9 @@ export default function StationLanding({ stationId }: StationLandingProps) {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
             navigate("/");
-          }} className="relative h-[53px] md:h-[63px] group-logo logo-load-distortion cursor-pointer select-none">
+          }}
+          onAnimationEnd={(e) => { if (e.animationName === 'logoLoadDistort') e.currentTarget.classList.remove('logo-load-distortion'); }}
+          className="relative h-[53px] md:h-[63px] group-logo logo-load-distortion cursor-pointer select-none">
             {/* Base Brown Logo */}
             <img
               src={wjrnLogoCubed}
@@ -472,7 +474,9 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                 {config.genres.join(" • ")}
               </span>
             </div>
-            <h2 className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left text-load-distortion">
+            <h2
+              onAnimationEnd={(e) => { if (e.animationName === 'textLoadDistort') e.currentTarget.classList.replace('text-load-distortion', 'text-hover-static'); }}
+              className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left text-load-distortion">
               {config.name}
             </h2>
           </div>
