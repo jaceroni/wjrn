@@ -11,10 +11,13 @@
       padding: 0;
     }
 
-    html, body {
+    html {
+      overflow: hidden; /* prevents viewport scroll without clipping transforms */
+    }
+
+    body {
       margin: 0;
       padding: 0;
-      width: 100%;
       background: #000;
       user-select: none;
       -webkit-user-select: none;
@@ -22,9 +25,8 @@
 
     #player-scaler {
       width: 100%;
-      aspect-ratio: 1280 / 443;
       position: relative;
-      overflow: hidden;
+      /* NO overflow:hidden — would clip before transforms are applied */
     }
 
     #player {
@@ -669,9 +671,11 @@
 
     // ─── Responsive scaling ───────────────────────────────────────────────────────
     function scalePlayer() {
-      var scaler = document.getElementById('player-scaler');
-      var scale = scaler.offsetWidth / 1280;
+      var vw = document.documentElement.clientWidth;
+      var scale = vw / 1280;
       document.getElementById('player').style.transform = 'scale(' + scale + ')';
+      // Set scaler height to match the scaled player so the page has the right height
+      document.getElementById('player-scaler').style.height = Math.round(443 * scale) + 'px';
     }
     scalePlayer();
     window.addEventListener('resize', scalePlayer);
