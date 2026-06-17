@@ -123,6 +123,7 @@ var tickerX = 569;
 var tickerContent = '';
 var lastTickerTime = null;
 var tickerWidth = 1;
+var currentTickerText = '';
 
 function setTickerStatic(text) {
   var wrap = document.getElementById('ticker-wrap');
@@ -136,13 +137,19 @@ function setTickerStatic(text) {
     el.textContent = text;
   }
   tickerMode = 'A';
+  currentTickerText = '';
 }
 
 function setTickerScroll(text, mode) {
   var wrap = document.getElementById('ticker-wrap');
   var el = document.getElementById('ticker-text');
   if (wrap && el) {
-    wrap.style.display = 'block';
+    if (tickerMode === mode && currentTickerText === text) {
+      return;
+    }
+    currentTickerText = text;
+    wrap.style.display = 'flex';
+    wrap.style.justifyContent = 'flex-start';
     el.style.position = 'absolute';
     el.style.left = '0';
     tickerMode = mode;
@@ -287,14 +294,14 @@ function fetchMeta() {
         currentTitle = 'LIVE STREAM';
         currentArtist = STATIONS[currentStation].name.toUpperCase();
       }
-      if (tickerMode === 'B' && !tickerTakeoverTimer) {
+      if ((tickerMode === 'B' || (playerState === 2 && tickerMode === 'A' && !tickerTakeoverTimer)) && tickerPreTakeover !== 'C') {
         setTickerScroll(buildMetaText(), 'B');
       }
     })
     .catch(function() {
       currentTitle = 'LIVE STREAM';
       currentArtist = STATIONS[currentStation].name.toUpperCase();
-      if (tickerMode === 'B' && !tickerTakeoverTimer) {
+      if ((tickerMode === 'B' || (playerState === 2 && tickerMode === 'A' && !tickerTakeoverTimer)) && tickerPreTakeover !== 'C') {
         setTickerScroll(buildMetaText(), 'B');
       }
     });
