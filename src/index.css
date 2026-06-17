@@ -116,89 +116,83 @@
   display: none; /* no longer needed — logo is white by default */
 }
 
-/* Logo: glitch in → hold → glitch out */
+/* Logo page-load: glitch in → hold → glitch out, with position shake */
 @keyframes logoLoadDistort {
-  0%    { filter: none; }
-  4%    { filter: url(#logo-interference); }
-  7%    { filter: none; }
-  12%   { filter: url(#logo-interference); }
-  16%   { filter: none; }
-  21%   { filter: url(#logo-interference); }
-  25%   { filter: none; }
-  30%   { filter: url(#logo-interference); }
+  0%    { filter: none;                    transform: translate(0,0); }
+  8%    { filter: url(#logo-interference); transform: translate(-2px, 1px); }
+  14%   { filter: none;                    transform: translate(0,0); }
+  24%   { filter: url(#logo-interference); transform: translate(1px, -2px); }
+  32%   { filter: url(#logo-interference); transform: translate(-1px, 1px); }
   /* hold */
-  34%   { filter: url(#logo-interference); }
-  68%   { filter: url(#logo-interference); }
+  38%   { filter: url(#logo-interference); transform: translate(2px, 0); }
+  52%   { filter: none;                    transform: translate(0,0); }
+  58%   { filter: url(#logo-interference); transform: translate(-1px, -1px); }
+  68%   { filter: url(#logo-interference); transform: translate(1px, 2px); }
   /* glitch out */
-  73%   { filter: none; }
-  78%   { filter: url(#logo-interference); }
-  84%   { filter: none; }
-  89%   { filter: url(#logo-interference); }
-  95%   { filter: none; }
-  98%   { filter: url(#logo-interference); }
-  100%  { filter: none; }
+  76%   { filter: none;                    transform: translate(0,0); }
+  84%   { filter: url(#logo-interference); transform: translate(-2px, 1px); }
+  92%   { filter: none;                    transform: translate(0,0); }
+  97%   { filter: url(#logo-interference); transform: translate(1px, -1px); }
+  100%  { filter: none;                    transform: translate(0,0); }
 }
 
 .logo-load-distortion {
-  animation: logoLoadDistort 3s linear forwards;
+  animation: logoLoadDistort 2s linear both;
+  /* Logo plays first */
 }
 
-/* Text: glitch in → hold → glitch out */
+/* Text page-load: staggered 0.4s after logo, same glitch-in/out with shake */
 @keyframes textLoadDistort {
-  0%    { filter: none; }
-  5%    { filter: url(#text-interference); }
-  8%    { filter: none; }
-  14%   { filter: url(#text-interference); }
-  18%   { filter: none; }
-  23%   { filter: url(#text-interference); }
-  27%   { filter: none; }
-  32%   { filter: url(#text-interference); }
+  0%    { filter: none;                    transform: translate(0,0); }
+  8%    { filter: url(#text-interference); transform: translate(2px, -1px); }
+  15%   { filter: none;                    transform: translate(0,0); }
+  25%   { filter: url(#text-interference); transform: translate(-1px, 2px); }
+  33%   { filter: url(#text-interference); transform: translate(1px, -1px); }
   /* hold */
-  36%   { filter: url(#text-interference); }
-  66%   { filter: url(#text-interference); }
+  40%   { filter: url(#text-interference); transform: translate(-2px, 1px); }
+  54%   { filter: none;                    transform: translate(0,0); }
+  60%   { filter: url(#text-interference); transform: translate(1px, 1px); }
+  69%   { filter: url(#text-interference); transform: translate(-1px, -2px); }
   /* glitch out */
-  71%   { filter: none; }
-  76%   { filter: url(#text-interference); }
-  82%   { filter: none; }
-  88%   { filter: url(#text-interference); }
-  94%   { filter: none; }
-  97%   { filter: url(#text-interference); }
-  100%  { filter: none; }
+  77%   { filter: none;                    transform: translate(0,0); }
+  85%   { filter: url(#text-interference); transform: translate(2px, -1px); }
+  93%   { filter: none;                    transform: translate(0,0); }
+  97%   { filter: url(#text-interference); transform: translate(-1px, 1px); }
+  100%  { filter: none;                    transform: translate(0,0); }
 }
 
 .text-load-distortion {
-  animation: textLoadDistort 2.5s linear forwards;
+  animation: textLoadDistort 2s linear both;
+  animation-delay: 0.4s; /* staggered after logo */
 }
 
-/* Glitch-in animation for hover entry */
+/* Hover glitch-in animations (1s, with position shake) */
 @keyframes glitchHoverIn {
-  0%   { filter: none; }
-  12%  { filter: url(#text-interference); }
-  22%  { filter: none; }
-  38%  { filter: url(#text-interference); }
-  52%  { filter: none; }
-  66%  { filter: url(#text-interference); }
-  80%  { filter: none; }
-  100% { filter: url(#text-interference); }
+  0%   { filter: none;                    transform: translate(0,0); }
+  18%  { filter: url(#text-interference); transform: translate(-1px, 1px); }
+  32%  { filter: none;                    transform: translate(0,0); }
+  50%  { filter: url(#text-interference); transform: translate(2px, -1px); }
+  65%  { filter: none;                    transform: translate(1px, 0); }
+  82%  { filter: url(#text-interference); transform: translate(-1px, -1px); }
+  100% { filter: url(#text-interference); transform: translate(0,0); }
 }
 
 @keyframes logoGlitchHoverIn {
-  0%   { filter: none; }
-  12%  { filter: url(#logo-interference); }
-  22%  { filter: none; }
-  38%  { filter: url(#logo-interference); }
-  52%  { filter: none; }
-  66%  { filter: url(#logo-interference); }
-  80%  { filter: none; }
-  100% { filter: url(#logo-interference); }
+  0%   { filter: none;                    transform: translate(0,0); }
+  18%  { filter: url(#logo-interference); transform: translate(1px, -1px); }
+  32%  { filter: none;                    transform: translate(0,0); }
+  50%  { filter: url(#logo-interference); transform: translate(-2px, 1px); }
+  65%  { filter: none;                    transform: translate(-1px, 0); }
+  82%  { filter: url(#logo-interference); transform: translate(1px, 2px); }
+  100% { filter: url(#logo-interference); transform: translate(0,0); }
 }
 
 @media (hover: hover) {
   .group-logo:hover {
-    animation: logoGlitchHoverIn 0.35s linear forwards !important;
+    animation: logoGlitchHoverIn 1s linear forwards !important;
   }
   .text-load-distortion:hover {
-    animation: glitchHoverIn 0.35s linear forwards !important;
+    animation: glitchHoverIn 1s linear forwards !important;
     cursor: default;
   }
 }
