@@ -130,36 +130,25 @@
       cursor: pointer;
     }
 
-    #click-prompt {
+
+    #art-pause-overlay {
       position: absolute;
-      left: 0;
-      top: 0;
-      width: 1280px;
-      height: 443px;
-      z-index: 5;
+      inset: 0;
+      background: rgba(0,0,0,0.52);
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.25s ease;
       pointer-events: none;
     }
-
-    #click-prompt-inner {
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(35, 191, 145, 0.4);
-      color: #23bf91;
-      font-family: monospace;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      padding: 10px 22px;
-      border-radius: 3px;
-      text-shadow: 0 0 8px rgba(35, 191, 145, 0.6);
-      opacity: 1;
-      transition: opacity 0.5s ease;
-    }
-
-    #click-prompt-inner.hidden {
-      opacity: 0;
+    #art-pause-overlay.visible { opacity: 1; }
+    #art-pause-icon {
+      color: rgba(255,255,255,0.88);
+      font-size: 52px;
+      line-height: 1;
+      text-shadow: 0 0 24px rgba(255,255,255,0.4);
     }
   </style>
 </head>
@@ -167,6 +156,7 @@
   <div id="player">
     <!-- Album art — z-index:1, behind faceplate -->
     <div id="art-container">
+      <div id="art-pause-overlay"><div id="art-pause-icon">&#9654;</div></div>
       <img id="art-a" src="" alt="" onerror="this.style.display='none'">
       <img id="art-b" src="" alt="" onerror="this.style.display='none'">
     </div>
@@ -190,9 +180,6 @@
     <div id="volume-knob-hit"></div>
 
     <!-- Click to start prompt -->
-    <div id="click-prompt">
-      <div id="click-prompt-inner">CLICK TO POWER ON</div>
-    </div>
   </div>
 
   <script>
@@ -229,6 +216,7 @@
     let isTuning = false;
     let volume = 0.8;
     let isMuted = false;
+    let lastTickerContent = '';
 
     let audioCtx = null;
     let analyser = null;
@@ -264,7 +252,6 @@
     const volumeHit    = document.getElementById('volume-knob-hit');
     const artA         = document.getElementById('art-a');
     const artB         = document.getElementById('art-b');
-    const clickPrompt  = document.getElementById('click-prompt-inner');
 
     // ─── Tuner tick position ───────────────────────────────────────────────────
     // 88 MHz → X:659, 108 MHz → X:1075 (416px / 20MHz = 20.8 px/MHz)
@@ -503,13 +490,7 @@
 
       // Start metadata polling
       startMetaPoll(currentStation);
-
-      // Hide click prompt
-      clickPrompt.classList.add('hidden');
-      setTimeout(() => {
-        document.getElementById('click-prompt').style.display = 'none';
-      }, 600);
-    }
+}
 
     // ─── Station switch ────────────────────────────────────────────────────────
     function switchStation() {
@@ -609,11 +590,28 @@
     });
 
     // Art & ticker click — toggle play/pause
+    const artPauseOverlay = document.getElementById('art-pause-overlay');
+
+    function setPausedUI(paused) {
+      if (paused) {
+        artPauseOverlay.classList.add('visible');
+        setTickerContent('PAUSED   —   CLICK ARTWORK OR METADATA TO RESUME   —   ', true);
+      } else {
+        artPauseOverlay.classList.remove('visible');
+        if (lastTickerContent) setTickerContent(lastTickerContent, false);
+      }
+    }
+
     function togglePlayPause() {
       if (!audioCtx || !audioEl) return;
       if (audioCtx.state === 'suspended') { audioCtx.resume(); return; }
-      if (audioEl.paused) { audioEl.play().catch(function(){}); }
-      else { audioEl.pause(); }
+      if (audioEl.paused) {
+        audioEl.play().catch(function(){});
+        setPausedUI(false);
+      } else {
+        audioEl.pause();
+        setPausedUI(true);
+      }
     }
     document.getElementById('art-container').addEventListener('click', function(e) { e.stopPropagation(); togglePlayPause(); });
     document.getElementById('ticker-wrap').addEventListener('click', function(e) { e.stopPropagation(); togglePlayPause(); });
