@@ -557,9 +557,10 @@ document.getElementById('hz-mono').addEventListener('click', function() {
 });
 
 document.getElementById('hz-power').addEventListener('click', function() {
-  if (audioEl) { audioEl.pause(); audioEl.src = ''; }
-  if (audioCtx) { audioCtx.close(); }
-  try { window.close(); } catch(e) {}
+  if (!audioCtx) { initAudio(); return; }
+  isMuted = !isMuted;
+  if (gainNode) gainNode.gain.value = isMuted ? 0 : savedGain;
+  tickerTakeover(isMuted ? 'POWER – OFF' : 'POWER – ON');
 });
 
 // ── INITIAL STATE ─────────────────────────────────────────────────────────────

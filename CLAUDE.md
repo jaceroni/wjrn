@@ -216,6 +216,7 @@ const STATIONS = [
 - **Volume knob click** → toggle mute/unmute
 - **Tuning knob click** / **Tuner Screen click** → cycle to next station with static noise sequence
 - **Loudness, Bass, Mid, Treble knobs** → interactive EQ cut / tube saturation filters
+- **Power button click** → toggle mute/unmute (displays POWER – OFF / POWER – ON)
 
 ### Paused state UI
 - Artwork: play icon (▶) or pause icon (⏸) overlay container `#art-overlay`
