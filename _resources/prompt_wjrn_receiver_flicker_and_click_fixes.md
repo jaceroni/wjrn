@@ -1,13 +1,14 @@
-# TASK: Fix Standalone Player Ticker Typo, First-Load Scroll, Visual Flash, Pause Hyphen, and Seamless looping
+# TASK: Standalone Player Ticker Fixes, Seamless Loop, and Album Art Glass Overlay
 
-We need to fix several bugs and implement seamless scrolling for the metadata ticker in the standalone receiver player (`public/player/index.html`):
-1. **`ticker-wrap` Typo & First-Load Scroll Bug**: The JavaScript tries to access `document.getElementById('ticker-wrap')`, but the HTML element ID is `ticker-container`. This throws a script error and crashes the player on first load, which stops the marquee from scrolling.
-2. **One-Frame Metadata Flash & Tuning Transition**:
+We need to apply several bug fixes, stabilize the metadata scrolling, and add a premium visual glass panel overlay on top of the album artwork in the standalone receiver player (`public/player/index.html`):
+1. **Album Art Glass Panel Overlay**: Add a subtle, glossy diagonal glass glare and rim highlight on top of the album artwork square. This makes the art look like it is resting behind a real physical protective glass lens.
+2. **`ticker-wrap` Typo & First-Load Scroll Bug**: The JavaScript tries to access `document.getElementById('ticker-wrap')`, but the HTML element ID is `ticker-container`. This throws a script error and crashes the player on first load, which stops the marquee from scrolling.
+3. **One-Frame Metadata Flash & Tuning Transition**:
    * **Transition Flow**: When switching stations, the ticker should display static centered `TUNING TO ...` and hold it on screen until the API fetch completes (minimum 2.5s). Once resolved, it should transition directly to the scrolling track metadata (no intermediate blank gaps, no placeholder dashes `– – – –`, and no station name flash).
    * **Flash Fix**: We must immediately set the `translateX` transform of the text element to `569px` (off-screen) when starting a scroll before the browser paints, preventing it from flashing centered for one frame.
-3. **Seamless Looping Marquee**: The ticker currently scrolls off-screen completely, then resets back to the right and repeats. We want it to be a **continuous, seamless loop** (like a tape loop) where the text repeats endlessly with no blank gaps.
-4. **Static Centering Layout**: Toggle the container layout context between `flex` (for centering static text) and `block` (for absolute positioning of scrolling text).
-5. **Pause Ticker Hyphen**: Remove the trailing hyphen from the paused messages (e.g. change `PAUSED – WJRN –` to `PAUSED – WJRN`).
+4. **Seamless Looping Marquee**: The ticker currently scrolls off-screen completely, then resets back to the right and repeats. We want it to be a **continuous, seamless loop** (like a tape loop) where the text repeats endlessly with no blank gaps.
+5. **Static Centering Layout**: Toggle the container layout context between `flex` (for centering static text) and `block` (for absolute positioning of scrolling text).
+6. **Pause Ticker Hyphen**: Remove the trailing hyphen from the paused messages (e.g. change `PAUSED – WJRN –` to `PAUSED – WJRN`).
 
 ## Files in Scope
 - `public/player/index.html` [MODIFY]
@@ -16,9 +17,40 @@ We need to fix several bugs and implement seamless scrolling for the metadata ti
 
 ## Technical Specifications
 
-In `public/player/index.html`'s `<script>`:
+In `public/player/index.html`'s `<style>` block and HTML body:
 
-### 1. Fix Ticker Typo & Layout Context
+### 1. Add Album Art Glass Panel Overlay
+* In the `<style>` block, add the CSS class for the glass reflection glare overlay:
+  ```css
+  .art-glass {
+    position: absolute;
+    inset: 0;
+    z-index: 1.5; /* Above art images (z-index 1) but below pause overlay (z-index 2) */
+    pointer-events: none;
+    /* Diagonal glossy reflection glare */
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.08) 45%,
+      rgba(255, 255, 255, 0) 46%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    /* 3D bezel specular rim highlight */
+    box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.2), 
+                inset -1px -1px 0px rgba(255, 255, 255, 0.05);
+  }
+  ```
+* In the HTML body, insert the glass overlay `div` inside `#art-container` (around line 105):
+  ```html
+  <div id="art-container">
+    <div id="art-pause-overlay"><div id="art-pause-icon">&#9654;</div></div>
+    <img id="art-a" src="" alt="">
+    <img id="art-b" src="" alt="">
+    <div class="art-glass"></div>
+  </div>
+  ```
+
+### 2. Fix Ticker Typo & Layout Context
 * Locate `setTickerStatic(text)` (around line 126):
   ```javascript
   function setTickerStatic(text) {
@@ -47,7 +79,7 @@ In `public/player/index.html`'s `<script>`:
   }
   ```
 
-### 2. Implement Seamless Looping & Flash Prevention
+### 3. Implement Seamless Looping & Flash Prevention
 * Locate `setTickerScroll(text, mode)` (around line 135).
 * Update it to:
   1. Measure the width of a single copy of the text.
@@ -122,7 +154,7 @@ In `public/player/index.html`'s `<script>`:
   }
   ```
 
-### 3. Stabilize Tuning Metadata Transition Flow
+### 4. Stabilize Tuning Metadata Transition Flow
 * Update `fetchMeta()` to handle API errors and empty responses gracefully. If the API returns empty/invalid data or fails, set a clean fallback title and artist:
   ```javascript
   function fetchMeta() {
@@ -174,7 +206,7 @@ In `public/player/index.html`'s `<script>`:
   }
   ```
 
-### 4. Remove Trailing Hyphens from Pause Messages
+### 5. Remove Trailing Hyphens from Pause Messages
 * Locate `audioEl.onpause` listener inside `initAudio()` (around line 372). Change the pause message concatenation from:
   `setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase() + ' –');`
   to:
@@ -186,10 +218,11 @@ In `public/player/index.html`'s `<script>`:
 1. Run `npm run build` locally to compile the player.
 2. Open the player in your browser at `http://localhost:3000/player/index.html`.
 3. Verify that:
+   * **Glass Overlay**: The album art container displays a subtle diagonal glare reflection and top/left rim highlight. The album art still crossfades underneath it, and the paused overlay renders correctly.
    * On first load, clicking the artwork starts playback, and the metadata immediately begins scrolling smoothly (no crash, no freeze on "WJRN").
    * Toggling pause shows `PAUSED – WJRN` centered without a trailing hyphen.
    * Switching stations shows `TUNING TO [freq] MHz – [STATION NAME]`. It remains static and centered, then transitions smoothly into the track metadata scrolling in from the right.
    * **Continuous Scrolling**: When the metadata finishes scrolling, the text repeats seamlessly behind it without any blank screen resets.
    * There are no placeholder dashes (`– – – –`), no flashes of the station name, and no visual layout glitches.
 4. Run the deploy script to push changes live:
-   `bash deploy.sh "fix: stabilize receiver ticker layout, fix first-load scroll, remove flash, and remove pause hyphen"`
+   `bash deploy.sh "fix: add art glass overlay, stabilize ticker layout, fix first-load scroll, remove flash, and remove pause hyphen"`
