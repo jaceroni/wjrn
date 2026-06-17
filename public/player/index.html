@@ -163,6 +163,9 @@ function restoreTicker() {
 }
 
 function buildMetaText() {
+  if (!currentTitle && !currentArtist) {
+    return STATIONS[currentStation].name.toUpperCase() + ' –  ';
+  }
   return (currentTitle || '–') + ' – ' + (currentArtist || '–') + ' – ' + STATIONS[currentStation].name.toUpperCase() + ' –  ';
 }
 
