@@ -103,8 +103,8 @@
     #tuner-tick {
       position: absolute;
       top: 149px;
-      width: 2px;
-      height: 7px;
+      width: 12px;
+      height: 14px;
       background: #ff3333;
       z-index: 3;
       transition: left 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -228,6 +228,7 @@
     let currentStation = 0;
     let isTuning = false;
     let volume = 0.8;
+    let isMuted = false;
 
     let audioCtx = null;
     let analyser = null;
@@ -572,7 +573,7 @@
       switchStation();
     });
 
-    // Volume knob click (left half = down, right half = up)
+    // Volume knob click — toggle mute
     volumeHit.addEventListener('click', function(e) {
       e.stopPropagation();
 
@@ -581,10 +582,8 @@
       }
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
-      const rect = volumeHit.getBoundingClientRect();
-      const localX = e.clientX - rect.left;
-      const half = volumeHit.offsetWidth / 2;
-      adjustVolume(localX < half ? -0.1 : 0.1);
+      isMuted = !isMuted;
+      if (gainNode) gainNode.gain.value = isMuted ? 0 : volume;
     });
 
     // Volume knob scroll wheel
@@ -609,7 +608,17 @@
       }
     });
 
-    // Handle page visibility — resume AudioContext if needed
+    // Art & ticker click — toggle play/pause
+    function togglePlayPause() {
+      if (!audioCtx || !audioEl) return;
+      if (audioCtx.state === 'suspended') { audioCtx.resume(); return; }
+      if (audioEl.paused) { audioEl.play().catch(function(){}); }
+      else { audioEl.pause(); }
+    }
+    document.getElementById('art-container').addEventListener('click', function(e) { e.stopPropagation(); togglePlayPause(); });
+    document.getElementById('ticker-wrap').addEventListener('click', function(e) { e.stopPropagation(); togglePlayPause(); });
+
+        // Handle page visibility — resume AudioContext if needed
     document.addEventListener('visibilitychange', function() {
       if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
