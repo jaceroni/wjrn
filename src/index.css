@@ -182,3 +182,9 @@
     cursor: default;
   }
 }
+
+/* Animates the height of visualizer columns (used by PopoutWidget + NebulaHomepage phone player) */
+@keyframes verticalPulse {
+  0%, 100% { transform: scaleY(0.15); }
+  50%       { transform: scaleY(0.95); }
+}

@@ -83,7 +83,7 @@ export default function PopoutWidget({ onClose }: Props) {
           <span className="text-[8px] uppercase tracking-[0.25em] block" style={{ color: accent }}>
             NOW PLAYING
           </span>
-          <div className="overflow-hidden mask-marquee h-[18px] flex items-center">
+          <div className={`overflow-hidden mask-marquee h-[18px] flex items-center ${isLongTitle ? "" : "justify-center"}`}>
             <p className={`text-[13px] font-black text-white uppercase tracking-wide whitespace-nowrap ${isLongTitle ? "animate-marquee" : ""}`}
               style={isLongTitle ? { animationDuration: "14s" } : undefined}>
               {isLongTitle ? `${trackTitle}     ${trackTitle}` : trackTitle}
@@ -104,6 +104,7 @@ export default function PopoutWidget({ onClose }: Props) {
                 height: isPlaying ? `${h}%` : "5%",
                 backgroundColor: accent,
                 opacity: isPlaying ? 0.75 : 0.2,
+                transformOrigin: "bottom",
                 ...(isPlaying ? {
                   animationName: "verticalPulse",
                   animationDuration: `${0.35 + (i % 5) * 0.08}s`,
