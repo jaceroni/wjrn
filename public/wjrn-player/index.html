@@ -12,21 +12,25 @@
     }
 
     html, body {
-      width: 100%;
       margin: 0;
+      padding: 0;
+      width: 100%;
       background: #000;
       user-select: none;
       -webkit-user-select: none;
-      overflow-x: hidden;
     }
 
     #player-scaler {
       width: 100%;
+      aspect-ratio: 1280 / 443;
+      position: relative;
       overflow: hidden;
     }
 
     #player {
-      position: relative;
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 1280px;
       height: 443px;
       cursor: pointer;
@@ -665,9 +669,9 @@
 
     // ─── Responsive scaling ───────────────────────────────────────────────────────
     function scalePlayer() {
-      var scale = window.innerWidth / 1280;
+      var scaler = document.getElementById('player-scaler');
+      var scale = scaler.offsetWidth / 1280;
       document.getElementById('player').style.transform = 'scale(' + scale + ')';
-      document.getElementById('player-scaler').style.height = Math.ceil(443 * scale) + 'px';
     }
     scalePlayer();
     window.addEventListener('resize', scalePlayer);
