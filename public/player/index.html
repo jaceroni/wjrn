@@ -122,24 +122,41 @@ var tickerTakeoverTimer = null;
 var tickerX = 569;
 var tickerContent = '';
 var lastTickerTime = null;
+var tickerWidth = 1;
 
 function setTickerStatic(text) {
-  var wrap = document.getElementById('ticker-wrap');
+  var wrap = document.getElementById('ticker-container');
   var el = document.getElementById('ticker-text');
-  wrap.style.justifyContent = 'center';
-  el.style.transform = 'translateX(0)';
-  el.textContent = text;
+  if (wrap && el) {
+    wrap.style.display = 'flex';
+    wrap.style.justifyContent = 'center';
+    el.style.position = 'relative';
+    el.style.left = 'auto';
+    el.style.transform = 'translateX(0)';
+    el.textContent = text;
+  }
   tickerMode = 'A';
 }
 
 function setTickerScroll(text, mode) {
-  var wrap = document.getElementById('ticker-wrap');
-  wrap.style.justifyContent = 'flex-start';
-  tickerContent = text;
-  tickerMode = mode;
-  tickerX = 569;
-  lastTickerTime = null;
-  document.getElementById('ticker-text').textContent = tickerContent;
+  var wrap = document.getElementById('ticker-container');
+  var el = document.getElementById('ticker-text');
+  if (wrap && el) {
+    wrap.style.display = 'block';
+    el.style.position = 'absolute';
+    el.style.left = '0';
+    tickerMode = mode;
+    lastTickerTime = null;
+    // Measure single-copy width then repeat for seamless loop
+    el.textContent = text;
+    var singleW = el.scrollWidth || 1;
+    var repeats = Math.ceil(569 / singleW) + 1;
+    tickerContent = text.repeat(repeats);
+    el.textContent = tickerContent;
+    tickerX = 569;
+    tickerWidth = singleW;
+    el.style.transform = 'translateX(' + tickerX + 'px)'; // prevent one-frame flash
+  }
 }
 
 function tickerTakeover(text) {
@@ -154,15 +171,14 @@ function tickerTakeover(text) {
 
 function restoreTicker() {
   if (playerState === 1) { setTickerStatic('CLICK ARTWORK OR TUNER TO BEGIN PLAYBACK'); return; }
-  if (playerState === 3) { setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase() + ' –'); return; }
+  if (playerState === 3) { setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase()); return; }
   if (tickerPreTakeover === 'C') {
     setTickerScroll(STATIONS[currentStation].description, 'C');
   } else {
     if (!currentTitle && !currentArtist) {
-      setTickerStatic(STATIONS[currentStation].name.toUpperCase());
-    } else {
-      setTickerScroll(buildMetaText(), 'B');
+      return; // hold takeover message until fetch completes
     }
+    setTickerScroll(buildMetaText(), 'B');
   }
 }
 
@@ -182,10 +198,13 @@ function animateTicker(ts) {
   lastTickerTime = ts;
   if (dt > 0.1) dt = 0.1; // clamp for tab-switch catchup
   tickerX -= 50 * dt;
+  if (tickerX <= -tickerWidth) {
+    tickerX += tickerWidth;
+  }
   var el = document.getElementById('ticker-text');
-  var textW = el.scrollWidth;
-  if (tickerX < -textW) tickerX = 569;
-  el.style.transform = 'translateX(' + tickerX + 'px)';
+  if (el) {
+    el.style.transform = 'translateX(' + tickerX + 'px)';
+  }
 }
 
 // ── VU NEEDLE ─────────────────────────────────────────────────────────────────
@@ -256,7 +275,7 @@ function fetchMeta() {
     .then(function(r) { return r.json(); })
     .then(function(d) {
       var np = d && d.now_playing && d.now_playing.song;
-      if (np) {
+      if (np && (np.title || np.artist)) {
         currentTitle = np.title || '';
         currentArtist = np.artist || '';
         var artUrl = np.art || '';
@@ -264,12 +283,21 @@ function fetchMeta() {
           currentArtUrl = artUrl;
           updateArt(artUrl);
         }
-        if (tickerMode === 'B' && !tickerTakeoverTimer) {
-          setTickerScroll(buildMetaText(), 'B');
-        }
+      } else {
+        currentTitle = 'LIVE STREAM';
+        currentArtist = STATIONS[currentStation].name.toUpperCase();
+      }
+      if (tickerMode === 'B' && !tickerTakeoverTimer) {
+        setTickerScroll(buildMetaText(), 'B');
       }
     })
-    .catch(function() {});
+    .catch(function() {
+      currentTitle = 'LIVE STREAM';
+      currentArtist = STATIONS[currentStation].name.toUpperCase();
+      if (tickerMode === 'B' && !tickerTakeoverTimer) {
+        setTickerScroll(buildMetaText(), 'B');
+      }
+    });
 }
 
 // ── AUDIO CURVE MAKERS ────────────────────────────────────────────────────────
@@ -373,7 +401,7 @@ function initAudio() {
     if (playerState !== 1) {
       playerState = 3;
       showArtOverlay(true);
-      setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase() + ' –');
+      setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase());
     }
   };
 
