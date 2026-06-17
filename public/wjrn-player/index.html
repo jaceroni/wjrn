@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280">
+  <title>WJRN Radio Player</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 1280px;
+      height: 443px;
+      overflow: hidden;
+      background: #000;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #player {
+      position: relative;
+      width: 1280px;
+      height: 443px;
+      cursor: pointer;
+    }
+
+    #faceplate {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1280px;
+      height: 443px;
+      z-index: 2;
+      pointer-events: none;
+      display: block;
+    }
+
+    #art-container {
+      position: absolute;
+      left: 111px;
+      top: 101px;
+      width: 274px;
+      height: 274px;
+      z-index: 1;
+      background: #1a1a1a;
+      overflow: hidden;
+    }
+
+    #art-a, #art-b {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 274px;
+      height: 274px;
+      object-fit: cover;
+      transition: opacity 0.8s ease;
+    }
+
+    #art-a {
+      opacity: 0;
+    }
+
+    #art-b {
+      opacity: 0;
+    }
+
+    #vu-canvas {
+      position: absolute;
+      left: 423px;
+      top: 104px;
+      width: 151px;
+      height: 79px;
+      z-index: 3;
+    }
+
+    #ticker-container {
+      position: absolute;
+      left: 410px;
+      top: 214px;
+      width: 569px;
+      height: 48px;
+      z-index: 3;
+      overflow: hidden;
+    }
+
+    #ticker-text {
+      position: absolute;
+      white-space: nowrap;
+      font-family: monospace;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #23bf91;
+      text-shadow: 0 0 8px rgba(35, 191, 145, 0.6);
+      line-height: 48px;
+      top: 0;
+      left: 0;
+    }
+
+    #tuner-tick {
+      position: absolute;
+      top: 149px;
+      width: 2px;
+      height: 7px;
+      background: #ff3333;
+      z-index: 3;
+      transition: left 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    #tuning-knob-hit {
+      position: absolute;
+      left: 993px;
+      top: 212px;
+      width: 188px;
+      height: 67px;
+      z-index: 4;
+      cursor: pointer;
+    }
+
+    #volume-knob-hit {
+      position: absolute;
+      left: 1015px;
+      top: 285px;
+      width: 74px;
+      height: 79px;
+      z-index: 4;
+      cursor: pointer;
+    }
+
+    #click-prompt {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1280px;
+      height: 443px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #click-prompt-inner {
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(35, 191, 145, 0.4);
+      color: #23bf91;
+      font-family: monospace;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      padding: 10px 22px;
+      border-radius: 3px;
+      text-shadow: 0 0 8px rgba(35, 191, 145, 0.6);
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    #click-prompt-inner.hidden {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+  <div id="player">
+    <!-- Album art — z-index:1, behind faceplate -->
+    <div id="art-container">
+      <img id="art-a" src="" alt="" onerror="this.style.display='none'">
+      <img id="art-b" src="" alt="" onerror="this.style.display='none'">
+    </div>
+
+    <!-- VU meter canvas — z-index:3 -->
+    <canvas id="vu-canvas" width="151" height="79"></canvas>
+
+    <!-- Metadata ticker — z-index:3 -->
+    <div id="ticker-container">
+      <span id="ticker-text">WJRN   —   LOADING...   —   </span>
+    </div>
+
+    <!-- Tuner tick — z-index:3 -->
+    <div id="tuner-tick"></div>
+
+    <!-- Faceplate PNG — z-index:2, pointer-events:none -->
+    <img id="faceplate" src="https://radio.jacewonmusic.com/assets/images/wjrn-receiver-front-ko.png" alt="">
+
+    <!-- Hit zones — z-index:4 -->
+    <div id="tuning-knob-hit"></div>
+    <div id="volume-knob-hit"></div>
+
+    <!-- Click to start prompt -->
+    <div id="click-prompt">
+      <div id="click-prompt-inner">CLICK TO POWER ON</div>
+    </div>
+  </div>
+
+  <script>
+    // ─── Station definitions ───────────────────────────────────────────────────
+    const STATIONS = [
+      {
+        name: "WJRN",
+        frequency: 98.7,
+        stream: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",
+        api: "https://radio.jacewonmusic.com/api/nowplaying/wjrn"
+      },
+      {
+        name: "The Rock Garden",
+        frequency: 91.5,
+        stream: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
+        api: "https://radio.jacewonmusic.com/api/nowplaying/the_rock_garden"
+      },
+      {
+        name: "Bridge City Hang Suite",
+        frequency: 94.3,
+        stream: "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3",
+        api: "https://radio.jacewonmusic.com/api/nowplaying/bridge_city_hang_suite"
+      },
+      {
+        name: "The Golden Boombox",
+        frequency: 105.1,
+        stream: "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3",
+        api: "https://radio.jacewonmusic.com/api/nowplaying/golden_boombox_sessions"
+      }
+    ];
+
+    // ─── State ─────────────────────────────────────────────────────────────────
+    let currentStation = 0;
+    let isTuning = false;
+    let volume = 0.8;
+
+    let audioCtx = null;
+    let analyser = null;
+    let gainNode = null;
+    let noiseGain = null;
+    let audioEl = null;
+    let metaPollInterval = null;
+    let rafId = null;
+
+    // VU meter state
+    let vuAngle = Math.PI / 2;
+    let vuTarget = Math.PI / 2;
+
+    // Album art crossfade state
+    let activeArt = 'a'; // 'a' or 'b'
+    let currentArtUrl = '';
+
+    // Ticker animation state
+    let tickerRaf = null;
+    let tickerStartTime = null;
+    let tickerContent = '';
+    let tickerTextWidth = 0;
+    const TICKER_DURATION = 20000; // 20s per pass
+
+    // ─── DOM refs ──────────────────────────────────────────────────────────────
+    const playerEl     = document.getElementById('player');
+    const vuCanvas     = document.getElementById('vu-canvas');
+    const vuCtx        = vuCanvas.getContext('2d');
+    const tickerEl     = document.getElementById('ticker-text');
+    const tickerWrap   = document.getElementById('ticker-container');
+    const tunerTick    = document.getElementById('tuner-tick');
+    const tuningHit    = document.getElementById('tuning-knob-hit');
+    const volumeHit    = document.getElementById('volume-knob-hit');
+    const artA         = document.getElementById('art-a');
+    const artB         = document.getElementById('art-b');
+    const clickPrompt  = document.getElementById('click-prompt-inner');
+
+    // ─── Tuner tick position ───────────────────────────────────────────────────
+    // 88 MHz → X:659, 108 MHz → X:1075 (416px / 20MHz = 20.8 px/MHz)
+    function freqToX(freq) {
+      return 659 + (freq - 88) * 20.8;
+    }
+
+    function updateTunerTick(freq) {
+      const x = freqToX(freq);
+      tunerTick.style.left = x + 'px';
+    }
+
+    // Initialize tick position
+    updateTunerTick(STATIONS[currentStation].frequency);
+
+    // ─── VU Meter drawing ──────────────────────────────────────────────────────
+    const VU_CX = 75.5;
+    const VU_CY = 79;
+    const VU_LEN = 60;
+
+    function drawVU() {
+      vuCtx.clearRect(0, 0, 151, 79);
+
+      // Draw needle
+      const angle = Math.PI + vuAngle;
+      const tipX = VU_CX + Math.cos(angle) * VU_LEN;
+      const tipY = VU_CY + Math.sin(angle) * VU_LEN;
+
+      vuCtx.beginPath();
+      vuCtx.moveTo(VU_CX, VU_CY);
+      vuCtx.lineTo(tipX, tipY);
+      vuCtx.strokeStyle = '#ff3333';
+      vuCtx.lineWidth = 2;
+      vuCtx.lineCap = 'round';
+      vuCtx.stroke();
+
+      // Small pivot dot
+      vuCtx.beginPath();
+      vuCtx.arc(VU_CX, VU_CY, 3, 0, Math.PI * 2);
+      vuCtx.fillStyle = '#ff3333';
+      vuCtx.fill();
+    }
+
+    function vuLoop() {
+      if (analyser) {
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(dataArray);
+
+        // Compute average level 0–1
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const avg = sum / dataArray.length / 255;
+
+        // Map to angle range PI/4 → 3*PI/4
+        vuTarget = Math.PI / 4 + avg * (Math.PI / 2);
+      } else {
+        vuTarget = Math.PI / 2;
+      }
+
+      // Inertia
+      vuAngle += (vuTarget - vuAngle) * 0.08;
+      drawVU();
+
+      rafId = requestAnimationFrame(vuLoop);
+    }
+
+    // Draw idle needle immediately
+    drawVU();
+
+    // ─── Ticker / Marquee ─────────────────────────────────────────────────────
+    function setTickerContent(content) {
+      tickerContent = content;
+
+      // Cancel existing animation
+      if (tickerRaf) {
+        cancelAnimationFrame(tickerRaf);
+        tickerRaf = null;
+      }
+
+      tickerEl.textContent = content;
+      tickerEl.style.transform = 'translateX(0px)';
+
+      // Measure text width after one frame (DOM needs to render)
+      requestAnimationFrame(() => {
+        tickerTextWidth = tickerEl.offsetWidth;
+        const containerWidth = tickerWrap.offsetWidth;
+
+        // Start position: right edge of container
+        tickerStartTime = null;
+        const startX = containerWidth;
+
+        function animateTicker(ts) {
+          if (!tickerStartTime) tickerStartTime = ts;
+          const elapsed = ts - tickerStartTime;
+
+          // Total travel = containerWidth + textWidth (start at right, end when fully off-left)
+          const totalTravel = containerWidth + tickerTextWidth;
+          const progress = (elapsed % TICKER_DURATION) / TICKER_DURATION;
+          const x = startX - progress * (startX + tickerTextWidth);
+
+          tickerEl.style.transform = `translateX(${x}px)`;
+          tickerRaf = requestAnimationFrame(animateTicker);
+        }
+
+        tickerRaf = requestAnimationFrame(animateTicker);
+      });
+    }
+
+    // ─── Album art crossfade ───────────────────────────────────────────────────
+    function updateArt(url) {
+      if (!url || url === currentArtUrl) return;
+      currentArtUrl = url;
+
+      const incoming = activeArt === 'a' ? artB : artA;
+      const outgoing = activeArt === 'a' ? artA : artB;
+
+      incoming.onerror = () => {
+        incoming.style.display = 'none';
+      };
+
+      incoming.onload = () => {
+        incoming.style.display = '';
+        incoming.style.opacity = '1';
+        outgoing.style.opacity = '0';
+        // Switch active track after fade completes
+        setTimeout(() => {
+          activeArt = activeArt === 'a' ? 'b' : 'a';
+        }, 850);
+      };
+
+      incoming.src = url;
+    }
+
+    // ─── Metadata fetch ────────────────────────────────────────────────────────
+    function fetchMeta(stationIndex) {
+      const station = STATIONS[stationIndex];
+      fetch(station.api)
+        .then(r => r.json())
+        .then(data => {
+          const np = data.now_playing;
+          const song = np && np.song ? np.song : null;
+          const title = song ? (song.title || 'Unknown Title') : 'Unknown Title';
+          const artist = song ? (song.artist || 'Unknown Artist') : 'Unknown Artist';
+          const artUrl = song ? (song.art || '') : '';
+
+          const content = `${station.name}   —   ${title}   —   ${artist}   `;
+          setTickerContent(content);
+          updateArt(artUrl);
+        })
+        .catch(() => {
+          const content = `${station.name}   —   —   `;
+          setTickerContent(content);
+        });
+    }
+
+    function startMetaPoll(stationIndex) {
+      if (metaPollInterval) clearInterval(metaPollInterval);
+      fetchMeta(stationIndex);
+      metaPollInterval = setInterval(() => fetchMeta(stationIndex), 15000);
+    }
+
+    // ─── White noise generator ─────────────────────────────────────────────────
+    function createNoiseBuffer() {
+      const sampleRate = audioCtx.sampleRate;
+      const bufferSize = sampleRate * 2; // 2 seconds
+      const buffer = audioCtx.createBuffer(1, bufferSize, sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * 0.8;
+      }
+      return buffer;
+    }
+
+    function playNoise(durationSec) {
+      if (!audioCtx || !noiseGain) return;
+
+      const noiseBuffer = createNoiseBuffer();
+      const noiseSource = audioCtx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      noiseSource.loop = true;
+      noiseSource.connect(noiseGain);
+      noiseSource.start();
+
+      const now = audioCtx.currentTime;
+      // Fade in: 0 → 0.3 over 100ms
+      noiseGain.gain.setValueAtTime(0, now);
+      noiseGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+      // Fade out: 0.3 → 0 starting at 1.1s, fully gone at 1.5s (100ms fade)
+      noiseGain.gain.setValueAtTime(0.3, now + 1.1);
+      noiseGain.gain.linearRampToValueAtTime(0, now + 1.5);
+
+      // Stop source after duration
+      setTimeout(() => {
+        try { noiseSource.stop(); } catch(e) {}
+        try { noiseSource.disconnect(); } catch(e) {}
+      }, durationSec * 1000 + 100);
+    }
+
+    // ─── Audio init ────────────────────────────────────────────────────────────
+    function initAudio() {
+      if (audioCtx) return;
+
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Analyser
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+
+      // Gain for stream
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = volume;
+
+      // Noise gain (for tuning static)
+      noiseGain = audioCtx.createGain();
+      noiseGain.gain.value = 0;
+
+      // Audio element
+      audioEl = new Audio();
+      audioEl.crossOrigin = 'anonymous';
+      audioEl.src = STATIONS[currentStation].stream;
+
+      // Connect: audioEl → analyser → gainNode → destination
+      const source = audioCtx.createMediaElementSource(audioEl);
+      source.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      // Connect noise: noiseGain → destination
+      noiseGain.connect(audioCtx.destination);
+
+      // Start playback
+      audioEl.play().catch(e => console.warn('Autoplay blocked:', e));
+
+      // Start VU animation
+      vuLoop();
+
+      // Start metadata polling
+      startMetaPoll(currentStation);
+
+      // Hide click prompt
+      clickPrompt.classList.add('hidden');
+      setTimeout(() => {
+        document.getElementById('click-prompt').style.display = 'none';
+      }, 600);
+    }
+
+    // ─── Station switch ────────────────────────────────────────────────────────
+    function switchStation() {
+      if (isTuning) return;
+      isTuning = true;
+
+      // Advance station index
+      currentStation = (currentStation + 1) % STATIONS.length;
+      const newStation = STATIONS[currentStation];
+
+      // Play static noise
+      playNoise(1.5);
+
+      // Move tuner tick immediately (CSS transition handles animation)
+      updateTunerTick(newStation.frequency);
+
+      // Rest needle to center during static
+      vuTarget = Math.PI / 2;
+
+      // Reset ticker to station name during static
+      setTickerContent(`${newStation.name}   —   TUNING...   —   `);
+
+      // At 1200ms: switch stream and start metadata
+      setTimeout(() => {
+        if (audioEl) {
+          audioEl.pause();
+          audioEl.src = newStation.stream;
+          audioEl.play().catch(e => console.warn('Play blocked:', e));
+        }
+        // Clear art during switch
+        startMetaPoll(currentStation);
+      }, 1200);
+
+      // At 2000ms: done tuning
+      setTimeout(() => {
+        isTuning = false;
+      }, 2000);
+    }
+
+    // ─── Volume control ────────────────────────────────────────────────────────
+    function adjustVolume(delta) {
+      volume = Math.min(1, Math.max(0, volume + delta));
+      if (gainNode) gainNode.gain.value = volume;
+    }
+
+    // ─── Event handlers ────────────────────────────────────────────────────────
+
+    // Tuning knob click
+    tuningHit.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      // Init audio on first click
+      if (!audioCtx) {
+        initAudio();
+        // Small delay to let audio init before switching
+        setTimeout(() => switchStation(), 100);
+        return;
+      }
+
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      switchStation();
+    });
+
+    // Volume knob click (left half = down, right half = up)
+    volumeHit.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      if (!audioCtx) {
+        initAudio();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+      const rect = volumeHit.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      const half = volumeHit.offsetWidth / 2;
+      adjustVolume(localX < half ? -0.1 : 0.1);
+    });
+
+    // Volume knob scroll wheel
+    volumeHit.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!audioCtx) {
+        initAudio();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+      adjustVolume(e.deltaY > 0 ? -0.1 : 0.1);
+    }, { passive: false });
+
+    // Player body click — init audio
+    playerEl.addEventListener('click', function(e) {
+      if (!audioCtx) {
+        initAudio();
+      } else if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    });
+
+    // Handle page visibility — resume AudioContext if needed
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    });
+
+    // ─── Initial ticker ────────────────────────────────────────────────────────
+    setTickerContent('WJRN JACEWON RADIO NETWORK   —   CLICK ANYWHERE TO START   —   ');
+  </script>
+</body>
+</html>
