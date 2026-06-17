@@ -167,13 +167,13 @@ If episode artwork shows as missing/placeholder in the on-demand section — thi
 
 ---
 
-## Vintage Receiver Standalone Player — `public/wjrn-player/`
+## Vintage Receiver Standalone Player — `public/player/`
 
-A self-contained single-file HTML player at `radio.jacewonmusic.com/wjrn-player/`. It is **not** part of the React SPA — it is a standalone HTML file with all CSS and JS inline. Deploy by running `bash deploy.sh` as normal (the `public/` directory is copied into `dist/` by Vite).
+A self-contained single-file HTML player at `radio.jacewonmusic.com/player/`. It is **not** part of the React SPA — it is a standalone HTML file with all CSS and JS inline. Deploy by running `bash deploy.sh` as normal (the `public/` directory is copied into `dist/` by Vite).
 
 ### Files
-- `public/wjrn-player/index.html` — the entire player (HTML + CSS + JS inline)
-- `public/wjrn-player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). When Jace updates this PNG in `src/assets/images/`, you must also copy it here: `cp src/assets/images/wjrn-receiver-front-ko.png public/wjrn-player/`
+- `public/player/index.html` — the entire player (HTML + CSS + JS inline)
+- `public/player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). When Jace updates this PNG in `src/assets/images/`, you must also copy it here: `cp src/assets/images/wjrn-receiver-front-ko.png public/player/`
 
 ### Design
 - Fixed canvas: **1280×443 pixels**. All interactive elements are positioned absolutely at precise pixel coordinates matching knockout holes in the faceplate PNG.
@@ -234,7 +234,7 @@ const STATIONS = [
 3. `aspect-ratio` on wrapper + `position: absolute` on player + `overflow: hidden` on wrapper → same clipping issue
 4. Removing `overflow: hidden` from wrapper, keeping only on `<html>` → still cuts off
 
-**Current state of the code** (in `public/wjrn-player/index.html`):
+**Current state of the code** (in `public/player/index.html`):
 ```css
 html { overflow: hidden; }
 body { margin: 0; padding: 0; background: #000; }

@@ -645,8 +645,13 @@
     }
 
     function togglePlayPause() {
-      if (!audioCtx || !audioEl) return;
-      if (audioCtx.state === 'suspended') { audioCtx.resume(); return; }
+      if (!audioCtx) {
+        initAudio();
+        return;
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       if (audioEl.paused) {
         audioEl.play().catch(function(){});
         setPausedUI(false);

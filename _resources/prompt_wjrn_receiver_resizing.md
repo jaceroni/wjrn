@@ -1,26 +1,70 @@
-# TASK: Fix Vintage Receiver Popout Player Resizing and JavaScript Crash
+# TASK: Fix Vintage Receiver Resizing, First-Click Play, and Rename URL to /player/
 
-We need to fix two issues in the standalone WJRN Vintage Receiver popout player (`public/wjrn-player/index.html`):
-1. **JavaScript Crash**: There is a typo where `document.getElementById('ticker-wrap')` is used instead of the correct container variable or ID. This throws a `TypeError` and stops the script from executing, which completely prevents the resizing function from running.
-2. **Responsive Resizing**: The player does not scale with window resizing, and gets cut off on smaller browser windows or mobile viewports. We need to update the layout to use a flex container that fills the viewport and scales the player proportionally in both dimensions (width and height) while maintaining its 1280:443 aspect ratio.
+We need to perform three updates for the standalone Vintage Receiver popout player:
+1. **URL Rename to `/player/`**: Rename the player directory in `public/` to `player/` so it is served at `https://radio.jacewonmusic.com/player/`. Update the Nginx routing configurations and documentation.
+2. **JavaScript Crash**: Fix a typo in the standalone player's HTML script where `document.getElementById('ticker-wrap')` is used instead of the correct variable `tickerWrap`, which crashes the script and blocks resizing.
+3. **First Click Play Bug**: Ensure that clicking the album artwork or metadata ticker on first load initializes the audio context and starts playback.
+4. **Responsive Resizing**: Make the player scale dynamically inside a centered flex container to fit the viewport in both dimensions while maintaining its 1280:443 aspect ratio.
 
 ## Files in Scope
-- `public/wjrn-player/index.html` [MODIFY]
+- `public/wjrn-player/` -> `public/player/` [RENAME]
+- `public/player/index.html` [MODIFY]
+- `nginx-wjrn.conf` [MODIFY]
+- `CLAUDE.md` [MODIFY]
 
 ---
 
 ## Technical Specifications
 
-### 1. Fix the JavaScript Null Pointer Crash
+### 1. Rename Directory
+* Rename the directory `public/wjrn-player/` to `public/player/`.
+
+### 2. Update Nginx Routing (`nginx-wjrn.conf`)
+* Locate the vintage receiver location block (around lines 79-85).
+* Replace `/wjrn-player/` references with `/player/` so Nginx serves the renamed folder for `https://radio.jacewonmusic.com/player/`:
+  ```nginx
+  # Vintage receiver standalone player
+  location = /player {
+      return 301 /player/;
+  }
+  location /player/ {
+      root /var/www/wjrn-landing;
+      try_files $uri $uri/index.html =404;
+  }
+  ```
+
+### 3. Update Documentation (`CLAUDE.md`)
+* In the section "Vintage Receiver Standalone Player — `public/wjrn-player/`" (around line 170), rename all occurrences of `wjrn-player` to `player`.
+* Update serving URL descriptions to `radio.jacewonmusic.com/player/`.
+
+### 4. Fix HTML Player Script (`public/player/index.html`)
+
+#### Fix Null Pointer Crash & Click Initialization
 In the event handlers section of `<script>`:
 * Locate the event listener for the ticker click (around line 654):
   `document.getElementById('ticker-wrap').addEventListener('click', ...)`
-* The element with ID `ticker-wrap` does not exist (the wrapper element actually has ID `ticker-container`).
 * Change `document.getElementById('ticker-wrap')` to `tickerWrap` (which is already defined as `const tickerWrap = document.getElementById('ticker-container')` at line 284).
-* It should look like this:
-  `tickerWrap.addEventListener('click', function(e) { e.stopPropagation(); togglePlayPause(); });`
+* Update `togglePlayPause()` function (around line 642) so that if `audioCtx` is null, it calls `initAudio()` and exits:
+  ```javascript
+  function togglePlayPause() {
+    if (!audioCtx) {
+      initAudio();
+      return;
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    if (audioEl.paused) {
+      audioEl.play().catch(function(){});
+      setPausedUI(false);
+    } else {
+      audioEl.pause();
+      setPausedUI(true);
+    }
+  }
+  ```
 
-### 2. Update Layout Styles for Centering and Aspect Ratio Scaling
+#### Update Layout Styles for Viewport Centering
 In the `<style>` block:
 * Update the `html` and `body` rules to lock the viewport size and enable flex centering:
   ```css
@@ -62,7 +106,7 @@ In the `<style>` block:
   }
   ```
 
-### 3. Update the Scaling Logic
+#### Update the Scaling Logic
 In the script's `scalePlayer` function (at the bottom):
 * Calculate the scale factor by comparing the viewport dimensions with the target size (`1280x443`) in both width and height (retaining aspect ratio without overflow/clipping):
   ```javascript
@@ -73,15 +117,19 @@ In the script's `scalePlayer` function (at the bottom):
     document.getElementById('player').style.transform = 'scale(' + scale + ')';
   }
   ```
-* Remove any manual height assignment to `player-scaler` (e.g. `document.getElementById('player-scaler').style.height = ...`) as the flex layout handles sizing automatically.
+* Remove the line that manually sets height on `player-scaler` (`document.getElementById('player-scaler').style.height = ...`), as CSS flexbox handles container dimensions.
 
 ---
 
 ## Verification & Deployment Plan
-1. Run `npm run build` locally to compile the application and copy the updated file to the `dist` folder.
-2. Open `/wjrn-player/index.html` in your browser.
-3. Verify that resizing the browser window scales the entire player smoothly in all dimensions without any clipping or scrollbars.
-4. Verify the player stays perfectly centered in the window.
-5. Verify clicking the artwork/ticker plays and pauses correctly and the console has no JavaScript errors.
-6. Run the deploy script to push changes live:
-   `bash deploy.sh "fix: popout receiver player resizing and ticker click crash"`
+1. Run `git mv public/wjrn-player public/player` (or let Claude Code perform the folder rename).
+2. Run `npm run build` locally to compile the application and copy the updated file to the `dist` folder.
+3. Open `http://localhost:5173/player/index.html` in your browser.
+4. Verify that:
+   * Clicking the album artwork on first load starts playback.
+   * Clicking the metadata screen on first load starts playback.
+   * Resizing the browser window scales the entire player proportionally in both dimensions without clipping.
+   * The developer console contains no JavaScript errors.
+5. Deploy to the server:
+   `bash deploy.sh "refactor: rename receiver player url to /player/, fix resizing, and click play"`
+6. Verify the live receiver is reachable at `https://radio.jacewonmusic.com/player/` and works perfectly.
