@@ -221,6 +221,13 @@ const STATIONS = [
 - Artwork: play icon (▶) or pause icon (⏸) overlay container `#art-overlay`
 - Ticker: displays static centered "PAUSED – [STATION NAME]"
 
+### Ticker Logic & Scrolling
+- **Modes**: `A` = static centered text (pre-play, paused, tuning/volume alerts), `B` = metadata marquee, `C` = station description marquee.
+- **Marquee Mechanism**: Seamless marquee loop measuring `el.scrollWidth` and duplicating text to fill the 569px width.
+- **Vertical Alignment**: Centered vertically via `display: flex; align-items: center;` combined with horizontal offsets.
+- **Reset Prevention**: To prevent text from jumping back to the right side on the 15-second metadata polling interval, `setTickerScroll` checks `currentTickerText` and returns early if the mode and text have not changed.
+
 ### Responsive Scaling
 - Centered automatically in viewport using Flexbox.
 - Scales proportionally on window resize based on viewport width & height using `Math.min(window.innerWidth / 1280, window.innerHeight / 443)` to prevent clipping on all screens.
+
