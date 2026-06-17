@@ -118,6 +118,7 @@ var currentTitle = '', currentArtist = '', currentArtUrl = '';
 var activeArt = 'a';
 var isTuning = false;
 var metaInterval = null;
+var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 var bassActive = false, midActive = false, trebleActive = false;
 var loudnessActive = false, monoActive = false, isMuted = false;
@@ -243,6 +244,19 @@ function drawVU() {
     var sum = 0;
     for (var i = 2; i <= 12; i++) sum += freqData[i];
     var avg = sum / 11 / 255;
+    
+    // iOS Safari bypasses Web Audio API for live streams, meaning avg will be 0.
+    // We simulate a rhythmic needle bounce so the visualizer operates on iOS.
+    if (isIOS && avg === 0) {
+      var now = Date.now() / 1000;
+      var base = 0.18 + Math.sin(now * 12.5) * 0.08 + Math.cos(now * 6.25) * 0.05;
+      avg = base + Math.random() * 0.08;
+      if (Math.random() > 0.94) {
+        avg += 0.2 + Math.random() * 0.15; // occasional drum beat / peak
+      }
+      avg = Math.max(0, Math.min(1, avg));
+    }
+    
     vuTarget = Math.PI / 4 + avg * (Math.PI / 2);
   } else {
     vuTarget = Math.PI / 4 + (Math.random() * 0.04 - 0.02);
