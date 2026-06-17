@@ -158,7 +158,11 @@ function restoreTicker() {
   if (tickerPreTakeover === 'C') {
     setTickerScroll(STATIONS[currentStation].description, 'C');
   } else {
-    setTickerScroll(buildMetaText(), 'B');
+    if (!currentTitle && !currentArtist) {
+      setTickerStatic(STATIONS[currentStation].name.toUpperCase());
+    } else {
+      setTickerScroll(buildMetaText(), 'B');
+    }
   }
 }
 
