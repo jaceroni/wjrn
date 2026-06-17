@@ -277,9 +277,11 @@ function makeFlatCurve() {
 
 function makeTubeCurve() {
   var c = new Float32Array(256);
+  var drive = 4.0;
+  var denom = Math.tanh(drive);
   for (var i = 0; i < 256; i++) {
     var x = (i * 2 / 255) - 1;
-    c[i] = (3 / 2) * x * (1 - (x * x) / 3);
+    c[i] = Math.tanh(drive * x) / denom;
   }
   return c;
 }
@@ -316,18 +318,18 @@ function initAudio() {
 
   bassFilter = audioCtx.createBiquadFilter();
   bassFilter.type = 'lowshelf';
-  bassFilter.frequency.value = 250;
+  bassFilter.frequency.value = 350;
   bassFilter.gain.value = 0;
 
   midFilter = audioCtx.createBiquadFilter();
   midFilter.type = 'peaking';
   midFilter.frequency.value = 1000;
-  midFilter.Q.value = 1;
+  midFilter.Q.value = 0.7;
   midFilter.gain.value = 0;
 
   trebleFilter = audioCtx.createBiquadFilter();
   trebleFilter.type = 'highshelf';
-  trebleFilter.frequency.value = 4000;
+  trebleFilter.frequency.value = 2500;
   trebleFilter.gain.value = 0;
 
   shaper = audioCtx.createWaveShaper();
@@ -453,19 +455,19 @@ document.getElementById('hz-volume').addEventListener('click', function() {
 
 document.getElementById('hz-bass').addEventListener('click', function() {
   bassActive = !bassActive;
-  if (bassFilter) bassFilter.gain.value = bassActive ? -8 : 0;
+  if (bassFilter) bassFilter.gain.value = bassActive ? -16 : 0;
   tickerTakeover(bassActive ? 'BASS – CUT' : 'BASS – RESTORED');
 });
 
 document.getElementById('hz-mid').addEventListener('click', function() {
   midActive = !midActive;
-  if (midFilter) midFilter.gain.value = midActive ? -6 : 0;
+  if (midFilter) midFilter.gain.value = midActive ? -12 : 0;
   tickerTakeover(midActive ? 'MID – CUT' : 'MID – RESTORED');
 });
 
 document.getElementById('hz-treble').addEventListener('click', function() {
   trebleActive = !trebleActive;
-  if (trebleFilter) trebleFilter.gain.value = trebleActive ? -7 : 0;
+  if (trebleFilter) trebleFilter.gain.value = trebleActive ? -16 : 0;
   tickerTakeover(trebleActive ? 'TREBLE – CUT' : 'TREBLE – RESTORED');
 });
 
