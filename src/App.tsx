@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import ReactDOM from "react-dom";
 import AppRetro from "./AppRetro";
 import StationLanding from "./components/StationLanding";
 import { PlayerProvider } from "./context/PlayerContext";
 import MiniPlayer from "./components/MiniPlayer";
+import PopoutWidget from "./components/PopoutWidget";
 
 const SLUG_TO_STATION: { [key: string]: string } = {
   "/the-rock-garden":        "rock_garden",
@@ -23,9 +25,16 @@ function resolveView(): ViewState {
   return { type: "retro" };
 }
 
-export default function App() {
-  const [view, setView] = useState<ViewState>(resolveView);
+// Fallback popout: full window opened with ?popout=true
+const isFallbackPopout =
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).get("popout") === "true";
 
+export default function App() {
+  const [view, setView]         = useState<ViewState>(resolveView);
+  const [pipWindow, setPipWindow] = useState<Window | null>(null);
+
+  // SPA navigation
   useEffect(() => {
     const sync = () => setView(resolveView());
     window.addEventListener("popstate", sync);
@@ -36,11 +45,88 @@ export default function App() {
     };
   }, []);
 
+  // Open Document Picture-in-Picture (or fallback popout)
+  const openPip = useCallback(async () => {
+    if ("documentPictureInPicture" in window) {
+      try {
+        const pip = await (window as any).documentPictureInPicture.requestWindow({
+          width: 320,
+          height: 420,
+        });
+
+        // Copy parent document styles into the PiP window
+        [...document.styleSheets].forEach((sheet) => {
+          try {
+            const css = [...sheet.cssRules].map((r) => r.cssText).join("");
+            const style = document.createElement("style");
+            style.textContent = css;
+            pip.document.head.appendChild(style);
+          } catch {
+            if (sheet.href) {
+              const link = document.createElement("link");
+              link.rel = "stylesheet";
+              link.href = sheet.href;
+              pip.document.head.appendChild(link);
+            }
+          }
+        });
+
+        // Copy SVG filter bank so glitch effects work
+        const svgBank = document.querySelector('svg[aria-hidden="true"]');
+        if (svgBank) pip.document.body.appendChild(svgBank.cloneNode(true));
+
+        // Dark background for the PiP window
+        pip.document.body.style.cssText = "margin:0;padding:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;min-height:100vh;";
+
+        setPipWindow(pip);
+        pip.addEventListener("pagehide", () => setPipWindow(null));
+      } catch (err) {
+        console.error("Document PiP failed:", err);
+      }
+    } else {
+      // Fallback: standard popup window
+      window.open(
+        "/?popout=true",
+        "WJRNPopout",
+        "width=320,height=420,menubar=no,status=no,toolbar=no,resizable=no"
+      );
+    }
+  }, []);
+
+  // Listen for the open-pip trigger from MiniPlayer
+  useEffect(() => {
+    const handler = () => openPip();
+    window.addEventListener("wjrn:open-pip", handler);
+    return () => window.removeEventListener("wjrn:open-pip", handler);
+  }, [openPip]);
+
+  // Fallback popout mode — render only the widget
+  if (isFallbackPopout) {
+    return (
+      <PlayerProvider>
+        <div className="bg-neutral-950 min-h-screen flex items-center justify-center">
+          <PopoutWidget onClose={() => window.close()} />
+        </div>
+      </PlayerProvider>
+    );
+  }
+
   return (
     <PlayerProvider>
-      {view.type === "station" && <StationLanding stationId={(view as { type: "station"; stationId: string }).stationId} />}
+      {view.type === "station" && (
+        <StationLanding stationId={(view as { type: "station"; stationId: string }).stationId} />
+      )}
       {view.type === "retro" && <AppRetro />}
-      <MiniPlayer />
+
+      {/* Mini player — hidden while PiP widget is active */}
+      {!pipWindow && <MiniPlayer />}
+
+      {/* Document PiP portal */}
+      {pipWindow &&
+        ReactDOM.createPortal(
+          <PopoutWidget isPip onClose={() => { pipWindow.close(); setPipWindow(null); }} />,
+          pipWindow.document.body
+        )}
     </PlayerProvider>
   );
 }

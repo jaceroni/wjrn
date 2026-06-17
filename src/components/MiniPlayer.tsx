@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Play, Pause, Volume2, VolumeX, X, Radio, ArrowRight, RotateCcw } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Radio, ArrowRight, RotateCcw, ExternalLink } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { navigate } from "../navigate";
 import logoWjrn from "../assets/images/miniplayer-logo-wjrn.svg";
@@ -220,6 +220,16 @@ export default function MiniPlayer() {
               +15
             </button>
           )}
+
+          {/* Pop Out */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("wjrn:open-pip"))}
+            className="w-8 h-8 flex items-center justify-center text-white/25 hover:text-white/60 transition-colors duration-150 rounded-full hover:bg-white/5"
+            aria-label="Pop out player"
+            title="Pop out player"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </button>
 
           {/* Stop / Dismiss */}
           <button
