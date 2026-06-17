@@ -652,15 +652,14 @@
       }
     });
 
-    // ─── Pre-fetch WJRN now-playing art on load ────────────────────────────────
+    // ─── Placeholder art on load, replaced by live art if available ──────────────
+    artA.src = 'https://radio.jacewonmusic.com/assets/images/jacewon-thumbnail.jpg';
+    artA.style.opacity = '1';
     fetch('https://radio.jacewonmusic.com/api/nowplaying/wjrn')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var art = data && data.now_playing && data.now_playing.song && data.now_playing.song.art;
-        if (art) {
-          artA.src = art;
-          artA.style.opacity = '1';
-        }
+        if (art) { artA.src = art; }
       })
       .catch(function() {});
 
