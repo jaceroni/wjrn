@@ -1,454 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WJRN Receiver</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; background: #000;
-      user-select: none; -webkit-user-select: none;
-      display: flex; justify-content: center; align-items: center;
-    }
-
-    #player-scaler {
-      width: 100%; height: 100%;
-      display: flex; justify-content: center; align-items: center;
-      overflow: hidden; position: relative;
-    }
-
-    #player {
-      position: relative; width: 1280px; height: 443px;
-      cursor: default; transform-origin: center center; flex-shrink: 0;
-    }
-
-    #faceplate {
-      position: absolute; left: 0; top: 0;
-      width: 1280px; height: 443px;
-      z-index: 2; pointer-events: none; display: block;
-    }
-
-    #art-container {
-      position: absolute; left: 111px; top: 101px;
-      width: 274px; height: 274px;
-      z-index: 1; background: #1a1a1a; overflow: hidden;
-    }
-
-    #art-pause-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.52);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2; opacity: 0;
-      transition: opacity 0.25s ease;
-      pointer-events: none;
-    }
-    #art-pause-overlay.visible { opacity: 1; }
-    #art-pause-icon {
-      color: rgba(255,255,255,0.88);
-      font-size: 52px; line-height: 1;
-      text-shadow: 0 0 24px rgba(255,255,255,0.4);
-    }
-
-    #art-a, #art-b {
-      position: absolute; left: 0; top: 0;
-      width: 274px; height: 274px;
-      object-fit: cover;
-      transition: opacity 0.8s ease;
-    }
-    #art-a { opacity: 1; }
-    #art-b { opacity: 0; }
-
-    #vu-canvas {
-      position: absolute; left: 423px; top: 104px;
-      width: 151px; height: 79px; z-index: 3;
-    }
-
-    #ticker-container {
-      position: absolute; left: 410px; top: 214px;
-      width: 569px; height: 48px;
-      z-index: 3; overflow: hidden;
-    }
-
-    #ticker-text {
-      position: absolute; white-space: nowrap;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 14px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.15em;
-      color: #23bf91;
-      text-shadow: 0 0 8px rgba(35, 191, 145, 0.7), 0 0 20px rgba(35, 191, 145, 0.3);
-      line-height: 48px; top: 0; left: 0;
-    }
-
-    #tuner-tick {
-      position: absolute; top: 133px;
-      width: 6px; height: 38px;
-      background: #ff3333; z-index: 3;
-      transition: left 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-      box-shadow: 0 0 6px rgba(255,51,51,0.8);
-    }
-
-    /* All hit zones */
-    .hit {
-      position: absolute; z-index: 5;
-      cursor: pointer; background: transparent;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WJRN Receiver</title>
+<style>
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; background: #000;
+  user-select: none; -webkit-user-select: none;
+  display: flex; justify-content: center; align-items: center;
+}
+#player-scaler {
+  width: 100%; height: 100%;
+  display: flex; justify-content: center; align-items: center;
+  overflow: hidden; position: relative;
+}
+#player {
+  position: relative; width: 1280px; height: 443px;
+  cursor: default; transform-origin: center center; flex-shrink: 0;
+}
+.hit { position: absolute; z-index: 4; cursor: pointer; background: transparent; }
+#art-container { position: absolute; left: 111px; top: 101px; width: 274px; height: 274px; z-index: 1; background: #1a1a1a; overflow: hidden; }
+#art-a, #art-b { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.8s ease; }
+#art-a { opacity: 1; }
+#art-b { opacity: 0; }
+#art-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3; opacity: 0; transition: opacity 0.3s ease; }
+#art-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #f1e3c8; font-size: 26px; display: flex; align-items: center; justify-content: center; }
+#vu-canvas { position: absolute; left: 423px; top: 104px; width: 151px; height: 79px; z-index: 3; }
+#ticker-wrap { position: absolute; left: 410px; top: 214px; width: 569px; height: 48px; z-index: 3; overflow: hidden; display: flex; align-items: center; }
+#ticker-text { white-space: nowrap; font-family: monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: #23bf91; text-shadow: 0 0 8px rgba(35,191,145,0.6); line-height: 1; }
+#tuner-tick { position: absolute; top: 133px; width: 6px; height: 38px; background: #ff3333; z-index: 3; transition: left 0.6s cubic-bezier(0.25,0.1,0.25,1); }
+#faceplate { position: absolute; left: 0; top: 0; width: 1280px; height: 443px; z-index: 2; pointer-events: none; display: block; }
+</style>
 </head>
 <body oncontextmenu="return false;">
 <div id="player-scaler">
-<div id="player">
-
-  <!-- Album art — z-index:1, behind faceplate -->
-  <div id="art-container">
-    <div id="art-pause-overlay"><div id="art-pause-icon">&#9654;</div></div>
-    <img id="art-a" src="" alt="">
-    <img id="art-b" src="" alt="">
+  <div id="player">
+    <img id="faceplate" src="./wjrn-receiver-front-ko.png" alt="">
+    <div id="art-container">
+      <img id="art-a" alt="">
+      <img id="art-b" alt="">
+      <div id="art-overlay"><span id="art-icon">&#9654;</span></div>
+    </div>
+    <canvas id="vu-canvas" width="151" height="79"></canvas>
+    <div id="ticker-wrap"><span id="ticker-text"></span></div>
+    <div id="tuner-tick"></div>
+    <div class="hit" id="hz-tuner-screen"  style="left:411px;top:90px;width:766px;height:104px"></div>
+    <div class="hit" id="hz-tuning-knob"   style="left:993px;top:212px;width:188px;height:67px"></div>
+    <div class="hit" id="hz-art"           style="left:111px;top:101px;width:274px;height:274px"></div>
+    <div class="hit" id="hz-ticker"        style="left:410px;top:214px;width:569px;height:48px"></div>
+    <div class="hit" id="hz-logo"          style="left:553px;top:46px;width:173px;height:30px"></div>
+    <div class="hit" id="hz-volume"        style="left:1015px;top:285px;width:74px;height:79px"></div>
+    <div class="hit" id="hz-bass"          style="left:468px;top:284px;width:69px;height:75px"></div>
+    <div class="hit" id="hz-mid"           style="left:606px;top:285px;width:69px;height:72px"></div>
+    <div class="hit" id="hz-treble"        style="left:740px;top:285px;width:72px;height:72px"></div>
+    <div class="hit" id="hz-balance"       style="left:878px;top:285px;width:75px;height:75px"></div>
+    <div class="hit" id="hz-loudness"      style="left:416px;top:291px;width:28px;height:28px"></div>
+    <div class="hit" id="hz-mono"          style="left:416px;top:343px;width:28px;height:27px"></div>
+    <div class="hit" id="hz-power"         style="left:1130px;top:293px;width:30px;height:28px"></div>
   </div>
-
-  <!-- VU meter canvas — z-index:3 -->
-  <canvas id="vu-canvas" width="151" height="79"></canvas>
-
-  <!-- Metadata ticker — z-index:3 -->
-  <div id="ticker-container">
-    <span id="ticker-text"></span>
-  </div>
-
-  <!-- Tuner tick — z-index:3 -->
-  <div id="tuner-tick"></div>
-
-  <!-- Faceplate PNG — z-index:2, pointer-events:none -->
-  <img id="faceplate" src="./wjrn-receiver-front-ko.png" alt="">
-
-  <!-- 12 Hit Zones — z-index:5 -->
-  <div class="hit" id="tuner-hit"   style="left:411px;top:90px;width:766px;height:104px;"></div>
-  <div class="hit" id="art-hit"     style="left:111px;top:101px;width:274px;height:274px;"></div>
-  <div class="hit" id="ticker-hit"  style="left:410px;top:214px;width:569px;height:48px;"></div>
-  <div class="hit" id="logo-hit"    style="left:553px;top:46px;width:173px;height:30px;"></div>
-  <div class="hit" id="vol-hit"     style="left:1015px;top:285px;width:74px;height:79px;"></div>
-  <div class="hit" id="bass-hit"    style="left:468px;top:284px;width:69px;height:75px;"></div>
-  <div class="hit" id="mid-hit"     style="left:606px;top:285px;width:69px;height:72px;"></div>
-  <div class="hit" id="treble-hit"  style="left:740px;top:285px;width:72px;height:72px;"></div>
-  <div class="hit" id="balance-hit" style="left:878px;top:285px;width:75px;height:75px;"></div>
-  <div class="hit" id="loudness-hit"style="left:416px;top:291px;width:28px;height:28px;"></div>
-  <div class="hit" id="mono-hit"    style="left:416px;top:343px;width:28px;height:27px;"></div>
-  <div class="hit" id="power-hit"   style="left:1130px;top:293px;width:30px;height:28px;"></div>
-
 </div>
-</div>
-
 <script>
 (function() {
 'use strict';
 
-// ─── Station definitions ────────────────────────────────────────────────────
+// ── STATIONS ──────────────────────────────────────────────────────────────────
 var STATIONS = [
-  { name: 'WJRN', frequency: 89.1,
-    stream: 'https://radio.jacewonmusic.com/listen/wjrn/radio.mp3',
-    api:    'https://radio.jacewonmusic.com/api/nowplaying/wjrn',
-    description: 'THIS IS WJRN – HOSTED BY JACEWON – BROADCASTING LIVE FROM CALIFORNIA – HOME OF THE ROCK GARDEN, BRIDGE CITY HANG SUITE, & GOLDEN BOOMBOX SESSIONS – ' },
-  { name: 'The Rock Garden', frequency: 95.5,
-    stream: 'https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3',
-    api:    'https://radio.jacewonmusic.com/api/nowplaying/the_rock_garden',
-    description: 'THIS IS THE ROCK GARDEN – ALL VINYL CLASSIC ROCK, FUNK, BLUES & JAZZ – LIVE EVERY TUESDAY 7PM PACIFIC ON TWITCH.TV – ' },
-  { name: 'Bridge City Hang Suite', frequency: 102.7,
-    stream: 'https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3',
-    api:    'https://radio.jacewonmusic.com/api/nowplaying/bridge_city_hang_suite',
-    description: 'THIS IS THE BRIDGE CITY HANG SUITE – GROWNFOLK R&B – LIVE EVERY WEDS 7PM PACIFIC ON TWITCH.TV – ' },
-  { name: 'The Golden Boombox Sessions', frequency: 105.9,
-    stream: 'https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3',
-    api:    'https://radio.jacewonmusic.com/api/nowplaying/golden_boombox_sessions',
-    description: 'THIS IS THE GOLDEN BOOMBOX SESSIONS – GOLDEN ERA & FUTURE CLASSIC HIP-HOP – LIVE EVERY FRIDAY 7PM PACIFIC ON TWITCH.TV – ' }
+  {
+    name: "WJRN",
+    frequency: 89.1,
+    stream: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",
+    api: "https://radio.jacewonmusic.com/api/nowplaying/wjrn",
+    description: "THIS IS WJRN – HOSTED BY JACEWON – BROADCASTING LIVE FROM CALIFORNIA – HOME OF THE ROCK GARDEN, BRIDGE CITY HANG SUITE, & GOLDEN BOOMBOX SESSIONS  "
+  },
+  {
+    name: "The Rock Garden",
+    frequency: 95.5,
+    stream: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
+    api: "https://radio.jacewonmusic.com/api/nowplaying/the_rock_garden",
+    description: "THIS IS THE ROCK GARDEN – ALL VINYL CLASSIC ROCK, FUNK, BLUES & JAZZ – LIVE EVERY TUESDAY 7PM PACIFIC ON TWITCH.TV  "
+  },
+  {
+    name: "Bridge City Hang Suite",
+    frequency: 102.7,
+    stream: "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3",
+    api: "https://radio.jacewonmusic.com/api/nowplaying/bridge_city_hang_suite",
+    description: "THIS IS THE BRIDGE CITY HANG SUITE – GROWNFOLK R&B – LIVE EVERY WEDS 7PM PACIFIC ON TWITCH.TV  "
+  },
+  {
+    name: "The Golden Boombox Sessions",
+    frequency: 105.9,
+    stream: "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3",
+    api: "https://radio.jacewonmusic.com/api/nowplaying/golden_boombox_sessions",
+    description: "THIS IS THE GOLDEN BOOMBOX SESSIONS – GOLDEN ERA & FUTURE CLASSIC HIP-HOP – LIVE EVERY FRIDAY 7PM PACIFIC ON TWITCH.TV  "
+  }
 ];
 
-// ─── DOM refs ───────────────────────────────────────────────────────────────
-var playerEl      = document.getElementById('player');
-var vuCanvas      = document.getElementById('vu-canvas');
-var vuCtx         = vuCanvas.getContext('2d');
-var tickerEl      = document.getElementById('ticker-text');
-var tickerWrap    = document.getElementById('ticker-container');
-var tunerTick     = document.getElementById('tuner-tick');
-var artA          = document.getElementById('art-a');
-var artB          = document.getElementById('art-b');
-var artContainer  = document.getElementById('art-container');
-var artOverlay    = document.getElementById('art-pause-overlay');
-
-// ─── State ──────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var playerState = 1; // 1=preplay, 2=playing, 3=paused
 var currentStation = 0;
-var isTuning       = false;
-var volume         = 0.8;
-var tickerMode     = 1;   // 1 = track info, 2 = description
-var tickerTakeoverTimer = null;
+var currentTitle = '', currentArtist = '', currentArtUrl = '';
+var activeArt = 'a';
+var isTuning = false;
+var metaInterval = null;
 
-// EQ / effects state
-var bassOn    = false;
-var midOn     = false;
-var trebleOn  = false;
-var loudOn    = false;
-var monoOn    = false;
-var balance   = 0;   // 0=center, -1=left, 1=right
-var BALANCE_STATES = [0, -1, 1];
-var balanceIdx = 0;
+var bassActive = false, midActive = false, trebleActive = false;
+var loudnessActive = false, monoActive = false, isMuted = false;
+var savedGain = 0.8, balanceState = 0; // 0=center, 1=left, 2=right
 
-// Audio nodes
-var audioCtx   = null;
-var audioEl    = null;
-var analyser   = null;
-var bassFilter = null;
-var midFilter  = null;
-var trebleFilter = null;
-var shaper     = null;
-var panner     = null;
-var splitter   = null;
-var merger     = null;
-var monoSource = null;   // node before merger (for mono routing)
-var gainNode   = null;
-var noiseGain  = null;
+// ── AUDIO NODES ───────────────────────────────────────────────────────────────
+var audioCtx = null, audioEl = null, analyser = null;
+var bassFilter = null, midFilter = null, trebleFilter = null;
+var shaper = null, panner = null, gainNode = null, noiseGain = null;
 var mediaSource = null;
 
-// Metadata
-var currentTrackTitle  = '';
-var currentTrackArtist = '';
-var currentArtUrl      = '';
-var activeArt          = 'a';
-var metaPollInterval   = null;
+// ── TICKER ────────────────────────────────────────────────────────────────────
+var tickerMode = 'A'; // 'A'=static centered, 'B'=metadata scroll, 'C'=description scroll
+var tickerPreTakeover = 'A';
+var tickerTakeoverTimer = null;
+var tickerX = 569;
+var tickerContent = '';
+var lastTickerTime = null;
 
-// VU meter
-var vuAngle   = Math.PI / 4;
-var vuTarget  = Math.PI / 4;
-var vuDrift   = 0;
-var vuRafId   = null;
-
-// Ticker animation
-var tickerRafId      = null;
-var tickerX          = 0;
-var tickerLastTs     = null;
-var tickerSpeed      = 50;   // px/s
-var tickerContent    = '';
-var tickerWidth      = 0;
-var TICKER_CONTAINER_W = 569;
-
-// ─── Responsive scaling ─────────────────────────────────────────────────────
-function scalePlayer() {
-  var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 443);
-  playerEl.style.transform = 'scale(' + scale + ')';
-}
-scalePlayer();
-window.addEventListener('resize', scalePlayer);
-
-// ─── Tuner tick position ────────────────────────────────────────────────────
-// 88MHz → left:659, 108MHz → left:1075 → 20.8 px/MHz
-function freqToLeft(freq) {
-  return 659 + (freq - 88) * 20.8;
-}
-function updateTunerTick(freq) {
-  tunerTick.style.left = freqToLeft(freq) + 'px';
-}
-updateTunerTick(STATIONS[0].frequency);
-
-// ─── VU Meter ───────────────────────────────────────────────────────────────
-var VU_CX  = 75.5;
-var VU_CY  = 79;
-var VU_LEN = 60;
-
-function drawVU(angle) {
-  vuCtx.clearRect(0, 0, 151, 79);
-  var a = Math.PI + angle;
-  var tipX = VU_CX + Math.cos(a) * VU_LEN;
-  var tipY = VU_CY + Math.sin(a) * VU_LEN;
-
-  vuCtx.beginPath();
-  vuCtx.moveTo(VU_CX, VU_CY);
-  vuCtx.lineTo(tipX, tipY);
-  vuCtx.strokeStyle = '#ff3333';
-  vuCtx.lineWidth = 1.5;
-  vuCtx.lineCap = 'round';
-  vuCtx.shadowColor = 'rgba(255,51,51,0.6)';
-  vuCtx.shadowBlur = 4;
-  vuCtx.stroke();
-  vuCtx.shadowBlur = 0;
-
-  vuCtx.beginPath();
-  vuCtx.arc(VU_CX, VU_CY, 3.5, 0, Math.PI * 2);
-  vuCtx.fillStyle = '#ff3333';
-  vuCtx.fill();
+function setTickerStatic(text) {
+  var wrap = document.getElementById('ticker-wrap');
+  var el = document.getElementById('ticker-text');
+  wrap.style.justifyContent = 'center';
+  el.style.transform = 'translateX(0)';
+  el.textContent = text;
+  tickerMode = 'A';
 }
 
-function vuLoop(ts) {
-  if (analyser && audioEl && !audioEl.paused) {
-    var data = new Uint8Array(analyser.frequencyBinCount);
-    analyser.getByteFrequencyData(data);
-    // Sample bins 2–12 (bass/kick range) for best VU feel
-    var sum = 0;
-    var count = 0;
-    for (var i = 2; i <= 12 && i < data.length; i++) {
-      sum += data[i];
-      count++;
-    }
-    var avg = count > 0 ? sum / count / 255 : 0;
-    // Map to PI/4 → 3*PI/4
-    vuTarget = Math.PI / 4 + avg * (Math.PI / 2);
-    // Fast attack, slow decay
-    if (avg > (vuAngle - Math.PI / 4) / (Math.PI / 2)) {
-      vuAngle += (vuTarget - vuAngle) * 0.25;
-    } else {
-      vuAngle += (vuTarget - vuAngle) * 0.04;
-    }
-  } else {
-    // Drift toward rest (PI/4) with tiny jitter
-    if (!ts) ts = performance.now();
-    vuDrift = (vuDrift || 0) + (Math.random() * 0.04 - 0.02);
-    vuDrift = Math.max(-0.06, Math.min(0.06, vuDrift));
-    var restTarget = Math.PI / 4 + vuDrift;
-    vuAngle += (restTarget - vuAngle) * 0.06;
-    vuAngle = Math.max(Math.PI / 4 - 0.05, Math.min(Math.PI / 4 + 0.06, vuAngle));
-  }
-  drawVU(vuAngle);
-  vuRafId = requestAnimationFrame(vuLoop);
-}
-
-// Start VU immediately for idle state
-vuRafId = requestAnimationFrame(vuLoop);
-
-// ─── Ticker marquee ─────────────────────────────────────────────────────────
-function measureTicker() {
-  tickerWidth = tickerEl.scrollWidth;
-}
-
-function setTickerText(text) {
-  tickerEl.textContent = text;
+function setTickerScroll(text, mode) {
+  var wrap = document.getElementById('ticker-wrap');
+  wrap.style.justifyContent = 'flex-start';
   tickerContent = text;
-  // Position just off right edge to scroll in
-  tickerX = TICKER_CONTAINER_W;
-  tickerEl.style.transform = 'translateX(' + tickerX + 'px)';
-  tickerLastTs = null;
-  // Measure after paint
-  requestAnimationFrame(function() {
-    measureTicker();
-  });
+  tickerMode = mode;
+  tickerX = 569;
+  lastTickerTime = null;
+  document.getElementById('ticker-text').textContent = tickerContent;
 }
 
-function tickerLoop(ts) {
-  if (tickerLastTs === null) { tickerLastTs = ts; }
-  var dt = (ts - tickerLastTs) / 1000;
-  tickerLastTs = ts;
-
-  if (dt > 0.1) dt = 0.1; // clamp large gaps (tab was hidden)
-
-  tickerX -= tickerSpeed * dt;
-
-  // When fully scrolled off left, jump back to right edge
-  if (tickerWidth > 0 && tickerX < -tickerWidth) {
-    tickerX = TICKER_CONTAINER_W;
-  }
-
-  tickerEl.style.transform = 'translateX(' + tickerX + 'px)';
-  tickerRafId = requestAnimationFrame(tickerLoop);
-}
-
-function startTicker(text) {
-  if (tickerRafId) {
-    cancelAnimationFrame(tickerRafId);
-    tickerRafId = null;
-  }
-  setTickerText(text);
-  tickerRafId = requestAnimationFrame(tickerLoop);
-}
-
-// Ticker takeover: show message for 2500ms, then restore
-function tickerTakeover(msg, onDone) {
-  if (tickerTakeoverTimer) {
-    clearTimeout(tickerTakeoverTimer);
-    tickerTakeoverTimer = null;
-  }
-  startTicker(msg);
+function tickerTakeover(text) {
+  if (tickerTakeoverTimer) clearTimeout(tickerTakeoverTimer);
+  tickerPreTakeover = tickerMode;
+  setTickerStatic(text);
   tickerTakeoverTimer = setTimeout(function() {
     tickerTakeoverTimer = null;
-    restoreTickerMode();
-    if (onDone) onDone();
+    restoreTicker();
   }, 2500);
 }
 
-function getMode1Content() {
-  var st = STATIONS[currentStation];
-  if (currentTrackTitle) {
-    return currentTrackTitle + ' – ' + currentTrackArtist + ' – ' + st.name.toUpperCase() + ' – ';
-  }
-  return st.name.toUpperCase() + ' – ';
-}
-
-function getMode2Content() {
-  return STATIONS[currentStation].description;
-}
-
-function restoreTickerMode() {
-  if (tickerMode === 1) {
-    startTicker(getMode1Content());
+function restoreTicker() {
+  if (playerState === 1) { setTickerStatic('CLICK ARTWORK OR TUNER TO BEGIN PLAYBACK'); return; }
+  if (playerState === 3) { setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase() + ' –'); return; }
+  if (tickerPreTakeover === 'C') {
+    setTickerScroll(STATIONS[currentStation].description, 'C');
   } else {
-    startTicker(getMode2Content());
+    setTickerScroll(buildMetaText(), 'B');
   }
 }
 
-// Initial ticker
-startTicker('WJRN – CLICK TO LISTEN – ');
+function buildMetaText() {
+  return (currentTitle || '–') + ' – ' + (currentArtist || '–') + ' – ' + STATIONS[currentStation].name.toUpperCase() + ' –  ';
+}
 
-// ─── Album art crossfade ────────────────────────────────────────────────────
+// RAF ticker animation
+function animateTicker(ts) {
+  requestAnimationFrame(animateTicker);
+  if (tickerMode !== 'B' && tickerMode !== 'C') return;
+  if (!lastTickerTime) { lastTickerTime = ts; return; }
+  var dt = (ts - lastTickerTime) / 1000;
+  lastTickerTime = ts;
+  if (dt > 0.1) dt = 0.1; // clamp for tab-switch catchup
+  tickerX -= 50 * dt;
+  var el = document.getElementById('ticker-text');
+  var textW = el.scrollWidth;
+  if (tickerX < -textW) tickerX = 569;
+  el.style.transform = 'translateX(' + tickerX + 'px)';
+}
+
+// ── VU NEEDLE ─────────────────────────────────────────────────────────────────
+var vuAngle = Math.PI / 4, vuTarget = Math.PI / 4;
+var freqData = null;
+
+function startVU() {
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function drawVU() {
+  requestAnimationFrame(drawVU);
+  if (analyser && playerState === 2 && freqData) {
+    analyser.getByteFrequencyData(freqData);
+    var sum = 0;
+    for (var i = 2; i <= 12; i++) sum += freqData[i];
+    var avg = sum / 11 / 255;
+    vuTarget = Math.PI / 4 + avg * (Math.PI / 2);
+  } else {
+    vuTarget = Math.PI / 4 + (Math.random() * 0.04 - 0.02);
+  }
+  var attack = (vuTarget > vuAngle) ? 0.25 : 0.04;
+  vuAngle += (vuTarget - vuAngle) * attack;
+  var canvas = document.getElementById('vu-canvas');
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 151, 79);
+  var cx = 75.5, cy = 79, len = 60;
+  var canvasAngle = Math.PI + vuAngle;
+  var tx = cx + Math.cos(canvasAngle) * len;
+  var ty = cy + Math.sin(canvasAngle) * len;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.lineTo(tx, ty);
+  ctx.strokeStyle = '#ff3333';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// ── TUNER TICK ────────────────────────────────────────────────────────────────
+function setTunerTick(freq) {
+  var x = 659 + (freq - 88) * 20.8;
+  document.getElementById('tuner-tick').style.left = x + 'px';
+}
+
+// ── ALBUM ART CROSSFADE ───────────────────────────────────────────────────────
 function updateArt(url) {
-  if (!url || url === currentArtUrl) return;
-  currentArtUrl = url;
-
-  var incoming = activeArt === 'a' ? artB : artA;
-  var outgoing  = activeArt === 'a' ? artA : artB;
-
-  incoming.onerror = function() {
-    incoming.src = '';
-    incoming.style.opacity = '0';
-  };
-  incoming.onload = function() {
-    incoming.style.opacity = '1';
-    outgoing.style.opacity = '0';
+  if (!url) return;
+  var a = document.getElementById('art-a');
+  var b = document.getElementById('art-b');
+  var next = activeArt === 'a' ? b : a;
+  var curr = activeArt === 'a' ? a : b;
+  next.onload = function() {
+    next.style.opacity = '1';
+    setTimeout(function() { curr.style.opacity = '0'; }, 50);
     activeArt = activeArt === 'a' ? 'b' : 'a';
   };
-  incoming.src = url;
+  next.onerror = function() { next.style.opacity = '0'; };
+  next.src = url;
 }
 
-// ─── Paused UI ──────────────────────────────────────────────────────────────
-var isPaused = false;
-
-function setPausedUI(paused) {
-  isPaused = paused;
-  if (paused) {
-    artOverlay.classList.add('visible');
-    tickerTakeover('PAUSED – CLICK TO RESUME – ');
-  } else {
-    artOverlay.classList.remove('visible');
-    restoreTickerMode();
-  }
+function showArtOverlay(show) {
+  document.getElementById('art-overlay').style.opacity = show ? '1' : '0';
 }
 
-// ─── Tube warmth curve ──────────────────────────────────────────────────────
+// ── METADATA ──────────────────────────────────────────────────────────────────
+function fetchMeta() {
+  fetch(STATIONS[currentStation].api)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var np = d && d.now_playing && d.now_playing.song;
+      if (np) {
+        currentTitle = np.title || '';
+        currentArtist = np.artist || '';
+        var artUrl = np.art || '';
+        if (artUrl && artUrl !== currentArtUrl) {
+          currentArtUrl = artUrl;
+          updateArt(artUrl);
+        }
+        if (tickerMode === 'B' && !tickerTakeoverTimer) {
+          setTickerScroll(buildMetaText(), 'B');
+        }
+      }
+    })
+    .catch(function() {});
+}
+
+// ── AUDIO CURVE MAKERS ────────────────────────────────────────────────────────
 function makeFlatCurve() {
-  var curve = new Float32Array(256);
-  for (var i = 0; i < 256; i++) {
-    curve[i] = (i * 2 / 255) - 1;
-  }
-  return curve;
+  var c = new Float32Array(256);
+  for (var i = 0; i < 256; i++) { c[i] = (i * 2 / 255) - 1; }
+  return c;
 }
 
 function makeTubeCurve() {
-  var curve = new Float32Array(256);
+  var c = new Float32Array(256);
   for (var i = 0; i < 256; i++) {
     var x = (i * 2 / 255) - 1;
-    curve[i] = (3 / 2) * x * (1 - (x * x) / 3);
+    c[i] = (3 / 2) * x * (1 - (x * x) / 3);
   }
-  return curve;
+  return c;
 }
 
-// ─── Audio chain builder ─────────────────────────────────────────────────────
-function buildAudioChain() {
-  // Create nodes
+// ── WHITE NOISE STATIC ────────────────────────────────────────────────────────
+function makeNoiseBuf() {
+  var buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+  var d = buf.getChannelData(0);
+  for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.8;
+  return buf;
+}
+
+function playStatic(duration) {
+  var src = audioCtx.createBufferSource();
+  src.buffer = makeNoiseBuf();
+  src.loop = true;
+  src.connect(noiseGain);
+  src.start();
+  noiseGain.gain.cancelScheduledValues(audioCtx.currentTime);
+  noiseGain.gain.setValueAtTime(0, audioCtx.currentTime);
+  noiseGain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);
+  noiseGain.gain.setValueAtTime(0.3, audioCtx.currentTime + duration - 0.3);
+  noiseGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+  setTimeout(function() { try { src.stop(); } catch(e) {} }, duration * 1000 + 100);
+}
+
+// ── INIT AUDIO ────────────────────────────────────────────────────────────────
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
 
@@ -460,7 +319,7 @@ function buildAudioChain() {
   midFilter = audioCtx.createBiquadFilter();
   midFilter.type = 'peaking';
   midFilter.frequency.value = 1000;
-  midFilter.Q.value = 1.0;
+  midFilter.Q.value = 1;
   midFilter.gain.value = 0;
 
   trebleFilter = audioCtx.createBiquadFilter();
@@ -470,21 +329,22 @@ function buildAudioChain() {
 
   shaper = audioCtx.createWaveShaper();
   shaper.curve = makeFlatCurve();
-  shaper.oversample = '2x';
 
   panner = audioCtx.createStereoPanner();
   panner.pan.value = 0;
 
   gainNode = audioCtx.createGain();
-  gainNode.gain.value = volume;
+  gainNode.gain.value = savedGain;
 
   noiseGain = audioCtx.createGain();
   noiseGain.gain.value = 0;
+  noiseGain.connect(audioCtx.destination);
 
-  // Media element source
+  audioEl = new Audio();
+  audioEl.crossOrigin = 'anonymous';
+  audioEl.src = STATIONS[currentStation].stream;
+
   mediaSource = audioCtx.createMediaElementSource(audioEl);
-
-  // Connect chain: source → analyser → bass → mid → treble → shaper → panner → gain → dest
   mediaSource.connect(analyser);
   analyser.connect(bassFilter);
   bassFilter.connect(midFilter);
@@ -494,378 +354,183 @@ function buildAudioChain() {
   panner.connect(gainNode);
   gainNode.connect(audioCtx.destination);
 
-  // Noise: noiseGain → destination
-  noiseGain.connect(audioCtx.destination);
-}
+  audioEl.onplay = function() {
+    playerState = 2;
+    showArtOverlay(false);
+    restoreTicker();
+  };
 
-// ─── Mono toggle ────────────────────────────────────────────────────────────
-function applyMono() {
-  // Disconnect panner from gain
-  try { panner.disconnect(gainNode); } catch(e) {}
-
-  if (monoOn) {
-    // Insert splitter+merger for mono summing
-    splitter = audioCtx.createChannelSplitter(2);
-    merger   = audioCtx.createChannelMerger(2);
-
-    panner.connect(splitter);
-    splitter.connect(merger, 0, 0);
-    splitter.connect(merger, 0, 1);
-    merger.connect(gainNode);
-  } else {
-    if (splitter) { try { splitter.disconnect(); } catch(e) {} }
-    if (merger)   { try { merger.disconnect(); }   catch(e) {} }
-    splitter = null;
-    merger   = null;
-    panner.connect(gainNode);
-  }
-}
-
-// ─── White noise ─────────────────────────────────────────────────────────────
-function createNoiseBuffer() {
-  var sr  = audioCtx.sampleRate;
-  var buf = audioCtx.createBuffer(2, sr * 2, sr);
-  for (var ch = 0; ch < 2; ch++) {
-    var d = buf.getChannelData(ch);
-    for (var i = 0; i < d.length; i++) {
-      d[i] = Math.random() * 2 - 1;
+  audioEl.onpause = function() {
+    if (playerState !== 1) {
+      playerState = 3;
+      showArtOverlay(true);
+      setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase() + ' –');
     }
-  }
-  return buf;
+  };
+
+  startVU();
+  audioEl.play().catch(function() {});
+  fetchMeta();
+  metaInterval = setInterval(fetchMeta, 15000);
 }
 
-function playStaticNoise() {
-  if (!audioCtx || !noiseGain) return;
-  var buf = createNoiseBuffer();
-  var src = audioCtx.createBufferSource();
-  src.buffer = buf;
-  src.loop = true;
-  src.connect(noiseGain);
-  src.start();
-
-  var now = audioCtx.currentTime;
-  noiseGain.gain.cancelScheduledValues(now);
-  noiseGain.gain.setValueAtTime(0, now);
-  noiseGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-  noiseGain.gain.setValueAtTime(0.3, now + 1.1);
-  noiseGain.gain.linearRampToValueAtTime(0, now + 1.4);
-
-  setTimeout(function() {
-    try { src.stop(); }        catch(e) {}
-    try { src.disconnect(); }  catch(e) {}
-  }, 1600);
-}
-
-// ─── Audio init ───────────────────────────────────────────────────────────────
-var audioInitialized = false;
-
-function initAudio() {
-  if (audioInitialized) return;
-  audioInitialized = true;
-
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  audioEl = new Audio();
-  audioEl.crossOrigin = 'anonymous';
-  audioEl.src = STATIONS[currentStation].stream;
-
-  buildAudioChain();
-
-  audioEl.play().catch(function(e) {
-    console.warn('Autoplay blocked:', e);
-    setPausedUI(true);
-  });
-
-  startMetaPoll(currentStation);
-}
-
-// ─── Toggle play/pause ────────────────────────────────────────────────────────
+// ── PLAY / PAUSE ──────────────────────────────────────────────────────────────
 function togglePlayPause() {
-  if (!audioInitialized) {
-    initAudio();
-    return;
-  }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
+  if (!audioCtx) { initAudio(); return; }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   if (audioEl.paused) {
     audioEl.play().catch(function() {});
-    setPausedUI(false);
+    showArtOverlay(false);
   } else {
     audioEl.pause();
-    setPausedUI(true);
+    showArtOverlay(true);
   }
 }
 
-// ─── Station switch ───────────────────────────────────────────────────────────
+// ── CHANNEL SWITCH ────────────────────────────────────────────────────────────
 function switchStation() {
-  if (isTuning) return;
+  if (isTuning || !audioCtx) { if (!audioCtx) { initAudio(); return; } return; }
   isTuning = true;
-
-  if (!audioInitialized) {
-    initAudio();
-    // Brief delay then continue
-    setTimeout(function() { doSwitch(); }, 200);
-    return;
-  }
-  doSwitch();
-}
-
-function doSwitch() {
   currentStation = (currentStation + 1) % STATIONS.length;
   var st = STATIONS[currentStation];
-
-  // Ticker takeover
-  tickerTakeover('TUNING TO ' + st.frequency + ' MHz – ' + st.name.toUpperCase() + ' – ');
-
-  // Move tuner tick
-  updateTunerTick(st.frequency);
-
-  // Rest VU
+  tickerTakeover('TUNING TO ' + st.frequency + ' MHz – ' + st.name.toUpperCase());
+  playStatic(1.5);
+  setTunerTick(st.frequency);
   vuTarget = Math.PI / 4;
-
-  // Play static
-  if (audioInitialized) playStaticNoise();
-
-  // At 1200ms: swap stream
   setTimeout(function() {
-    if (audioEl) {
-      audioEl.pause();
-      audioEl.src = st.stream;
-      if (!isPaused) {
-        audioEl.play().catch(function() {});
-      }
-    }
-    // Reset art for new station
+    audioEl.src = st.stream;
+    audioEl.play().catch(function() {});
+    clearInterval(metaInterval);
+    currentTitle = '';
+    currentArtist = '';
     currentArtUrl = '';
-    currentTrackTitle  = '';
-    currentTrackArtist = '';
-    startMetaPoll(currentStation);
+    fetchMeta();
+    metaInterval = setInterval(fetchMeta, 15000);
   }, 1200);
-
-  // At 2000ms: done
-  setTimeout(function() {
-    isTuning = false;
-  }, 2000);
+  setTimeout(function() { isTuning = false; }, 2000);
 }
 
-// ─── Metadata polling ─────────────────────────────────────────────────────────
-function fetchMeta(stationIdx) {
-  var st = STATIONS[stationIdx];
-  fetch(st.api)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (stationIdx !== currentStation) return; // stale
-      var np   = data && data.now_playing;
-      var song = np && np.song ? np.song : null;
-      var title  = song && song.title  ? song.title.toUpperCase()  : '';
-      var artist = song && song.artist ? song.artist.toUpperCase() : '';
-      var artUrl = song && song.art    ? song.art : '';
-
-      currentTrackTitle  = title;
-      currentTrackArtist = artist;
-
-      // Update ticker if in mode 1 and not in takeover
-      if (tickerMode === 1 && !tickerTakeoverTimer) {
-        restoreTickerMode();
-      }
-
-      if (artUrl) updateArt(artUrl);
-    })
-    .catch(function() {
-      // Ignore fetch errors silently
-    });
+// ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
+function scalePlayer() {
+  var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 443);
+  document.getElementById('player').style.transform = 'scale(' + scale + ')';
 }
 
-function startMetaPoll(stationIdx) {
-  if (metaPollInterval) clearInterval(metaPollInterval);
-  fetchMeta(stationIdx);
-  metaPollInterval = setInterval(function() {
-    fetchMeta(stationIdx);
-  }, 15000);
-}
-
-// ─── Volume ───────────────────────────────────────────────────────────────────
-function setVolume(v) {
-  volume = Math.max(0, Math.min(1, v));
-  if (gainNode) gainNode.gain.value = volume;
-  var pct = Math.round(volume * 100);
-  tickerTakeover('VOLUME – ' + pct + '% – ');
-}
-
-// ─── EQ / effects ─────────────────────────────────────────────────────────────
-function toggleBass() {
-  bassOn = !bassOn;
-  if (bassFilter) bassFilter.gain.value = bassOn ? 6 : 0;
-  tickerTakeover('BASS BOOST – ' + (bassOn ? 'ON' : 'OFF') + ' – ');
-}
-
-function toggleMid() {
-  midOn = !midOn;
-  if (midFilter) midFilter.gain.value = midOn ? 4 : 0;
-  tickerTakeover('MID BOOST – ' + (midOn ? 'ON' : 'OFF') + ' – ');
-}
-
-function toggleTreble() {
-  trebleOn = !trebleOn;
-  if (trebleFilter) trebleFilter.gain.value = trebleOn ? 5 : 0;
-  tickerTakeover('TREBLE BOOST – ' + (trebleOn ? 'ON' : 'OFF') + ' – ');
-}
-
-function toggleLoudness() {
-  loudOn = !loudOn;
-  if (shaper) shaper.curve = loudOn ? makeTubeCurve() : makeFlatCurve();
-  tickerTakeover('TUBE WARMTH – ' + (loudOn ? 'ON' : 'OFF') + ' – ');
-}
-
-function cycleBalance() {
-  balanceIdx = (balanceIdx + 1) % BALANCE_STATES.length;
-  balance = BALANCE_STATES[balanceIdx];
-  if (panner) panner.pan.value = balance;
-  var label = balance === 0 ? 'CENTER' : balance === -1 ? 'LEFT' : 'RIGHT';
-  tickerTakeover('BALANCE – ' + label + ' – ');
-}
-
-function toggleMono() {
-  monoOn = !monoOn;
-  if (audioInitialized) applyMono();
-  tickerTakeover('MONO – ' + (monoOn ? 'ON' : 'OFF') + ' – ');
-}
-
-// ─── Ticker mode toggle ───────────────────────────────────────────────────────
-function toggleTickerMode() {
-  tickerMode = tickerMode === 1 ? 2 : 1;
-  var modeName = tickerMode === 1 ? 'NOW PLAYING' : 'STATION INFO';
-  tickerTakeover(modeName + ' – ', function() {
-    restoreTickerMode();
-  });
-}
-
-// ─── Hit zone event listeners ─────────────────────────────────────────────────
-
-// 1. Tuner — cycle stations
-document.getElementById('tuner-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  switchStation();
+// ── HIT ZONE WIRING ───────────────────────────────────────────────────────────
+document.getElementById('hz-tuner-screen').addEventListener('click', function() {
+  if (playerState === 1) { initAudio(); } else { switchStation(); }
 });
 
-// 2. Art — toggle play/pause
-document.getElementById('art-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
+document.getElementById('hz-tuning-knob').addEventListener('click', function() {
+  if (playerState === 1) { initAudio(); } else { switchStation(); }
+});
+
+document.getElementById('hz-art').addEventListener('click', function() {
   togglePlayPause();
 });
 
-// 3. Ticker — toggle mode
-document.getElementById('ticker-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  toggleTickerMode();
+document.getElementById('hz-ticker').addEventListener('click', function() {
+  if (playerState !== 2) return;
+  if (tickerMode === 'B') {
+    setTickerScroll(STATIONS[currentStation].description, 'C');
+  } else if (tickerMode === 'C') {
+    setTickerScroll(buildMetaText(), 'B');
+  }
 });
 
-// 4. Logo — open site
-document.getElementById('logo-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
+document.getElementById('hz-logo').addEventListener('click', function() {
   window.open('https://radio.jacewonmusic.com', '_blank');
 });
 
-// 5. Volume — left half = vol -10%, right half = vol +10%
-document.getElementById('vol-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  var rect   = this.getBoundingClientRect();
-  var relX   = e.clientX - rect.left;
-  var half   = rect.width / 2;
-  if (relX < half) {
-    setVolume(volume - 0.1);
-  } else {
-    setVolume(volume + 0.1);
+document.getElementById('hz-volume').addEventListener('click', function() {
+  isMuted = !isMuted;
+  if (gainNode) gainNode.gain.value = isMuted ? 0 : savedGain;
+  tickerTakeover(isMuted ? 'MUTED' : 'VOLUME – RESTORED');
+});
+
+document.getElementById('hz-bass').addEventListener('click', function() {
+  bassActive = !bassActive;
+  if (bassFilter) bassFilter.gain.value = bassActive ? -8 : 0;
+  tickerTakeover(bassActive ? 'BASS – CUT' : 'BASS – RESTORED');
+});
+
+document.getElementById('hz-mid').addEventListener('click', function() {
+  midActive = !midActive;
+  if (midFilter) midFilter.gain.value = midActive ? -6 : 0;
+  tickerTakeover(midActive ? 'MID – CUT' : 'MID – RESTORED');
+});
+
+document.getElementById('hz-treble').addEventListener('click', function() {
+  trebleActive = !trebleActive;
+  if (trebleFilter) trebleFilter.gain.value = trebleActive ? -7 : 0;
+  tickerTakeover(trebleActive ? 'TREBLE – CUT' : 'TREBLE – RESTORED');
+});
+
+document.getElementById('hz-balance').addEventListener('click', function() {
+  balanceState = (balanceState + 1) % 3;
+  var panVals = [0, -1.0, 1.0];
+  var msgs = ['BALANCE – CENTER', 'BALANCE – LEFT CHANNEL', 'BALANCE – RIGHT CHANNEL'];
+  if (panner) panner.pan.value = panVals[balanceState];
+  tickerTakeover(msgs[balanceState]);
+});
+
+document.getElementById('hz-loudness').addEventListener('click', function() {
+  loudnessActive = !loudnessActive;
+  if (shaper) shaper.curve = loudnessActive ? makeTubeCurve() : makeFlatCurve();
+  tickerTakeover(loudnessActive ? 'LOUDNESS – ON' : 'LOUDNESS – OFF');
+});
+
+document.getElementById('hz-mono').addEventListener('click', function() {
+  monoActive = !monoActive;
+  if (panner && gainNode && audioCtx) {
+    try { panner.disconnect(); } catch(e) {}
+    if (monoActive) {
+      var splitter = audioCtx.createChannelSplitter(2);
+      var mergerM = audioCtx.createChannelMerger(2);
+      panner.connect(splitter);
+      splitter.connect(mergerM, 0, 0);
+      splitter.connect(mergerM, 0, 1);
+      mergerM.connect(gainNode);
+    } else {
+      panner.connect(gainNode);
+    }
   }
+  tickerTakeover(monoActive ? 'MONO – ON' : 'STEREO – RESTORED');
 });
 
-// 6. Bass boost toggle
-document.getElementById('bass-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  toggleBass();
+document.getElementById('hz-power').addEventListener('click', function() {
+  if (audioEl) { audioEl.pause(); audioEl.src = ''; }
+  if (audioCtx) { audioCtx.close(); }
+  try { window.close(); } catch(e) {}
 });
 
-// 7. Mid boost toggle
-document.getElementById('mid-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  toggleMid();
-});
+// ── INITIAL STATE ─────────────────────────────────────────────────────────────
+scalePlayer();
+window.addEventListener('resize', scalePlayer);
 
-// 8. Treble boost toggle
-document.getElementById('treble-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  toggleTreble();
-});
+setTickerStatic('CLICK ARTWORK OR TUNER TO BEGIN PLAYBACK');
+showArtOverlay(true);
+setTunerTick(STATIONS[0].frequency);
 
-// 9. Balance cycle
-document.getElementById('balance-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  cycleBalance();
-});
+// Start VU idle draw
+requestAnimationFrame(drawVU);
 
-// 10. Loudness / tube warmth toggle
-document.getElementById('loudness-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  toggleLoudness();
-});
+// Start ticker RAF
+requestAnimationFrame(animateTicker);
 
-// 11. Mono toggle
-document.getElementById('mono-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (!audioInitialized) initAudio();
-  toggleMono();
-});
-
-// 12. Power — stop + close
-document.getElementById('power-hit').addEventListener('click', function(e) {
-  e.stopPropagation();
-  if (audioEl) {
-    audioEl.pause();
-    audioEl.src = '';
-  }
-  if (audioCtx) {
-    audioCtx.suspend();
-  }
-  window.close();
-});
-
-// ─── Visibility — resume suspended context ────────────────────────────────────
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && audioCtx && audioCtx.state === 'suspended' && !isPaused) {
-    audioCtx.resume();
-  }
-});
-
-// ─── Initial art fetch (pre-audio-init) ──────────────────────────────────────
+// Pre-load first station art
 fetch(STATIONS[0].api)
   .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var np   = data && data.now_playing;
-    var song = np && np.song ? np.song : null;
-    var artUrl = song && song.art ? song.art : '';
-    var title  = song && song.title  ? song.title.toUpperCase()  : '';
-    var artist = song && song.artist ? song.artist.toUpperCase() : '';
-    currentTrackTitle  = title;
-    currentTrackArtist = artist;
-    if (artUrl) {
-      currentArtUrl = artUrl;
-      artA.src = artUrl;
-    }
-    if (!tickerTakeoverTimer) {
-      startTicker(title ? title + ' – ' + artist + ' – WJRN – ' : 'WJRN – CLICK TO LISTEN – ');
+  .then(function(d) {
+    var art = d && d.now_playing && d.now_playing.song && d.now_playing.song.art;
+    if (art) {
+      currentArtUrl = art;
+      document.getElementById('art-a').src = art;
     }
   })
   .catch(function() {});
 
-})(); // IIFE
+})();
 </script>
 </body>
 </html>

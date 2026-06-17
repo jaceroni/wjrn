@@ -173,7 +173,7 @@ A self-contained single-file HTML player at `radio.jacewonmusic.com/player/`. It
 
 ### Files
 - `public/player/index.html` — the entire player (HTML + CSS + JS inline)
-- `public/player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). When Jace updates this PNG in `src/assets/images/`, you must also copy it here: `cp src/assets/images/wjrn-receiver-front-ko.png public/player/`
+- `public/player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). Automatically copied from `src/assets/images/wjrn-receiver-front-ko.png` by `deploy.sh` during the build process.
 
 ### Design
 - Fixed canvas: **1280×443 pixels**. All interactive elements are positioned absolutely at precise pixel coordinates matching knockout holes in the faceplate PNG.

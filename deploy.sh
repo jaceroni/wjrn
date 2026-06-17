@@ -19,6 +19,11 @@ if [ $? -ne 0 ]; then
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
+echo "=== Syncing faceplate PNG to public player folder ==="
+if [ -f "src/assets/images/wjrn-receiver-front-ko.png" ]; then
+  cp src/assets/images/wjrn-receiver-front-ko.png public/player/wjrn-receiver-front-ko.png
+fi
+
 echo "=== Building React project locally ==="
 npm run build
 
