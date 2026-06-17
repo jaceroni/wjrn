@@ -164,3 +164,92 @@ If episode artwork shows as missing/placeholder in the on-demand section — thi
 
 ## Parallax
 `NebulaHomepage` has scroll-based parallax on the WJRN watermark, left/right side panels, and phone. **Disabled on mobile** via `if (window.innerWidth < 1024) return;` guard in the scroll handler. Preserve this guard when editing.
+
+---
+
+## Vintage Receiver Standalone Player — `public/wjrn-player/`
+
+A self-contained single-file HTML player at `radio.jacewonmusic.com/wjrn-player/`. It is **not** part of the React SPA — it is a standalone HTML file with all CSS and JS inline. Deploy by running `bash deploy.sh` as normal (the `public/` directory is copied into `dist/` by Vite).
+
+### Files
+- `public/wjrn-player/index.html` — the entire player (HTML + CSS + JS inline)
+- `public/wjrn-player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). When Jace updates this PNG in `src/assets/images/`, you must also copy it here: `cp src/assets/images/wjrn-receiver-front-ko.png public/wjrn-player/`
+
+### Design
+- Fixed canvas: **1280×443 pixels**. All interactive elements are positioned absolutely at precise pixel coordinates matching knockout holes in the faceplate PNG.
+- The faceplate PNG sits at `z-index: 2` over the content layer.
+- All UI elements (art, VU meter, ticker, tuner tick, knob hit zones) are at `z-index: 1–4` behind or above the faceplate.
+
+### Key coordinates (all `position: absolute` within `#player`)
+| Element | left | top | width | height |
+|---------|------|-----|-------|--------|
+| Album art | 111 | 101 | 274 | 274 |
+| VU meter canvas | 423 | 104 | 151 | 79 |
+| Metadata ticker | 410 | 214 | 569 | 48 |
+| Tuner tick | computed | 133 | 6 | 38 |
+| Tuning knob hit | 993 | 212 | 188 | 67 |
+| Volume knob hit | 1015 | 285 | 74 | 79 |
+
+### Stations
+```javascript
+const STATIONS = [
+  { name: "WJRN", frequency: 98.7, stream: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3", api: "https://radio.jacewonmusic.com/api/nowplaying/wjrn" },
+  { name: "The Rock Garden", frequency: 91.5, stream: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3", api: "https://radio.jacewonmusic.com/api/nowplaying/the_rock_garden" },
+  { name: "Bridge City Hang Suite", frequency: 94.3, stream: "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3", api: "https://radio.jacewonmusic.com/api/nowplaying/bridge_city_hang_suite" },
+  { name: "The Golden Boombox", frequency: 105.1, stream: "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3", api: "https://radio.jacewonmusic.com/api/nowplaying/golden_boombox_sessions" }
+];
+```
+
+### Tuner tick position formula
+- 88 MHz → X: 659px, 108 MHz → X: 1075px (416px / 20MHz = 20.8 px/MHz)
+- `tickLeft = 659 + (freq - 88) * 20.8`
+
+### Audio architecture
+- Standard `<audio>` element with `crossOrigin="anonymous"`
+- `AudioContext` → `AnalyserNode` (fftSize: 256) → `GainNode` → destination
+- Separate `noiseGain` node for white noise static (procedural AudioBuffer, no external files)
+- All audio initialized on first user click (browser autoplay policy)
+
+### Interactions
+- **Click anywhere** → init audio + start WJRN stream
+- **Click artwork or ticker** → toggle play/pause
+- **Volume knob click** → toggle mute/unmute
+- **Volume knob scroll wheel** → adjust volume ±10%
+- **Tuning knob click** → cycle to next station with static noise sequence
+
+### Paused state UI
+- Artwork: dimmed overlay with ▶ icon (`#art-pause-overlay`)
+- Ticker: shows "PAUSED — CLICK ARTWORK OR METADATA TO RESUME"
+- Restored on resume via `lastTickerContent`
+
+### ⚠️ UNRESOLVED ISSUE: Responsive scaling does not work
+
+**Goal**: The player should scale to fit the browser window width while maintaining the 1280:443 aspect ratio. On narrow screens (mobile, small browser windows) the entire player should scale down proportionally. On resize, it should update dynamically.
+
+**Symptom**: Resizing the browser window just cuts off the right side of the player. The player does not scale. On iPhone, only ~1/3 of the player is visible.
+
+**What has been tried and failed**:
+1. `transform: scale()` + `overflow: hidden` on wrapper → clips at layout dimensions before transforms apply
+2. `zoom` CSS property → inconsistent behavior, effectively same result
+3. `aspect-ratio` on wrapper + `position: absolute` on player + `overflow: hidden` on wrapper → same clipping issue
+4. Removing `overflow: hidden` from wrapper, keeping only on `<html>` → still cuts off
+
+**Current state of the code** (in `public/wjrn-player/index.html`):
+```css
+html { overflow: hidden; }
+body { margin: 0; padding: 0; background: #000; }
+#player-scaler { width: 100%; position: relative; /* no overflow:hidden */ }
+#player { position: absolute; top:0; left:0; width:1280px; height:443px; transform-origin: top left; }
+```
+```javascript
+function scalePlayer() {
+  var vw = document.documentElement.clientWidth;
+  var scale = vw / 1280;
+  document.getElementById('player').style.transform = 'scale(' + scale + ')';
+  document.getElementById('player-scaler').style.height = Math.round(443 * scale) + 'px';
+}
+scalePlayer();
+window.addEventListener('resize', scalePlayer);
+```
+
+**What needs to happen**: The full 1280×443 player (with all its absolutely-positioned children) must scale visually to fit any viewport width while maintaining aspect ratio. The `#player-scaler` wrapper height should always equal `443 * (viewportWidth / 1280)`. No content should be clipped.
