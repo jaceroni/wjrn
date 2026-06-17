@@ -167,7 +167,7 @@ If episode artwork shows as missing/placeholder in the on-demand section — thi
 
 ---
 
-## Vintage Receiver Standalone Player — `public/player/`
+## WJRN Vintage Player — `public/player/`
 
 A self-contained single-file HTML player at `radio.jacewonmusic.com/player/`. It is **not** part of the React SPA — it is a standalone HTML file with all CSS and JS inline. Deploy by running `bash deploy.sh` as normal (the `public/` directory is copied into `dist/` by Vite).
 
