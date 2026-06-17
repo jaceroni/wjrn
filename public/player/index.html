@@ -26,7 +26,6 @@ html, body {
 #art-a { opacity: 1; }
 #art-b { opacity: 0; }
 #art-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3; opacity: 0; transition: opacity 0.3s ease; }
-    .art-glass { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0) 46%, rgba(255,255,255,0) 100%); box-shadow: inset 1px 1px 0px rgba(255,255,255,0.2), inset -1px -1px 0px rgba(255,255,255,0.05); }
 #art-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #f1e3c8; font-size: 26px; display: flex; align-items: center; justify-content: center; }
 #vu-canvas { position: absolute; left: 423px; top: 104px; width: 151px; height: 79px; z-index: 3; }
 #ticker-wrap { position: absolute; left: 410px; top: 214px; width: 569px; height: 48px; z-index: 3; overflow: hidden; display: flex; align-items: center; }
@@ -42,7 +41,6 @@ html, body {
     <div id="art-container">
       <img id="art-a" alt="">
       <img id="art-b" alt="">
-      <div class="art-glass"></div>
       <div id="art-overlay"><span id="art-icon">&#9654;</span></div>
     </div>
     <canvas id="vu-canvas" width="151" height="79"></canvas>
@@ -127,7 +125,7 @@ var lastTickerTime = null;
 var tickerWidth = 1;
 
 function setTickerStatic(text) {
-  var wrap = document.getElementById('ticker-container');
+  var wrap = document.getElementById('ticker-wrap');
   var el = document.getElementById('ticker-text');
   if (wrap && el) {
     wrap.style.display = 'flex';
@@ -141,7 +139,7 @@ function setTickerStatic(text) {
 }
 
 function setTickerScroll(text, mode) {
-  var wrap = document.getElementById('ticker-container');
+  var wrap = document.getElementById('ticker-wrap');
   var el = document.getElementById('ticker-text');
   if (wrap && el) {
     wrap.style.display = 'block';
