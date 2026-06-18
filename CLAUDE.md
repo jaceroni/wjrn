@@ -177,14 +177,18 @@ A self-contained single-file HTML player at `radio.jacewonmusic.com/player/`. It
 - `public/player/wjrn-player-thumbnail.jpg` — visual receiver thumbnail for social share/meta previews.
 
 ### Homepage Activation
-Opened from the `NebulaHomepage` right-hand column using the "Activate Vintage Experience" button component (`wjrn-vintage-exp-button.png`). Clicking it spawns the player at `/player/` in a dedicated `1280x443` popup window using:
+Opened from the `NebulaHomepage` right-hand column using the "Activate Vintage Experience" button component (`wjrn-vintage-exp-button.png`). Clicking it spawns the player at `/player/?popout=true` in a dedicated `1280x443` popup window using:
 ```javascript
 window.open(
-  'https://radio.jacewonmusic.com/player/',
+  'https://radio.jacewonmusic.com/player/?popout=true',
   'WJRN',
   'width=1280,height=443,resizable=no,scrollbars=no'
 )
 ```
+
+- **Popout vs. Backdrop Modes**:
+  - **Popout Mode** (`?popout=true` in URL): Disables the credenza backdrop, resets player coordinates to `left: 0; top: 0;`, and scales based on standard `1280x443` dimensions to fill the dedicated popup window.
+  - **Backdrop Mode** (no query param): Renders a `1920x1080` room backdrop scene (`wjrn-player-backdrop.jpg`) and positions the receiver absolutely at `X: 320px, Y: 340px`, scaling the entire scene proportionally to fit any screen size.
 
 ### Design
 - Fixed canvas: **1280×443 pixels**. All interactive elements are positioned absolutely at precise pixel coordinates matching knockout holes in the faceplate PNG.
