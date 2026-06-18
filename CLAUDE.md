@@ -174,6 +174,17 @@ A self-contained single-file HTML player at `radio.jacewonmusic.com/player/`. It
 ### Files
 - `public/player/index.html` — the entire player (HTML + CSS + JS inline)
 - `public/player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). Automatically copied from `src/assets/images/wjrn-receiver-front-ko.png` by `deploy.sh` during the build process.
+- `public/player/wjrn-player-thumbnail.jpg` — visual receiver thumbnail for social share/meta previews.
+
+### Homepage Activation
+Opened from the `NebulaHomepage` right-hand column using the "Activate Vintage Experience" button component (`wjrn-vintage-exp-button.png`). Clicking it spawns the player at `/player/` in a dedicated `1280x443` popup window using:
+```javascript
+window.open(
+  'https://radio.jacewonmusic.com/player/',
+  'WJRN',
+  'width=1280,height=443,resizable=no,scrollbars=no'
+)
+```
 
 ### Design
 - Fixed canvas: **1280×443 pixels**. All interactive elements are positioned absolutely at precise pixel coordinates matching knockout holes in the faceplate PNG.
