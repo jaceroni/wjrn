@@ -15,6 +15,7 @@ import TwitchSchedule from "./TwitchScheduleRetro";
 import wjrnLogoCubed from "../assets/images/wjrn-logo-cubed.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 import AudioVisualizer from "./AudioVisualizer";
+import wjrnVintageExpButton from "../assets/images/wjrn-vintage-exp-button.png";
 
 // Premium imported assets for the high-end station player cards
 import vinylLogoTrg from "../assets/images/vinyl-logo-trg.png";
@@ -363,10 +364,31 @@ export default function NebulaHomepage({
         {/* RIGHT PANEL */}
         <div ref={rightPanelRef} style={{ willChange: "transform" }} className="lg:col-span-3 flex flex-col md:flex-row lg:flex-col justify-between h-full gap-8 items-center lg:items-end">
           
-          <div className="text-center lg:text-right flex flex-col items-center lg:items-end gap-1.5 p-4 rounded-xl bg-white/[0.01] border border-white/5 w-fit mx-auto lg:mr-0 lg:ml-auto md:mx-0">
-            <span className="block text-[9px] uppercase tracking-widest text-[#b5945b] font-mono">ESTABLISHED</span>
-            <span className="text-sm font-bold uppercase font-mono text-white">MAY 2020</span>
-            <span className="text-xs text-neutral-500 font-mono uppercase tracking-wider">PACIFIC NORTH FRESH</span>
+          <div className="flex flex-col gap-6 items-center lg:items-end">
+            <div className="text-center lg:text-right flex flex-col items-center lg:items-end gap-1.5 p-4 rounded-xl bg-white/[0.01] border border-white/5 w-fit mx-auto lg:mr-0 lg:ml-auto md:mx-0">
+              <span className="block text-[9px] uppercase tracking-widest text-[#b5945b] font-mono">ESTABLISHED</span>
+              <span className="text-sm font-bold uppercase font-mono text-white">MAY 2020</span>
+              <span className="text-xs text-neutral-500 font-mono uppercase tracking-wider">PACIFIC NORTH FRESH</span>
+            </div>
+
+            <div className="flex flex-col items-center lg:items-end w-fit">
+              <img
+                src={wjrnVintageExpButton}
+                alt="Activate Vintage Experience"
+                onClick={() => {
+                  window.open(
+                    'https://radio.jacewonmusic.com/player/',
+                    'WJRN',
+                    'width=1280,height=443,resizable=no,scrollbars=no'
+                  );
+                }}
+                className="cursor-pointer"
+                style={{ display: "block" }}
+              />
+              <span className="text-[9px] uppercase tracking-widest text-white font-mono mt-2.5 cursor-default select-none block">
+                ACTIVATE VINTAGE EXPERIENCE
+              </span>
+            </div>
           </div>
 
           {/* Premium deliverables list details matching mockup */}
