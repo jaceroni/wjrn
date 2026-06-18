@@ -30,9 +30,15 @@ html, body {
   display: flex; justify-content: center; align-items: center;
   overflow: hidden; position: relative;
 }
+#scene {
+  position: relative; width: 1920px; height: 1080px;
+  background: #000 url('./wjrn-player-backdrop.jpg') no-repeat center center;
+  background-size: cover;
+  transform-origin: center center; flex-shrink: 0;
+}
 #player {
-  position: relative; width: 1280px; height: 443px;
-  cursor: default; transform-origin: center center; flex-shrink: 0;
+  position: absolute; left: 320px; top: 340px; width: 1280px; height: 443px;
+  cursor: default; transform-origin: center center;
 }
 .hit { position: absolute; z-index: 4; cursor: pointer; background: transparent; }
 #art-container { position: absolute; left: 111px; top: 101px; width: 274px; height: 274px; z-index: 1; background: #1a1a1a; overflow: hidden; }
@@ -50,18 +56,19 @@ html, body {
 </head>
 <body oncontextmenu="return false;">
 <div id="player-scaler">
-  <div id="player">
-    <img id="faceplate" src="./wjrn-receiver-front-ko.png" alt="">
-    <div id="art-container">
-      <img id="art-a" alt="">
-      <img id="art-b" alt="">
-      <div id="art-overlay"><span id="art-icon">&#9654;</span></div>
-    </div>
-    <canvas id="vu-canvas" width="151" height="79"></canvas>
-    <div id="ticker-wrap"><span id="ticker-text"></span></div>
-    <div id="tuner-tick"></div>
-    <div class="hit" id="hz-tuner-screen"  style="left:411px;top:90px;width:766px;height:104px"></div>
-    <div class="hit" id="hz-tuning-knob"   style="left:993px;top:212px;width:188px;height:67px"></div>
+  <div id="scene">
+    <div id="player">
+      <img id="faceplate" src="./wjrn-receiver-front-ko.png" alt="">
+      <div id="art-container">
+        <img id="art-a" alt="">
+        <img id="art-b" alt="">
+        <div id="art-overlay"><span id="art-icon">&#9654;</span></div>
+      </div>
+      <canvas id="vu-canvas" width="151" height="79"></canvas>
+      <div id="ticker-wrap"><span id="ticker-text"></span></div>
+      <div id="tuner-tick"></div>
+      <div class="hit" id="hz-tuner-screen"  style="left:411px;top:90px;width:766px;height:104px"></div>
+      <div class="hit" id="hz-tuning-knob"   style="left:993px;top:212px;width:188px;height:67px"></div>
     <div class="hit" id="hz-art"           style="left:111px;top:101px;width:274px;height:274px"></div>
     <div class="hit" id="hz-ticker"        style="left:410px;top:214px;width:569px;height:48px"></div>
     <div class="hit" id="hz-logo"          style="left:553px;top:46px;width:173px;height:30px"></div>
@@ -73,6 +80,7 @@ html, body {
     <div class="hit" id="hz-loudness"      style="left:416px;top:291px;width:28px;height:28px"></div>
     <div class="hit" id="hz-mono"          style="left:416px;top:343px;width:28px;height:27px"></div>
     <div class="hit" id="hz-power"         style="left:1130px;top:293px;width:30px;height:28px"></div>
+    </div>
   </div>
 </div>
 <script>
@@ -484,8 +492,8 @@ function switchStation() {
 
 // ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
 function scalePlayer() {
-  var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 443);
-  document.getElementById('player').style.transform = 'scale(' + scale + ')';
+  var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  document.getElementById('scene').style.transform = 'scale(' + scale + ')';
 }
 
 // ── HIT ZONE WIRING ───────────────────────────────────────────────────────────
