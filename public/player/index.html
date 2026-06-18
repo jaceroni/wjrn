@@ -507,7 +507,7 @@ function scalePlayer() {
     var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 443);
     document.getElementById('scene').style.transform = 'scale(' + scale + ')';
   } else {
-    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    var scale = Math.max(window.innerWidth / 1920, window.innerHeight / 1080);
     document.getElementById('scene').style.transform = 'scale(' + scale + ')';
   }
 }
