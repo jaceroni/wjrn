@@ -40,6 +40,16 @@ html, body {
   position: absolute; left: 320px; top: 340px; width: 1280px; height: 443px;
   cursor: default; transform-origin: center center;
 }
+#scene.popout-mode {
+  width: 1280px !important;
+  height: 443px !important;
+  background: #000 !important;
+}
+#scene.popout-mode #player {
+  position: relative !important;
+  left: 0 !important;
+  top: 0 !important;
+}
 .hit { position: absolute; z-index: 4; cursor: pointer; background: transparent; }
 #art-container { position: absolute; left: 111px; top: 101px; width: 274px; height: 274px; z-index: 1; background: #1a1a1a; overflow: hidden; }
 #art-a, #art-b { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity 0.8s ease; }
@@ -127,6 +137,7 @@ var activeArt = 'a';
 var isTuning = false;
 var metaInterval = null;
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+var isPopout = window.location.search.includes('popout=true');
 
 var bassActive = false, midActive = false, trebleActive = false;
 var loudnessActive = false, monoActive = false, isMuted = false;
@@ -492,8 +503,13 @@ function switchStation() {
 
 // ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
 function scalePlayer() {
-  var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  document.getElementById('scene').style.transform = 'scale(' + scale + ')';
+  if (isPopout) {
+    var scale = Math.min(window.innerWidth / 1280, window.innerHeight / 443);
+    document.getElementById('scene').style.transform = 'scale(' + scale + ')';
+  } else {
+    var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    document.getElementById('scene').style.transform = 'scale(' + scale + ')';
+  }
 }
 
 // ── HIT ZONE WIRING ───────────────────────────────────────────────────────────
@@ -586,6 +602,10 @@ document.getElementById('hz-power').addEventListener('click', function() {
 });
 
 // ── INITIAL STATE ─────────────────────────────────────────────────────────────
+if (isPopout) {
+  var scene = document.getElementById('scene');
+  if (scene) scene.classList.add('popout-mode');
+}
 scalePlayer();
 window.addEventListener('resize', scalePlayer);
 

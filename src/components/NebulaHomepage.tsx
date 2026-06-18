@@ -377,7 +377,7 @@ export default function NebulaHomepage({
                 alt="Activate Vintage Experience"
                 onClick={() => {
                   window.open(
-                    'https://radio.jacewonmusic.com/player/',
+                    'https://radio.jacewonmusic.com/player/?popout=true',
                     'WJRN',
                     'width=1280,height=443,resizable=no,scrollbars=no'
                   );
