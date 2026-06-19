@@ -6,6 +6,8 @@ import {
   VolumeX, 
   Radio, 
   Antenna,
+  ThumbsUp,
+  Phone,
 } from "lucide-react";
 import { Station, NowPlaying, RadioConfig } from "../types";
 import TwitchSchedule from "./TwitchSchedule";
@@ -254,11 +256,11 @@ export default function NebulaHomepage({
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#b5945b]" />
+              <ThumbsUp className="w-3 h-3 text-[#664d49] shrink-0" />
               <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300">ALWAYS ON ALWAYS FRESH</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#664d49]" />
+              <Phone className="w-3 h-3 text-[#b5945b] animate-pulse shrink-0" />
               <a href="tel:+12135793748" className="text-[10px] font-mono uppercase tracking-wider text-neutral-300 hover:text-[#b5945b] transition-colors">
                 HOTLINE OPEN: (213) 579-3748
               </a>
@@ -450,7 +452,7 @@ export default function NebulaHomepage({
           {/* Premium deliverables list details matching mockup */}
           <div className="text-left lg:text-right flex flex-col gap-5">
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/40">NOT-SO FRIENDLY REMINDERS</span>
-            <ul className="text-xs text-neutral-400 space-y-1.5 font-mono">
+            <ul className="text-xs text-neutral-400 space-y-1.5 font-mono border-r-4 border-[#664d49] pr-4">
               <li>• We will never play EDM</li>
               <li>• New country is bad country</li>
               <li>• DJs do not take requests</li>

@@ -7,6 +7,8 @@ import {
   Radio,
   Antenna,
   ArrowRight,
+  ThumbsUp,
+  Phone,
 } from "lucide-react";
 import { Station, NowPlaying, RadioConfig } from "../types";
 import { navigate } from "../navigate";
@@ -236,11 +238,11 @@ export default function NebulaHomepage({
 
           <div className="space-y-4 w-fit">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#b5945b]" />
+              <ThumbsUp className="w-3 h-3 text-[#664d49] shrink-0" />
               <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300">ALWAYS ON ALWAYS FRESH</span>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#664d49]" />
+              <Phone className="w-3 h-3 text-[#b5945b] animate-pulse shrink-0" />
               <a href="tel:+12135793748" className="text-[10px] font-mono uppercase tracking-wider text-neutral-300 hover:text-[#b5945b] transition-colors">
                 HOTLINE OPEN: (213) 579-3748
               </a>
@@ -396,7 +398,7 @@ export default function NebulaHomepage({
           {/* Premium deliverables list details matching mockup */}
           <div className="text-center lg:text-right flex flex-col items-center lg:items-end gap-5 w-fit mx-auto lg:mr-0 lg:ml-auto md:mx-0">
             <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#b5945b] text-center lg:text-right">NOT-SO FRIENDLY REMINDERS</span>
-            <ul className="text-xs text-neutral-400 space-y-1.5 font-mono text-center lg:text-right">
+            <ul className="text-xs text-neutral-400 space-y-1.5 font-mono text-center lg:text-right border-r-4 border-[#664d49] pr-4">
               <li>Playlists are for elevators</li>
               <li>Support your local musicians</li>
               <li>New country is bad country</li>
