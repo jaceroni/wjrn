@@ -510,7 +510,9 @@ export default function NebulaHomepage({
             </div>
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-[#664d49]" />
-              <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300">LIVE STREAMS WEEKLY</span>
+              <a href="tel:+12135793748" className="text-[10px] font-mono uppercase tracking-wider text-neutral-300 hover:text-[#b5945b] transition-colors">
+                HOTLINE OPEN: (213) 579-3748
+              </a>
             </div>
           </div>
         </div>
