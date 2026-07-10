@@ -74,7 +74,7 @@ export default function NebulaHomepage({
   setVisualizerType,
   audioRef,
 }: NebulaHomepageProps) {
-  
+
   const STATION_SLUGS: { [key: string]: string } = {
     rock_garden: "the-rock-garden",
     bridge_city: "bridge-city-hang-suite",
@@ -93,7 +93,7 @@ export default function NebulaHomepage({
   const cycleViz = () => {
     setVisualizerType(
       visualizerType === "bars" ? "wave" :
-      visualizerType === "wave" ? "retro" : "bars"
+        visualizerType === "wave" ? "retro" : "bars"
     );
   };
 
@@ -106,9 +106,9 @@ export default function NebulaHomepage({
     const onScroll = () => {
       if (window.innerWidth < 1024) return;
       const y = window.scrollY;
-      if (leftPanelRef.current)  leftPanelRef.current.style.transform  = `translateX(${y * -0.06}px)`;
+      if (leftPanelRef.current) leftPanelRef.current.style.transform = `translateX(${y * -0.06}px)`;
       if (rightPanelRef.current) rightPanelRef.current.style.transform = `translateX(${y * 0.05}px)`;
-      if (phoneRef.current)      phoneRef.current.style.transform      = `translateY(${y * -0.09}px)`;
+      if (phoneRef.current) phoneRef.current.style.transform = `translateY(${y * -0.09}px)`;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -144,10 +144,10 @@ export default function NebulaHomepage({
 
   return (
     <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col justify-between overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>
-      
+
       {/* 1. Nebula Cosmic Fire Background in soft brown and mustard #664d49 spectrum */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        
+
         {/* SVG Procedural Analog Noise Overlay to soften gradients and prevent banding */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.025] pointer-events-none z-10" xmlns="http://www.w3.org/2000/svg">
           <filter id="noiseFilter">
@@ -179,8 +179,8 @@ export default function NebulaHomepage({
             e.preventDefault();
             navigate("/");
           }}
-          onAnimationEnd={(e) => { if (e.animationName === 'logoLoadDistort') e.currentTarget.classList.remove('logo-load-distortion'); }}
-          className="relative h-[53px] md:h-[63px] group-logo logo-load-distortion cursor-pointer select-none">
+            onAnimationEnd={(e) => { if (e.animationName === 'logoLoadDistort') e.currentTarget.classList.remove('logo-load-distortion'); }}
+            className="relative h-[53px] md:h-[63px] group-logo logo-load-distortion cursor-pointer select-none">
             {/* Base Brown Logo */}
             <img
               src={wjrnLogoCubed}
@@ -227,7 +227,7 @@ export default function NebulaHomepage({
 
       {/* 4. Centerpiece Immersive Layout (Smartphone & Side Panels) */}
       <section className="relative z-20 w-full max-w-7xl mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 mt-[15px] mb-8 md:mt-[19px] md:mb-11 items-center">
-        
+
         {/* LEFT PANEL */}
         <div ref={leftPanelRef} style={{ willChange: "transform" }} className="lg:col-span-3 hidden lg:flex flex-col gap-10">
           <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-md w-fit">
@@ -253,7 +253,7 @@ export default function NebulaHomepage({
         {/* CENTER COLUMN: INTERACTIVE GLASSY PHONE CONTROLLER */}
         <div ref={phoneRef} style={{ willChange: "transform" }} className="lg:col-span-6 flex justify-center items-center relative py-4 z-30">
           <div className="relative w-full max-w-[422px] aspect-[9/18.5] bg-neutral-950/90 rounded-[44px] p-3.5 border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.85),0_0_50px_rgba(181,148,91,0.08)] overflow-hidden group/phone">
-            
+
             {/* Phone Top Speaker Notch */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-950 rounded-b-2xl z-40 border-b border-r border-l border-white/5 flex items-center justify-center">
               <div className="w-12 h-1 bg-white/20 rounded-full" />
@@ -293,9 +293,8 @@ export default function NebulaHomepage({
 
                 {/* Album Cover Art — full width, clicking cycles viz */}
                 <div
-                  className={`w-full aspect-square rounded-xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.9)] relative border border-white/15 transition-all duration-500 ease-out ${
-                    wjrnIsPlaying ? "scale-[1.01]" : "scale-[0.99]"
-                  }`}
+                  className={`w-full aspect-square rounded-xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.9)] relative border border-white/15 transition-all duration-500 ease-out ${wjrnIsPlaying ? "scale-[1.01]" : "scale-[0.99]"
+                    }`}
                 >
                   <img
                     src={(isOnDemand ? onDemandItem?.art : wjrnMeta.artUrl) || defaultArt}
@@ -310,8 +309,8 @@ export default function NebulaHomepage({
                 <div className="h-4 flex items-end justify-center gap-[3px]">
                   {wjrnIsPlaying ? (
                     Array.from({ length: 9 }).map((_, idx) => {
-                      const delays = [0.1,0.4,0.2,0.6,0.3,0.5,0.2,0.4,0.1];
-                      const heights = ["h-3","h-2","h-4","h-2.5","h-3.5","h-2","h-4","h-3","h-1.5"];
+                      const delays = [0.1, 0.4, 0.2, 0.6, 0.3, 0.5, 0.2, 0.4, 0.1];
+                      const heights = ["h-3", "h-2", "h-4", "h-2.5", "h-3.5", "h-2", "h-4", "h-3", "h-1.5"];
                       return (
                         <span key={idx} className={`w-[2px] bg-[#b5945b] rounded-full ${heights[idx]} origin-bottom animate-[bounce_1.2s_ease-in-out_infinite]`} style={{ animationDelay: `${delays[idx]}s` }} />
                       );
@@ -367,7 +366,7 @@ export default function NebulaHomepage({
 
         {/* RIGHT PANEL */}
         <div ref={rightPanelRef} style={{ willChange: "transform" }} className="lg:col-span-3 flex flex-col md:flex-row lg:flex-col justify-between h-full gap-8 items-center lg:items-end">
-          
+
           <div className="flex flex-col gap-6 items-center lg:items-end">
             <div className="text-center lg:text-right flex flex-col items-center lg:items-end gap-1.5 p-4 rounded-xl bg-white/[0.01] border border-white/5 w-fit mx-auto lg:mr-0 lg:ml-auto md:mx-0">
               <span className="block text-[9px] uppercase tracking-widest text-[#b5945b] font-mono">ESTABLISHED</span>
@@ -416,7 +415,7 @@ export default function NebulaHomepage({
       <section className="relative z-10 w-full max-w-7xl mx-auto mt-10 md:-mt-[7px] mb-6">
         <div className="flex flex-col gap-5">
           <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {STATIONS.filter((s) => s.id !== "wjrn").map((station) => {
               const isActive = activeStationId === station.id;
@@ -436,7 +435,7 @@ export default function NebulaHomepage({
               let pulseColorBg = "bg-[#b5945b]";
               let shadowActiveClass = "shadow-[0_20px_50px_-10px_rgba(181,148,91,0.22)]";
               let glowColorBg = "rgba(181,148,91,0.22)";
-              
+
               if (station.id === "rock_garden") {
                 stationColorClass = "border-emerald-500/15 hover:border-emerald-500/60";
                 activeBorderColor = "border-emerald-500/60";
@@ -464,9 +463,9 @@ export default function NebulaHomepage({
 
               const learnMoreHoverClass =
                 station.id === "rock_garden" ? "hover:bg-emerald-500 hover:border-emerald-500" :
-                station.id === "bridge_city" ? "hover:bg-pink-500 hover:border-pink-500" :
-                station.id === "golden_boombox" ? "hover:bg-yellow-500 hover:border-yellow-500" :
-                "hover:bg-[#b5945b] hover:border-[#b5945b]";
+                  station.id === "bridge_city" ? "hover:bg-pink-500 hover:border-pink-500" :
+                    station.id === "golden_boombox" ? "hover:bg-yellow-500 hover:border-yellow-500" :
+                      "hover:bg-[#b5945b] hover:border-[#b5945b]";
 
               const isOnline = !!station.streamUrl;
               const vinylArt = VINYL_ARTWORKS[station.id] || station.logoUrl;
@@ -475,29 +474,26 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className={`pt-7 pb-7 px-7 rounded-3xl border bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 cursor-pointer flex flex-col justify-between min-h-[440px] relative overflow-hidden group ${
-                    isActive 
-                      ? `${activeBorderColor} shadow-2xl -translate-y-1.5 bg-white/[0.045] ${shadowActiveClass}` 
+                  className={`pt-7 pb-7 px-7 rounded-3xl border bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 cursor-pointer flex flex-col justify-between min-h-[440px] relative overflow-hidden group ${isActive
+                      ? `${activeBorderColor} shadow-2xl -translate-y-1.5 bg-white/[0.045] ${shadowActiveClass}`
                       : `${stationColorClass} hover:shadow-2xl hover:-translate-y-1.5`
-                  }`}
+                    }`}
                 >
                   {/* Premium analog dotted board background matrix on hover */}
-                  <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none transition-opacity duration-700 ${
-                    isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"
-                  }`} />
-                  
+                  <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"
+                    }`} />
+
                   {/* Subtle top edge custom color accent strip */}
-                  <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-current to-transparent transition-opacity duration-500 ${textColorClass} ${
-                    isActive ? "opacity-60" : "opacity-0 group-hover:opacity-60"
-                  }`} />
- 
+                  <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-current to-transparent transition-opacity duration-500 ${textColorClass} ${isActive ? "opacity-60" : "opacity-0 group-hover:opacity-60"
+                    }`} />
+
                   {/* STATION CORE TITLE, ROTATING VINYL & BRANDING */}
                   <div className="mt-6 mb-6 flex flex-col gap-6 relative z-10 flex-1 justify-center items-center text-center">
                     {/* Beautiful Vinyl Spinning Disc Cover Artwork with Reflection Glare */}
                     <div className="relative">
                       {isActive && (
-                        <div 
-                          className="absolute -inset-10 rounded-full blur-3xl animate-performant-pulse" 
+                        <div
+                          className="absolute -inset-10 rounded-full blur-3xl animate-performant-pulse"
                           style={{ backgroundColor: glowColorBg }}
                         />
                       )}
@@ -505,22 +501,20 @@ export default function NebulaHomepage({
                       {station.id === "rock_garden" && (
                         <div className="absolute -inset-10 rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 pointer-events-none transition-all duration-500" />
                       )}
-                      <div className={`w-56 h-56 rounded-full overflow-hidden shrink-0 shadow-[0_15px_35px_rgba(0,0,0,0.8)] flex items-center justify-center bg-black duration-700 transition-transform relative ${
-                        isActive ? "scale-105" : "group-hover:scale-105"
-                      }`}>
-                        <img 
-                          src={vinylArt} 
-                          alt={`${station.name} spinning vinyl`} 
-                          className={`w-full h-full object-cover rounded-full ${
-                            isActive && audioState === "playing" ? "animate-[spin_8s_linear_infinite]" : ""
-                          }`}
+                      <div className={`w-56 h-56 rounded-full overflow-hidden shrink-0 shadow-[0_15px_35px_rgba(0,0,0,0.8)] flex items-center justify-center bg-black duration-700 transition-transform relative ${isActive ? "scale-105" : "group-hover:scale-105"
+                        }`}>
+                        <img
+                          src={vinylArt}
+                          alt={`${station.name} spinning vinyl`}
+                          className={`w-full h-full object-cover rounded-full ${isActive && audioState === "playing" ? "animate-[spin_8s_linear_infinite]" : ""
+                            }`}
                           referrerPolicy="no-referrer"
                         />
                         {/* Realistic vinyl shine projection layer */}
                         <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/20 via-white/[0.04] to-black/40 pointer-events-none mix-blend-overlay" />
                       </div>
                     </div>
-                    
+
                     {/* Core Station Header & Secondary Genres Centered */}
                     <div className="space-y-2 max-w-[270vw]">
                       <h4 className="text-xl sm:text-2xl font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
@@ -534,9 +528,9 @@ export default function NebulaHomepage({
 
                   {/* NOW PLAYING CONTAINER FOR SONGS & LIVE CONTROL */}
                   <div className="pt-5 flex flex-col gap-4 relative z-10 mt-auto">
-                    
+
                     <div className="relative overflow-hidden rounded-2xl bg-[#090605]/80 border border-white/5 p-3 flex flex-col gap-3 transition-colors duration-300 group-hover:bg-[#0b0807]/90 group-hover:border-white/10 shadow-inner">
-                      
+
                       {/* Compact Now Playing visual header inside the box */}
                       <div className="flex items-center justify-between border-b border-white/5 pb-1.5 w-full">
                         <span className={`text-[8.5px] font-mono uppercase tracking-[0.2em] font-extrabold ${textColorClass}`}>
@@ -556,9 +550,9 @@ export default function NebulaHomepage({
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           {meta.artUrl ? (
                             <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-white/15 shrink-0 shadow-lg bg-black">
-                              <img 
-                                src={meta.artUrl} 
-                                alt="Track visual" 
+                              <img
+                                src={meta.artUrl}
+                                alt="Track visual"
                                 className="w-full h-full object-cover"
                                 referrerPolicy="no-referrer"
                               />
@@ -582,11 +576,10 @@ export default function NebulaHomepage({
 
                         {/* HIGH FIDELITY CLICK TRIGGER PLAY BUTTON FOR STREAM SELECTION */}
                         <div className="shrink-0 relative z-10">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
-                            isActive 
-                              ? `${textColorClass} bg-white/10 border border-white/20 scale-105` 
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${isActive
+                              ? `${textColorClass} bg-white/10 border border-white/20 scale-105`
                               : "text-neutral-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20"
-                          }`}>
+                            }`}>
                             {isActive && audioState === "playing" ? (
                               <Pause className="w-4 h-4 ml-0" />
                             ) : (
@@ -649,9 +642,9 @@ export default function NebulaHomepage({
 
       {/* 6. Live Twitch Center Embed inside the Secondary layout */}
       <section className="relative z-10 w-full max-w-7xl mx-auto pt-8 mt-4 pb-20">
-        <TwitchSchedule 
-          twitchChannel={currentConfig.twitchChannel} 
-          scheduledDaysText={currentConfig.twitchLiveSchedule} 
+        <TwitchSchedule
+          twitchChannel={currentConfig.twitchChannel}
+          scheduledDaysText={currentConfig.twitchLiveSchedule}
         />
       </section>
 

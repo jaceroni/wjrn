@@ -481,10 +481,11 @@ function togglePlayPause() {
 }
 
 // ── CHANNEL SWITCH ────────────────────────────────────────────────────────────
-function switchStation() {
+function switchStation(dir) {
   if (isTuning || !audioCtx) { if (!audioCtx) { initAudio(); return; } return; }
   isTuning = true;
-  currentStation = (currentStation + 1) % STATIONS.length;
+  var d = (dir !== undefined) ? dir : 1;
+  currentStation = (currentStation + d + STATIONS.length) % STATIONS.length;
   var st = STATIONS[currentStation];
   tickerTakeover('TUNING TO ' + st.frequency + ' MHz – ' + st.name.toUpperCase());
   playStatic(1.5);
@@ -632,6 +633,17 @@ fetch(STATIONS[0].api)
     }
   })
   .catch(function() {});
+
+  // ── KEYBOARD / TV REMOTE NAVIGATION ──────────────────────────────────────────
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'MediaTrackNext') {
+      switchStation(1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown' || e.key === 'MediaTrackPrevious') {
+      switchStation(-1);
+    } else if (e.key === ' ' || e.key === 'Enter' || e.key === 'MediaPlayPause') {
+      togglePlayPause();
+    }
+  });
 
 })();
 </script>

@@ -1,0 +1,10 @@
+title=WJRN Radio
+subtitle=Independent Radio
+major_version=1
+minor_version=0
+build_version=00001
+ui_resolutions=fhd
+mm_icon_focus_hd=pkg:/images/wjrn-player-thumbnail.jpg
+splash_screen_fhd=pkg:/images/wjrn-player-app-startup-screen.jpg
+splash_color=#050201
+splash_min_time=2000

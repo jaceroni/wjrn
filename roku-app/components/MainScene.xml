@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+
+    <children>
+        <!-- 1920x1080 Room Backdrop -->
+        <Poster 
+            id="backdrop" 
+            uri="pkg:/images/wjrn-player-backdrop.jpg" 
+            width="1920" 
+            height="1080" />
+
+        <!-- Vintage Player Group centered on the credenza -->
+        <Group id="playerContainer" translation="[320, 340]">
+            
+            <!-- 1. Album Art (z-index: 1 - Behind faceplate) -->
+            <Poster 
+                id="albumArt" 
+                uri="pkg:/images/wjrn-player-app-startup-screen.jpg" 
+                translation="[111, 101]" 
+                width="274" 
+                height="274" />
+
+            <!-- 2. Tuner Tick Line (z-index: 1 - Behind faceplate) -->
+            <Rectangle 
+                id="tunerTick" 
+                color="#ff3333" 
+                translation="[682, 133]" 
+                width="6" 
+                height="38" />
+
+            <!-- 3. Metadata Ticker (z-index: 1 - Behind faceplate) -->
+            <Label 
+                id="tickerText" 
+                text="LOADING WJRN..." 
+                translation="[410, 214]" 
+                width="569" 
+                height="48" 
+                horizAlign="left" 
+                vertAlign="center" />
+
+            <!-- 4. Faceplate Knockout Image overlay (z-index: 2) -->
+            <Poster 
+                id="faceplate" 
+                uri="pkg:/images/wjrn-receiver-front-ko.png" 
+                width="1280" 
+                height="443" />
+
+        </Group>
+
+        <!-- Hidden Native Audio Engine -->
+        <Audio id="audioPlayer" />
+    </children>
+</component>
