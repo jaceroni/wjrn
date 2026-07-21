@@ -19,7 +19,7 @@ A self-hosted independent internet radio SPA for **radio.jacewonmusic.com**. Thr
 bash deploy.sh
 ```
 
-This builds locally, rsyncs `dist/` to the VPS, syncs nginx config, and reloads nginx. **NEVER run this deployment script yourself unless the user explicitly tells you to do so. Claude Code handles the coding and deployment.**
+This builds locally, rsyncs `dist/` to the VPS, syncs nginx config, and reloads nginx. **Once edits are agreed upon in a session (the user has confirmed the change or asked for it directly), make the edits and then run `deploy.sh` as part of finishing the task — no need to ask for confirmation each time.** Claude Code handles the coding and deployment as one continuous process.
 
 SSH key: `/Users/jacebrown/Dropbox/Jacewon/Radio/newradiokey.pem`  
 Web root on server: `/var/www/wjrn-landing`
