@@ -19,9 +19,13 @@ if [ $? -ne 0 ]; then
 fi
 # ─────────────────────────────────────────────────────────────────────────────
 
-echo "=== Syncing faceplate PNG to public player folder ==="
+echo "=== Syncing player assets to public player folder ==="
 if [ -f "src/assets/images/wjrn-receiver-front-ko.png" ]; then
   cp src/assets/images/wjrn-receiver-front-ko.png public/player/wjrn-receiver-front-ko.png
+fi
+if [ -f "src/assets/images/wjrn-player-backdrop.jpg" ]; then
+  cp src/assets/images/wjrn-player-backdrop.jpg public/player/wjrn-player-backdrop.jpg
+  cp src/assets/images/wjrn-player-backdrop.jpg roku-app/images/wjrn-player-backdrop.jpg
 fi
 
 echo "=== Building React project locally ==="

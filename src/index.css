@@ -108,7 +108,7 @@
   will-change: transform, opacity;
 }
 
-/* ---- Logo: always white, RF interference distortion on hover & page load ---- */
+/* ---- Logo: always white, RF interference distortion on hover ---- */
 .logo-base {
   filter: brightness(0) invert(1); /* permanently white */
 }
@@ -116,67 +116,10 @@
   display: none; /* no longer needed — logo is white by default */
 }
 
-/* Logo page-load: glitch in → hold (2 sharp snaps) → glitch out */
-@keyframes logoLoadDistort {
-  0%    { filter: none;                    transform: translate(0,0); }
-  8%    { filter: url(#logo-interference); transform: translate(0,0); }
-  14%   { filter: none;                    transform: translate(0,0); }
-  24%   { filter: url(#logo-interference); transform: translate(0,0); }
-  32%   { filter: url(#logo-interference); transform: translate(0,0); }
-  /* hold — snap 1 */
-  39%   { filter: url(#logo-interference); transform: translate(0,0); }
-  40%   { filter: url(#logo-interference); transform: translate(-5px, 2px); }
-  42%   { filter: url(#logo-interference); transform: translate(0,0); }
-  /* hold — snap 2 */
-  61%   { filter: url(#logo-interference); transform: translate(0,0); }
-  62%   { filter: url(#logo-interference); transform: translate(4px, -3px); }
-  64%   { filter: url(#logo-interference); transform: translate(0,0); }
-  /* glitch out */
-  72%   { filter: url(#logo-interference); transform: translate(0,0); }
-  80%   { filter: none;                    transform: translate(0,0); }
-  88%   { filter: url(#logo-interference); transform: translate(0,0); }
-  96%   { filter: none;                    transform: translate(0,0); }
-  100%  { filter: none;                    transform: translate(0,0); }
-}
-
-.logo-load-distortion {
-  animation: logoLoadDistort 2s linear both;
-}
-
-/* Text page-load: staggered 0.4s after logo, 2 sharp snaps during hold */
-@keyframes textLoadDistort {
-  0%    { filter: none;                    transform: translate(0,0); }
-  8%    { filter: url(#text-interference); transform: translate(0,0); }
-  15%   { filter: none;                    transform: translate(0,0); }
-  25%   { filter: url(#text-interference); transform: translate(0,0); }
-  33%   { filter: url(#text-interference); transform: translate(0,0); }
-  /* hold — snap 1 */
-  42%   { filter: url(#text-interference); transform: translate(0,0); }
-  43%   { filter: url(#text-interference); transform: translate(5px, -2px); }
-  45%   { filter: url(#text-interference); transform: translate(0,0); }
-  /* hold — snap 2 */
-  63%   { filter: url(#text-interference); transform: translate(0,0); }
-  64%   { filter: url(#text-interference); transform: translate(-4px, 3px); }
-  66%   { filter: url(#text-interference); transform: translate(0,0); }
-  /* glitch out */
-  73%   { filter: url(#text-interference); transform: translate(0,0); }
-  81%   { filter: none;                    transform: translate(0,0); }
-  89%   { filter: url(#text-interference); transform: translate(0,0); }
-  97%   { filter: none;                    transform: translate(0,0); }
-  100%  { filter: none;                    transform: translate(0,0); }
-}
-
-.text-load-distortion {
-  animation: textLoadDistort 2s linear both;
-  animation-delay: 0.4s; /* staggered after logo */
-}
-
 @media (hover: hover) {
-  /* Logo: instant filter on/off once load animation has played (class stays after swap) */
   .group-logo:hover {
     filter: url(#logo-interference) !important;
   }
-  /* Text: instant filter on/off after JS swaps text-load-distortion → text-hover-static */
   .text-hover-static:hover {
     filter: url(#text-interference) !important;
     cursor: default;
