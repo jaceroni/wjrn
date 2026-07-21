@@ -36,35 +36,6 @@
     <meta name="twitter:image" content="https://radio.jacewonmusic.com/assets/images/wjrn-thumbnail.jpg" />
   </head>
   <body>
-    <!-- Hidden SVG filter bank — shared across all pages -->
-    <svg style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <!-- Radio wave / RF interference displacement filter for logo hover -->
-        <filter id="logo-interference" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
-          <!-- Rapidly animate the seed to create frame-by-frame white noise static -->
-          <!-- High vertical frequency (0.95) creates thin horizontal scanlines/tears -->
-          <feTurbulence type="turbulence" baseFrequency="0.02 0.95" numOctaves="2" seed="1" result="wave">
-            <animate attributeName="seed"
-              values="1;5;9;3;7;2;8;4;6;1"
-              dur="0.25s" repeatCount="indefinite"/>
-          </feTurbulence>
-          <feDisplacementMap in="SourceGraphic" in2="wave" scale="25" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
-          <feComposite in="displaced" in2="SourceGraphic" operator="in"/>
-        </filter>
-
-        <!-- RF interference displacement filter for text/headlines (slightly lower scale for legibility) -->
-        <filter id="text-interference" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
-          <feTurbulence type="turbulence" baseFrequency="0.03 0.95" numOctaves="2" seed="1" result="wave">
-            <animate attributeName="seed"
-              values="1;5;9;3;7;2;8;4;6;1"
-              dur="0.25s" repeatCount="indefinite"/>
-          </feTurbulence>
-          <feDisplacementMap in="SourceGraphic" in2="wave" scale="12" xChannelSelector="R" yChannelSelector="G" result="displaced"/>
-          <feComposite in="displaced" in2="SourceGraphic" operator="in"/>
-        </filter>
-      </defs>
-    </svg>
-
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

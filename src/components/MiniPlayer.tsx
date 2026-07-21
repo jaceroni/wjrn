@@ -56,7 +56,6 @@ export default function MiniPlayer() {
   // Track the last station that was playing so the bar stays populated after pause
   const lastStationRef = useRef<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   // Update last station and un-dismiss whenever a station becomes active
   if (activeStationId) {
@@ -105,16 +104,11 @@ export default function MiniPlayer() {
       {/* Main bar */}
       <div className="relative bg-[#080808]/96 backdrop-blur-2xl border-t border-white/[0.07] px-4 md:px-8 h-20 flex items-center gap-4">
         {/* Station Logo — dead center */}
-        <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 hidden md:block"
-          onMouseEnter={() => setIsLogoHovered(true)}
-          onMouseLeave={() => setIsLogoHovered(false)}
-        >
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 hidden md:block">
           <img
             src={STATION_LOGOS[displayStationId || "wjrn"] || logoWjrn}
             alt="Active Station Logo"
             className="h-10 w-auto object-contain transition-all duration-200"
-            style={isLogoHovered ? { filter: "url(#logo-interference)" } : undefined}
           />
         </div>
 

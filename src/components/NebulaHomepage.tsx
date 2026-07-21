@@ -179,7 +179,7 @@ export default function NebulaHomepage({
             e.preventDefault();
             navigate("/");
           }}
-            className="relative h-[53px] md:h-[63px] group-logo cursor-pointer select-none">
+            className="relative h-[53px] md:h-[63px] cursor-pointer select-none">
             {/* Base Brown Logo */}
             <img
               src={wjrnLogoCubed}
@@ -212,7 +212,7 @@ export default function NebulaHomepage({
             <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#b5945b]">WJRN - JACEWON RADIO NETWORK</span>
           </div>
           <h2
-            className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left text-hover-static">
+            className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left">
             STATIONS THAT DON'T ASK FOR PERMISSION
           </h2>
         </div>

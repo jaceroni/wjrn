@@ -116,16 +116,6 @@
   display: none; /* no longer needed — logo is white by default */
 }
 
-@media (hover: hover) {
-  .group-logo:hover {
-    filter: url(#logo-interference) !important;
-  }
-  .text-hover-static:hover {
-    filter: url(#text-interference) !important;
-    cursor: default;
-  }
-}
-
 /* Animates the height of visualizer columns (used by PopoutWidget + NebulaHomepage phone player) */
 @keyframes verticalPulse {
   0%, 100% { transform: scaleY(0.15); }

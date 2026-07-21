@@ -122,13 +122,12 @@ Fetched in `StationLanding.tsx` on mount. Public — no auth required.
 
 **Brand accent**: `#b5945b` (gold/tan) — used for WJRN homepage elements  
 **Fonts**: `font-display` = Montserrat (headlines), `font-mono` = JetBrains Mono (UI labels)  
-**Background**: `#050201` homepage, station pages have per-station dark bg  
-**Logo hover effect**: SVG `feTurbulence` + `feDisplacementMap` filter defined in `index.html` as `#logo-interference`. Applied via `.group-logo:hover { filter: url(#logo-interference) }` in `index.css`.
+**Background**: `#050201` homepage, station pages have per-station dark bg
 
 ### Shared CSS classes (`index.css`)
 - `.animate-glow-one/two/three` — shared lava lamp blob animations
 - `.animate-marquee` + `.mask-marquee` — scrolling text for long track titles
-- `.logo-base` / `.logo-white-reveal` / `.group-logo` — logo hover system
+- `.logo-base` / `.logo-white-reveal` — logo always-white treatment (no hover distortion effect — removed 2026-07-21)
 - `@keyframes verticalPulse` — used by phone visualizer bars
 
 ### Lava lamp blobs (anti-flicker rules)

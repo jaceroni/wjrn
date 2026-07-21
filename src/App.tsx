@@ -71,10 +71,6 @@ export default function App() {
           }
         });
 
-        // Copy SVG filter bank so glitch effects work
-        const svgBank = document.querySelector('svg[aria-hidden="true"]');
-        if (svgBank) pip.document.body.appendChild(svgBank.cloneNode(true));
-
         // Dark background for the PiP window
         pip.document.body.style.cssText = "margin:0;padding:0;background:#0a0a0a;display:flex;align-items:center;justify-content:center;min-height:100vh;";
 
