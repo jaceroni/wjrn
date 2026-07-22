@@ -65,7 +65,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
 
       {/* Header — Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
+      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
         <a href="/" onClick={go("/")} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
@@ -113,7 +113,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           </span>
         </div>
       </header>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-6xl mx-auto" />
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
       </div>
 
       {/* Hero */}
@@ -130,7 +130,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </section>
 
       {/* Team */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto">
+      <section className="relative z-10 w-full max-w-7xl mx-auto">
         <div className="flex flex-col gap-5 mb-8">
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#b5945b]">The Team</span>
         </div>
@@ -161,14 +161,14 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>
         </div>
         <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
           <span className="flex items-center gap-1.5">
-            Designed with <span className="animate-pulse text-[14px] leading-none">❤</span> in California
+            Designed with <span className="animate-pulse text-[20px] leading-none mb-1">❤</span> in California
           </span>
           <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
         </div>

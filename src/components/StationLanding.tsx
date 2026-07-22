@@ -4,7 +4,7 @@ import { navigate } from "../navigate";
 import { formatTime } from "../context/PlayerContext";
 import { NowPlaying } from "../types";
 import { usePlayer } from "../context/PlayerContext";
-import wjrnLogoCubed from "../assets/images/wjrn-logo-cubed.svg";
+import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 import logoRockGarden from "../assets/images/miniplayer-logo-trg.svg";
 import logoBridgeCity from "../assets/images/miniplayer-logo-bchs.svg";
@@ -18,6 +18,15 @@ import djBoothBg from "../assets/images/wjrn-thumbnail.jpg";
 interface StationLandingProps {
   stationId: string;
 }
+
+// Nav dropdown — kept as a small local lookup (matches the pattern already
+// used on the homepage/About pages) rather than threading the full STATIONS
+// array down as a prop.
+const NAV_STATIONS = [
+  { id: "rock_garden", name: "THE ROCK GARDEN", slug: "the-rock-garden" },
+  { id: "bridge_city", name: "BRIDGE CITY HANG SUITE", slug: "bridge-city-hang-suite" },
+  { id: "golden_boombox", name: "THE GOLDEN BOOMBOX", slug: "the-golden-boombox" },
+];
 
 interface OnDemandEpisode {
   title: string;
@@ -302,8 +311,6 @@ export default function StationLanding({ stationId }: StationLandingProps) {
   // Use context metadata for this station (kept fresh by global polling)
   const contextMeta = metadata[stationId] ?? DEFAULT_META;
 
-  const [pacificTime, setPacificTime] = useState("");
-
   // --- Podcast episodes ---
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>([]);
   const [episodesLoading, setEpisodesLoading] = useState(true);
@@ -363,23 +370,6 @@ export default function StationLanding({ stationId }: StationLandingProps) {
     })();
   }, [stationId]);
 
-  // --- Clock ---
-  useEffect(() => {
-    const tick = () => {
-      const t = new Date().toLocaleTimeString("en-US", {
-        timeZone: "America/Los_Angeles",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      });
-      setPacificTime(`${t} PACIFIC`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-
   const isLive = contextMeta.isOnline;
   const isThisStationOnDemand = isOnDemand && activeStationId === stationId;
   const pageAudioStateFull = isThisStationOnDemand ? audioState : pageAudioState;
@@ -415,50 +405,91 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       </div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Header                                                              */}
+      {/* Header — Logo / Nav / Live Indicator                               */}
       {/* ------------------------------------------------------------------ */}
-      <header className="relative z-10 w-full flex items-center justify-between pb-6 max-w-7xl mx-auto">
-        {/* (1) Broadcasting Info (Far Upper Left) */}
-         <div className="hidden md:flex flex-col text-left">
-          <span className={`text-[9px] uppercase tracking-[0.25em] font-mono mb-1 ${config.textColorClass}`}>Broadcasting</span>
-          <span className="text-xs md:text-sm font-bold uppercase tracking-wide text-white/95 font-mono flex items-center gap-1.5">
-            <Antenna className="w-3.5 h-3.5 text-red-500 animate-pulse shrink-0" />
-            LIVE FROM CALIFORNIA
-          </span>
-        </div>
-
-        {/* (3) SVG Logo (Center Alignment) */}
-        <div className="flex justify-center flex-1 md:max-w-[240px] px-4">
-          <a href="/" onClick={(e: React.MouseEvent) => {
+      <div className="relative z-30">
+      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+        <a
+          href="/"
+          onClick={(e: React.MouseEvent) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
             navigate("/");
           }}
-          className="relative h-[53px] md:h-[63px] cursor-pointer select-none">
-            {/* Base Brown Logo */}
-            <img
-              src={wjrnLogoCubed}
-              alt="WJRN Logo"
-              className="h-full object-contain logo-base"
-            />
-            {/* White Logo Overlay (Revealed from center) */}
-            <img
-              src={wjrnLogoCubed}
-              alt="WJRN Logo White"
-              className="absolute inset-0 w-full h-full object-contain logo-white-reveal pointer-events-none"
-            />
-          </a>
-        </div>
+          className="flex items-center gap-3 cursor-pointer select-none shrink-0"
+        >
+          <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
+          <span className="hidden sm:flex items-center gap-3">
+            <span className="w-px h-3.5 bg-white/20" />
+            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
+              Jacewon Radio Network
+            </span>
+          </span>
+        </a>
 
-        {/* (2) Studio Clock Sync Info (Far Upper Right) */}
-         <div className="hidden md:flex flex-col text-right">
-          <span className={`text-[9px] uppercase tracking-[0.25em] font-mono mb-1 ${config.textColorClass}`}>STUDIO CLOCK SYNC</span>
-          <span className="text-xs md:text-sm font-bold text-white/95 font-mono flex items-center justify-end gap-2">
-            <span>{pacificTime}</span>
+        <nav className="hidden md:flex items-center gap-5 text-[11px] font-mono uppercase tracking-[0.2em]">
+          <a
+            href="/"
+            onClick={(e: React.MouseEvent) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+              e.preventDefault();
+              navigate("/");
+            }}
+            className="text-white/80 hover:text-[#b5945b] transition-colors"
+          >
+            Home
+          </a>
+          <span className="text-white/20">&middot;</span>
+
+          <div className="relative group py-2">
+            <span className="text-white/80 group-hover:text-[#b5945b] transition-colors cursor-default">
+              Our Stations
+            </span>
+            <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
+              <div className="flex flex-col min-w-[230px] rounded-lg border border-white/10 bg-[#0c0908]/95 backdrop-blur-md shadow-2xl overflow-hidden">
+                {NAV_STATIONS.map((station) => (
+                  <a
+                    key={station.id}
+                    href={`/${station.slug}`}
+                    onClick={(e: React.MouseEvent) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+                      e.preventDefault();
+                      navigate(`/${station.slug}`);
+                    }}
+                    className={`px-4 py-2.5 text-[10px] tracking-[0.15em] transition-colors whitespace-nowrap hover:bg-white/5 ${
+                      station.id === stationId ? config.textColorClass : "text-white/70 hover:text-white"
+                    }`}
+                  >
+                    {station.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <span className="text-white/20">&middot;</span>
+          <a
+            href="/about-wjrn"
+            onClick={(e: React.MouseEvent) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+              e.preventDefault();
+              navigate("/about-wjrn");
+            }}
+            className="text-white/80 hover:text-[#b5945b] transition-colors"
+          >
+            About WJRN
+          </a>
+        </nav>
+
+        <div className="hidden md:flex items-center gap-1.5 shrink-0">
+          <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
+          <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
+            Live From California
           </span>
         </div>
       </header>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-7xl mx-auto relative z-10" />
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
+      </div>
 
       {/* 3. Main Centerpiece Grid Layout */}
       <section className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mt-2 md:mt-4">

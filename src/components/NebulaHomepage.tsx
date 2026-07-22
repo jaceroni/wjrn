@@ -199,7 +199,7 @@ export default function NebulaHomepage({
 
       {/* 2. Top Header - Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
+      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
         {/* Logo lockup (Far Upper Left) */}
         <a
           href="/"
@@ -281,11 +281,11 @@ export default function NebulaHomepage({
           </span>
         </div>
       </header>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-6xl mx-auto" />
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
       </div>
 
       {/* 3. Hero — Vintage Receiver Player Embed */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto">
+      <section className="relative z-10 w-full max-w-7xl mx-auto">
         <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_35px_70px_rgba(0,0,0,0.55)]">
           <iframe
             ref={playerIframeRef}
@@ -298,7 +298,7 @@ export default function NebulaHomepage({
       </section>
 
       {/* 5. Glassy Selectable Stream Channels Slider/Deck modules */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto">
+      <section className="relative z-10 w-full max-w-7xl mx-auto">
         <div className="flex flex-col gap-5">
           <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
 
@@ -527,7 +527,7 @@ export default function NebulaHomepage({
       </section>
 
       {/* 6. Live Twitch Center Embed inside the Secondary layout */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto">
+      <section className="relative z-10 w-full max-w-7xl mx-auto">
         <TwitchSchedule
           twitchChannel={currentConfig.twitchChannel}
           scheduledDaysText={currentConfig.twitchLiveSchedule}
@@ -535,14 +535,14 @@ export default function NebulaHomepage({
       </section>
 
       {/* 7. Beautiful Minimal Footer */}
-      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>
         </div>
         <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
           <span className="flex items-center gap-1.5">
-            Designed with <span className="animate-pulse text-[14px] leading-none">❤</span> in California
+            Designed with <span className="animate-pulse text-[20px] leading-none mb-1">❤</span> in California
           </span>
           <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
         </div>
