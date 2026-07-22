@@ -87,13 +87,13 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
-              <div className="flex flex-col min-w-[230px] rounded-lg border border-white/10 bg-[#0c0908]/95 backdrop-blur-md shadow-2xl overflow-hidden">
+              <div className="flex flex-col rounded-lg border border-white/10 bg-[#0c0908]/95 backdrop-blur-md shadow-2xl overflow-hidden">
                 {STATIONS.filter((s) => s.id !== "wjrn").map((station) => (
                   <a
                     key={station.id}
                     href={`/${STATION_SLUGS[station.id]}`}
                     onClick={go(`/${STATION_SLUGS[station.id]}`)}
-                    className="px-4 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap"
+                    className="px-6 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap text-center"
                   >
                     {station.name}
                   </a>
