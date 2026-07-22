@@ -2,7 +2,7 @@ import React from "react";
 import { Antenna, User } from "lucide-react";
 import { Station } from "../types";
 import { navigate } from "../navigate";
-import wjrnLogoCubed from "../assets/images/wjrn-logo-cubed.svg";
+import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 
 interface AboutWjrnProps {
   STATIONS: Station[];
@@ -66,7 +66,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       {/* Header — Logo / Nav / Live Indicator */}
       <header className="relative z-30 w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
         <a href="/" onClick={go("/")} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
-          <img src={wjrnLogoCubed} alt="WJRN" className="logo-base h-6 md:h-7 w-auto object-contain" />
+          <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
             <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">

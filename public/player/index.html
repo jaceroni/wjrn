@@ -102,6 +102,7 @@ html, body {
 // ── STATIONS ──────────────────────────────────────────────────────────────────
 var STATIONS = [
   {
+    key: "wjrn",
     name: "WJRN",
     frequency: 89.1,
     stream: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",
@@ -109,6 +110,7 @@ var STATIONS = [
     description: "THIS IS WJRN – HOSTED BY JACEWON – BROADCASTING LIVE FROM CALIFORNIA – HOME OF THE ROCK GARDEN, BRIDGE CITY HANG SUITE, & GOLDEN BOOMBOX SESSIONS  "
   },
   {
+    key: "rock_garden",
     name: "The Rock Garden",
     frequency: 95.5,
     stream: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
@@ -116,6 +118,7 @@ var STATIONS = [
     description: "THIS IS THE ROCK GARDEN – ALL VINYL CLASSIC ROCK, FUNK, BLUES & JAZZ – LIVE EVERY TUESDAY 7PM PACIFIC ON TWITCH.TV  "
   },
   {
+    key: "bridge_city",
     name: "Bridge City Hang Suite",
     frequency: 102.7,
     stream: "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3",
@@ -123,6 +126,7 @@ var STATIONS = [
     description: "THIS IS THE BRIDGE CITY HANG SUITE – GROWNFOLK R&B – LIVE EVERY WEDS 7PM PACIFIC ON TWITCH.TV  "
   },
   {
+    key: "golden_boombox",
     name: "The Golden Boombox Sessions",
     frequency: 105.9,
     stream: "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3",
@@ -140,6 +144,25 @@ var isTuning = false;
 var metaInterval = null;
 var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 var isPopout = window.location.search.includes('popout=true');
+
+// "Synced" mode: embedded inline on the homepage hero, cross-frame linked to the
+// main site's global player. Its own audio graph still runs (VU meter, ticker,
+// art all stay real/alive) but output is never connected to speakers — the
+// global MiniPlayer/station cards are the only audible source, so the two
+// don't play the same stream out loud at once.
+var isSynced = window.location.search.includes('sync=1');
+
+function notifyStationChanged() {
+  try {
+    window.parent.postMessage({ source: 'wjrn-player', type: 'stationChanged', station: STATIONS[currentStation].key }, '*');
+  } catch (e) {}
+}
+
+function notifyPlayStateChanged(playing) {
+  try {
+    window.parent.postMessage({ source: 'wjrn-player', type: 'playStateChanged', playing: playing, station: STATIONS[currentStation].key }, '*');
+  } catch (e) {}
+}
 
 var bassActive = false, midActive = false, trebleActive = false;
 var loudnessActive = false, monoActive = false, isMuted = false;
@@ -397,8 +420,12 @@ function playStatic(duration) {
 }
 
 // ── INIT AUDIO ────────────────────────────────────────────────────────────────
-function initAudio() {
+function initAudio(startIndex) {
   if (audioCtx) return;
+  if (typeof startIndex === 'number' && STATIONS[startIndex]) {
+    currentStation = startIndex;
+    setTunerTick(STATIONS[startIndex].frequency);
+  }
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   analyser = audioCtx.createAnalyser();
@@ -431,7 +458,7 @@ function initAudio() {
 
   noiseGain = audioCtx.createGain();
   noiseGain.gain.value = 0;
-  noiseGain.connect(audioCtx.destination);
+  if (!isSynced) noiseGain.connect(audioCtx.destination);
 
   audioEl = new Audio();
   audioEl.crossOrigin = 'anonymous';
@@ -445,12 +472,13 @@ function initAudio() {
   trebleFilter.connect(shaper);
   shaper.connect(panner);
   panner.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
+  if (!isSynced) gainNode.connect(audioCtx.destination);
 
   audioEl.onplay = function() {
     playerState = 2;
     showArtOverlay(false);
     restoreTicker();
+    notifyPlayStateChanged(true);
   };
 
   audioEl.onpause = function() {
@@ -458,11 +486,13 @@ function initAudio() {
       playerState = 3;
       showArtOverlay(true);
       setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase());
+      notifyPlayStateChanged(false);
     }
   };
 
   startVU();
   audioEl.play().catch(function() {});
+  notifyStationChanged();
   fetchMeta();
   metaInterval = setInterval(fetchMeta, 15000);
 }
@@ -481,11 +511,10 @@ function togglePlayPause() {
 }
 
 // ── CHANNEL SWITCH ────────────────────────────────────────────────────────────
-function switchStation(dir) {
-  if (isTuning || !audioCtx) { if (!audioCtx) { initAudio(); return; } return; }
+function goToStation(targetIndex) {
+  if (isTuning || !audioCtx || targetIndex === currentStation) return;
   isTuning = true;
-  var d = (dir !== undefined) ? dir : 1;
-  currentStation = (currentStation + d + STATIONS.length) % STATIONS.length;
+  currentStation = targetIndex;
   var st = STATIONS[currentStation];
   tickerTakeover('TUNING TO ' + st.frequency + ' MHz – ' + st.name.toUpperCase());
   playStatic(1.5);
@@ -498,10 +527,18 @@ function switchStation(dir) {
     currentTitle = '';
     currentArtist = '';
     currentArtUrl = '';
+    notifyStationChanged();
     fetchMeta();
     metaInterval = setInterval(fetchMeta, 15000);
   }, 1200);
   setTimeout(function() { isTuning = false; }, 2000);
+}
+
+function switchStation(dir) {
+  if (isTuning || !audioCtx) { if (!audioCtx) { initAudio(); return; } return; }
+  var d = (dir !== undefined) ? dir : 1;
+  var target = (currentStation + d + STATIONS.length) % STATIONS.length;
+  goToStation(target);
 }
 
 // ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
@@ -644,6 +681,39 @@ fetch(STATIONS[0].api)
       togglePlayPause();
     }
   });
+
+  // ── CROSS-FRAME SYNC (embedded/synced mode only) ─────────────────────────────
+  // Lets the main site's station cards / MiniPlayer drive this player, and vice
+  // versa, so whichever station is live is reflected everywhere at once.
+  if (isSynced) {
+    window.addEventListener('message', function(e) {
+      var data = e && e.data;
+      if (!data || data.source !== 'wjrn-app') return;
+
+      if (data.type === 'setStation') {
+        var idx = -1;
+        for (var i = 0; i < STATIONS.length; i++) {
+          if (STATIONS[i].key === data.station) { idx = i; break; }
+        }
+        if (idx === -1) return;
+        if (!audioCtx) {
+          initAudio(idx);
+        } else if (idx !== currentStation) {
+          goToStation(idx);
+        } else if (audioEl && audioEl.paused) {
+          audioEl.play().catch(function() {});
+        }
+      } else if (data.type === 'play') {
+        if (!audioCtx) { initAudio(); return; }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioEl && audioEl.paused) audioEl.play().catch(function() {});
+      } else if (data.type === 'pause') {
+        if (audioEl && !audioEl.paused) audioEl.pause();
+      }
+    });
+
+    try { window.parent.postMessage({ source: 'wjrn-player', type: 'ready' }, '*'); } catch (e) {}
+  }
 
 })();
 </script>

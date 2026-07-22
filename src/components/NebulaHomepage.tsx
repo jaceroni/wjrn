@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Play,
   Pause,
@@ -8,8 +8,9 @@ import {
 } from "lucide-react";
 import { Station, NowPlaying, RadioConfig } from "../types";
 import { navigate } from "../navigate";
+import { usePlayer } from "../context/PlayerContext";
 import TwitchSchedule from "./TwitchScheduleRetro";
-import wjrnLogoCubed from "../assets/images/wjrn-logo-cubed.svg";
+import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 
 // Premium imported assets for the high-end station player cards
@@ -60,6 +61,57 @@ export default function NebulaHomepage({
     golden_boombox: "the-golden-boombox",
   };
 
+  const { togglePlayback } = usePlayer();
+
+  // Cross-frame sync with the embedded vintage player (public/player/index.html).
+  // The iframe keeps its own audio graph alive (VU meter, ticker, art all stay
+  // real) but its output is never connected to speakers when synced — the
+  // MiniPlayer/station cards are the one audible source, so turning the tuner
+  // in the vintage player or clicking a station card both drive the same state
+  // without the two ever playing the same stream out loud at once.
+  const playerIframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const sendCurrentState = () => {
+      const win = playerIframeRef.current?.contentWindow;
+      if (!win) return;
+      if (activeStationId && audioState !== "idle" && audioState !== "error") {
+        win.postMessage({ source: "wjrn-app", type: "setStation", station: activeStationId }, "*");
+        if (audioState !== "playing") {
+          win.postMessage({ source: "wjrn-app", type: "pause" }, "*");
+        }
+      }
+    };
+
+    sendCurrentState();
+
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (!data || data.source !== "wjrn-player") return;
+
+      if (data.type === "ready") {
+        sendCurrentState();
+        return;
+      }
+      if (data.type === "stationChanged") {
+        if (data.station && data.station !== activeStationId) {
+          toggleStation(data.station);
+        }
+        return;
+      }
+      if (data.type === "playStateChanged") {
+        if (data.station === activeStationId) {
+          const isPlaying = audioState === "playing";
+          if (data.playing && !isPlaying) togglePlayback();
+          if (!data.playing && isPlaying) togglePlayback();
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [activeStationId, audioState, toggleStation, togglePlayback]);
+
   return (
     <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col justify-between overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>
 
@@ -91,7 +143,7 @@ export default function NebulaHomepage({
           }}
           className="flex items-center gap-3 cursor-pointer select-none shrink-0"
         >
-          <img src={wjrnLogoCubed} alt="WJRN" className="logo-base h-6 md:h-7 w-auto object-contain" />
+          <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
             <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
@@ -165,10 +217,11 @@ export default function NebulaHomepage({
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-6xl mx-auto relative z-10" />
 
       {/* 3. Hero — Vintage Receiver Player Embed */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto mt-2 mb-16 md:mb-24">
+      <section className="relative z-10 w-full max-w-6xl mx-auto mt-2 mb-16">
         <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_35px_70px_rgba(0,0,0,0.55)]">
           <iframe
-            src="https://radio.jacewonmusic.com/player/?popout=true"
+            ref={playerIframeRef}
+            src="https://radio.jacewonmusic.com/player/?popout=true&sync=1"
             title="WJRN Vintage Player"
             className="w-full h-full border-0 block"
             allow="autoplay"
