@@ -1,23 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
   Play,
   Pause,
-  Volume2,
-  VolumeX,
   Radio,
   Antenna,
   ArrowRight,
-  ThumbsUp,
-  Phone,
 } from "lucide-react";
 import { Station, NowPlaying, RadioConfig } from "../types";
 import { navigate } from "../navigate";
-import { usePlayer } from "../context/PlayerContext";
 import TwitchSchedule from "./TwitchScheduleRetro";
 import wjrnLogoCubed from "../assets/images/wjrn-logo-cubed.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
-import AudioVisualizer from "./AudioVisualizer";
-import wjrnVintageExpButton from "../assets/images/wjrn-vintage-exp-button.png";
 
 // Premium imported assets for the high-end station player cards
 import vinylLogoTrg from "../assets/images/vinyl-logo-trg.png";
@@ -46,17 +39,10 @@ interface NebulaHomepageProps {
   setActiveStationId: (id: string | null) => void;
   toggleStation: (id: string) => void;
   audioState: "idle" | "connecting" | "playing" | "error";
-  volume: number;
-  setVolume: (v: number) => void;
-  isMuted: boolean;
-  setIsMuted: (m: boolean) => void;
   metadata: { [key: string]: NowPlaying };
   utcTime: string;
   currentConfig: RadioConfig;
-  visualizerType: "bars" | "wave" | "retro";
-  setVisualizerType: (type: "bars" | "wave" | "retro") => void;
   onToggleView: () => void;
-  audioRef?: React.RefObject<HTMLAudioElement | null>;
 }
 
 export default function NebulaHomepage({
@@ -64,15 +50,8 @@ export default function NebulaHomepage({
   activeStationId,
   toggleStation,
   audioState,
-  volume,
-  setVolume,
-  isMuted,
-  setIsMuted,
   metadata,
   currentConfig,
-  visualizerType,
-  setVisualizerType,
-  audioRef,
 }: NebulaHomepageProps) {
 
   const STATION_SLUGS: { [key: string]: string } = {
@@ -80,67 +59,6 @@ export default function NebulaHomepage({
     bridge_city: "bridge-city-hang-suite",
     golden_boombox: "the-golden-boombox",
   };
-
-  const { isOnDemand, onDemandItem, togglePlayback } = usePlayer();
-
-  // Phone player is locked to the WJRN master stream — station cards are independent
-  const wjrnMeta = metadata["wjrn"] || {
-    trackTitle: "OFFLINE", trackArtist: "WJRN Broadcast Network", album: "Offline",
-    artUrl: defaultArt, listeners: 0, isOnline: false, isPlayingLive: false, nextTrack: null,
-  };
-  const wjrnIsPlaying = activeStationId === "wjrn" && audioState === "playing";
-
-  const cycleViz = () => {
-    setVisualizerType(
-      visualizerType === "bars" ? "wave" :
-        visualizerType === "wave" ? "retro" : "bars"
-    );
-  };
-
-  // Parallax refs — DOM mutation on scroll, no re-render
-  const leftPanelRef = useRef<HTMLDivElement>(null);
-  const phoneRef = useRef<HTMLDivElement>(null);
-  const rightPanelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onScroll = () => {
-      if (window.innerWidth < 1024) return;
-      const y = window.scrollY;
-      if (leftPanelRef.current) leftPanelRef.current.style.transform = `translateX(${y * -0.06}px)`;
-      if (rightPanelRef.current) rightPanelRef.current.style.transform = `translateX(${y * 0.05}px)`;
-      if (phoneRef.current) phoneRef.current.style.transform = `translateY(${y * -0.09}px)`;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // State to track Pacific Time (PST/PDT) Split for custom separator
-  const [pacificDate, setPacificDate] = useState("");
-  const [pacificTimeOnly, setPacificTimeOnly] = useState("");
-
-  useEffect(() => {
-    const updateTime = () => {
-      const d = new Date();
-      const timeStr = d.toLocaleTimeString("en-US", {
-        timeZone: "America/Los_Angeles",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true
-      });
-      const dateStr = d.toLocaleDateString("en-US", {
-        timeZone: "America/Los_Angeles",
-        month: "short",
-        day: "2-digit",
-        year: "numeric"
-      });
-      setPacificDate(dateStr);
-      setPacificTimeOnly(`${timeStr} PACIFIC`);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col justify-between overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>
@@ -161,252 +79,101 @@ export default function NebulaHomepage({
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] opacity-45" />
       </div>
 
-      {/* 2. Top Header - Strict 3 Elements Layout */}
-      <header className="relative z-10 w-full flex items-center justify-between pb-6 max-w-7xl mx-auto">
-        {/* (1) Broadcasting Info (Far Upper Left) */}
-        <div className="hidden md:flex flex-col text-left">
-          <span className="text-[9px] uppercase tracking-[0.25em] text-[#b5945b] font-mono mb-1">Broadcasting</span>
-          <span className="text-xs md:text-sm font-bold uppercase tracking-wide text-white/95 font-mono flex items-center gap-1.5">
-            <Antenna className="w-3.5 h-3.5 text-red-500 animate-pulse shrink-0" />
-            LIVE FROM CALIFORNIA
-          </span>
-        </div>
-
-        {/* (3) SVG Logo (Center Alignment) */}
-        <div className="flex justify-center flex-1 md:max-w-[240px] px-4">
-          <a href="/" onClick={(e) => {
+      {/* 2. Top Header - Logo / Nav / Live Indicator */}
+      <header className="relative z-10 w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+        {/* Logo lockup (Far Upper Left) */}
+        <a
+          href="/"
+          onClick={(e) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
             navigate("/");
           }}
-            className="relative h-[53px] md:h-[63px] cursor-pointer select-none">
-            {/* Base Brown Logo */}
-            <img
-              src={wjrnLogoCubed}
-              alt="WJRN Logo"
-              className="h-full object-contain logo-base"
-            />
-            {/* White Logo Overlay (Revealed from center) */}
-            <img
-              src={wjrnLogoCubed}
-              alt="WJRN Logo White"
-              className="absolute inset-0 w-full h-full object-contain logo-white-reveal pointer-events-none"
-            />
-          </a>
-        </div>
+          className="flex items-center gap-3 cursor-pointer select-none shrink-0"
+        >
+          <img src={wjrnLogoCubed} alt="WJRN" className="h-6 md:h-7 w-auto object-contain" />
+          <span className="hidden sm:flex items-center gap-3">
+            <span className="w-px h-3.5 bg-white/20" />
+            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
+              Jacewon Radio Network
+            </span>
+          </span>
+        </a>
 
-        {/* (2) Studio Clock Sync Info (Far Upper Right) */}
-        <div className="hidden md:flex flex-col text-right">
-          <span className="text-[9px] uppercase tracking-[0.25em] text-[#b5945b] font-mono mb-1">STUDIO CLOCK SYNC</span>
-          <span className="text-xs md:text-sm font-bold text-white/95 font-mono flex items-center justify-end gap-2">
-            <span>{pacificTimeOnly}</span>
+        {/* Center Nav */}
+        <nav className="hidden md:flex items-center gap-5 text-[11px] font-mono uppercase tracking-[0.2em]">
+          <a
+            href="/"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+              e.preventDefault();
+              navigate("/");
+            }}
+            className="text-white/80 hover:text-[#b5945b] transition-colors"
+          >
+            Home
+          </a>
+          <span className="text-white/20">&middot;</span>
+
+          {/* Our Stations — hover dropdown */}
+          <div className="relative group py-2">
+            <span className="text-white/80 group-hover:text-[#b5945b] transition-colors cursor-default">
+              Our Stations
+            </span>
+            <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
+              <div className="flex flex-col min-w-[230px] rounded-lg border border-white/10 bg-[#0c0908]/95 backdrop-blur-md shadow-2xl overflow-hidden">
+                {STATIONS.filter((s) => s.id !== "wjrn").map((station) => (
+                  <a
+                    key={station.id}
+                    href={`/${STATION_SLUGS[station.id]}`}
+                    onClick={(e) => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+                      e.preventDefault();
+                      navigate(`/${STATION_SLUGS[station.id]}`);
+                    }}
+                    className="px-4 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap"
+                  >
+                    {station.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <span className="text-white/20">&middot;</span>
+          <a
+            href="/about-wjrn"
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+              e.preventDefault();
+              navigate("/about-wjrn");
+            }}
+            className="text-white/80 hover:text-[#b5945b] transition-colors"
+          >
+            About WJRN
+          </a>
+        </nav>
+
+        {/* Live Indicator (Far Upper Right) */}
+        <div className="hidden md:flex items-center gap-1.5 shrink-0">
+          <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
+          <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
+            Live From California
           </span>
         </div>
       </header>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-7xl mx-auto relative z-10" />
 
-      {/* 3. Hero Section & Typography Layout */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-start mt-2">
-        <div className="lg:col-span-8 flex flex-col">
-          <div className="flex items-center justify-center lg:justify-start mb-3">
-            <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#b5945b]">WJRN - JACEWON RADIO NETWORK</span>
-          </div>
-          <h2
-            className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left">
-            STATIONS THAT DON'T ASK FOR PERMISSION
-          </h2>
+      {/* 3. Hero — Vintage Receiver Player Embed */}
+      <section className="relative z-10 w-full max-w-6xl mx-auto mt-2 mb-10 md:mb-14">
+        <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_35px_70px_rgba(0,0,0,0.55)]">
+          <iframe
+            src="https://radio.jacewonmusic.com/player/?popout=true"
+            title="WJRN Vintage Player"
+            className="w-full h-full border-0 block"
+            allow="autoplay"
+          />
         </div>
-        <div className="lg:col-span-4 lg:pt-6">
-          <p className="text-xs md:text-sm lg:text-base text-neutral-400 leading-relaxed font-light font-mono text-center lg:text-left">
-            Every show we broadcast is built with intent and taste, mixed live in front of a studio audience, and kept in rotation around the clock.
-          </p>
-        </div>
-      </section>
-
-      {/* 4. Centerpiece Immersive Layout (Smartphone & Side Panels) */}
-      <section className="relative z-20 w-full max-w-7xl mx-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 mt-[15px] mb-8 md:mt-[19px] md:mb-11 items-center">
-
-        {/* LEFT PANEL */}
-        <div ref={leftPanelRef} style={{ willChange: "transform" }} className="lg:col-span-3 hidden lg:flex flex-col gap-10">
-          <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 backdrop-blur-md w-fit">
-            <span className="block text-[9px] uppercase tracking-widest text-[#b5945b] font-mono mb-1.5">BROADCAST INFO</span>
-            <span className="text-xs text-white/80 font-mono block mb-1">Locale: California, USA</span>
-            <span className="text-xs text-white/80 font-mono block">Host: Jacewon</span>
-          </div>
-
-          <div className="space-y-4 w-fit">
-            <div className="flex items-center gap-3">
-              <ThumbsUp className="w-3 h-3 text-[#664d49] shrink-0" />
-              <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-300">ALWAYS ON ALWAYS FRESH</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-3 h-3 text-[#b5945b] animate-pulse shrink-0" />
-              <a href="tel:+12135793748" className="text-[10px] font-mono uppercase tracking-wider text-neutral-300 hover:text-[#b5945b] transition-colors">
-                HOTLINE OPEN: (213) 579-3748
-              </a>
-            </div>
-          </div>
-        </div>
-
-        {/* CENTER COLUMN: INTERACTIVE GLASSY PHONE CONTROLLER */}
-        <div ref={phoneRef} style={{ willChange: "transform" }} className="lg:col-span-6 flex justify-center items-center relative py-4 z-30">
-          <div className="relative w-full max-w-[422px] aspect-[9/18.5] bg-neutral-950/90 rounded-[44px] p-3.5 border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.85),0_0_50px_rgba(181,148,91,0.08)] overflow-hidden group/phone">
-
-            {/* Phone Top Speaker Notch */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-950 rounded-b-2xl z-40 border-b border-r border-l border-white/5 flex items-center justify-center">
-              <div className="w-12 h-1 bg-white/20 rounded-full" />
-            </div>
-
-            {/* Simulated Reflection Glare */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/[0.02] to-white/0 pointer-events-none z-30" />
-
-            {/* Inner App Content Screen */}
-            <div
-              className="relative w-full h-full bg-[#080605] rounded-[34px] overflow-hidden flex flex-col select-none cursor-pointer"
-              onClick={cycleViz}
-            >
-              {/* Ambient glow when playing */}
-              {audioState === "playing" && (
-                <div className="absolute inset-0 z-0 pointer-events-none">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(181,148,91,0.10),_transparent_70%)] animate-pulse" style={{ animationDuration: "3s" }} />
-                </div>
-              )}
-
-              {/* Screen Header */}
-              <div className="relative z-10 flex items-center justify-between text-[9px] font-mono text-white/40 uppercase tracking-widest border-b border-white/5 pt-8 px-[18px] pb-2.5 shrink-0">
-                <span className="flex items-center gap-1.5">
-                  <Radio className="w-3 h-3 text-[#b5945b] animate-pulse" />
-                  WJRN ONLINE
-                </span>
-                <span>Stereo 320k</span>
-              </div>
-
-              {/* TOP VISUALIZER BAND — fills space above content */}
-              <div className="relative z-10 flex-1 overflow-hidden px-[18px] pt-2 pb-1 min-h-[44px] opacity-60">
-                <AudioVisualizer isPlaying={wjrnIsPlaying} type={visualizerType} accentColor="#b5945b" audioRef={audioRef} isFlipped={true} />
-              </div>
-
-              {/* CONTENT GROUP — art + status + meta + controls + volume */}
-              <div className="relative z-10 shrink-0 flex flex-col gap-2 px-[18px]">
-
-                {/* Album Cover Art — full width, clicking cycles viz */}
-                <div
-                  className={`w-full aspect-square rounded-xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.9)] relative border border-white/15 transition-all duration-500 ease-out ${wjrnIsPlaying ? "scale-[1.01]" : "scale-[0.99]"
-                    }`}
-                >
-                  <img
-                    src={(isOnDemand ? onDemandItem?.art : wjrnMeta.artUrl) || defaultArt}
-                    alt="Current station art"
-                    className="w-full h-full object-cover transition-all duration-700 ease-in-out"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/[0.08] to-white/0 pointer-events-none" />
-                </div>
-
-                {/* Soundwave / status */}
-                <div className="h-4 flex items-end justify-center gap-[3px]">
-                  {wjrnIsPlaying ? (
-                    Array.from({ length: 9 }).map((_, idx) => {
-                      const delays = [0.1, 0.4, 0.2, 0.6, 0.3, 0.5, 0.2, 0.4, 0.1];
-                      const heights = ["h-3", "h-2", "h-4", "h-2.5", "h-3.5", "h-2", "h-4", "h-3", "h-1.5"];
-                      return (
-                        <span key={idx} className={`w-[2px] bg-[#b5945b] rounded-full ${heights[idx]} origin-bottom animate-[bounce_1.2s_ease-in-out_infinite]`} style={{ animationDelay: `${delays[idx]}s` }} />
-                      );
-                    })
-                  ) : (
-                    <span className="text-[9px] uppercase font-mono tracking-widest text-[#b5945b]/80">STREAM PAUSED</span>
-                  )}
-                </div>
-
-                {/* Station + track meta */}
-                <div className="text-center">
-                  <h4 className="text-[13px] font-bold text-white truncate uppercase font-mono tracking-wider">WJRN</h4>
-                  <p className="text-[11px] text-[#b5945b] font-mono mt-0.5 tracking-wider truncate uppercase">{isOnDemand ? (onDemandItem?.title ?? "") : wjrnMeta.trackTitle}</p>
-                  <p className="text-[9.5px] text-white/50 font-mono tracking-wide truncate mt-0.5">{isOnDemand ? "ON DEMAND" : `by ${wjrnMeta.trackArtist}`}</p>
-                </div>
-
-                {/* Controls — stopPropagation so clicks don't cycle viz */}
-                <div
-                  className="flex items-center justify-center gap-4 py-1.5 border-t border-b border-white/5"
-                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                >
-                  <button onClick={() => isOnDemand ? togglePlayback() : toggleStation("wjrn")} className="w-12 h-12 bg-[#b5945b] hover:bg-[#cbb085] active:scale-95 rounded-full flex items-center justify-center text-black shadow-lg shadow-[#b5945b]/20 transition-all cursor-pointer animate-[pulse_6s_infinite]" title="Play / Pause">
-                    {wjrnIsPlaying ? <Pause className="w-5 h-5 text-black fill-current" /> : <Play className="w-5 h-5 text-black fill-current translate-x-0.5" />}
-                  </button>
-                </div>
-
-                {/* Volume — stopPropagation */}
-                <div
-                  className="bg-white/[0.02] border border-white/5 rounded-full px-4 py-2"
-                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <button onClick={() => setIsMuted(!isMuted)} className="p-0.5 text-white/60 hover:text-white transition-colors cursor-pointer">
-                      {isMuted ? <VolumeX className="w-3.5 h-3.5 text-[#b5945b]" /> : <Volume2 className="w-3.5 h-3.5 text-[#b5945b]" />}
-                    </button>
-                    <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume}
-                      onChange={(e) => { setVolume(parseFloat(e.target.value)); if (isMuted) setIsMuted(false); }}
-                      className="flex-1 h-[2px] bg-white/10 rounded-full appearance-none cursor-pointer accent-[#b5945b]"
-                    />
-                  </div>
-                </div>
-
-              </div>
-
-              {/* BOTTOM VISUALIZER BAND — fills space below content */}
-              <div className="relative z-10 flex-1 overflow-hidden px-[18px] pb-2 pt-1 min-h-[44px] opacity-60">
-                <AudioVisualizer isPlaying={wjrnIsPlaying} type={visualizerType} accentColor="#b5945b" audioRef={audioRef} />
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div ref={rightPanelRef} style={{ willChange: "transform" }} className="lg:col-span-3 flex flex-col md:flex-row lg:flex-col justify-between h-full gap-8 items-center lg:items-end">
-
-          <div className="flex flex-col gap-6 items-center lg:items-end">
-            <div className="text-center lg:text-right flex flex-col items-center lg:items-end gap-1.5 p-4 rounded-xl bg-white/[0.01] border border-white/5 w-fit mx-auto lg:mr-0 lg:ml-auto md:mx-0">
-              <span className="block text-[9px] uppercase tracking-widest text-[#b5945b] font-mono">ESTABLISHED</span>
-              <span className="text-sm font-bold uppercase font-mono text-white">MAY 2020</span>
-              <span className="text-xs text-neutral-500 font-mono uppercase tracking-wider">PACIFIC NORTH FRESH</span>
-            </div>
-
-            <div className="flex flex-col items-center lg:items-end w-fit">
-              <img
-                src={wjrnVintageExpButton}
-                alt="Activate Vintage Experience"
-                onClick={() => {
-                  window.open(
-                    'https://radio.jacewonmusic.com/player/?popout=true',
-                    'WJRN',
-                    'width=1280,height=443,resizable=no,scrollbars=no'
-                  );
-                }}
-                className="cursor-pointer"
-                style={{ display: "block" }}
-              />
-              <span className="text-[9px] uppercase tracking-widest text-white font-mono mt-2.5 cursor-default select-none block">
-                ACTIVATE VINTAGE EXPERIENCE
-              </span>
-            </div>
-          </div>
-
-          {/* Premium deliverables list details matching mockup */}
-          <div className="text-center lg:text-right flex flex-col items-center lg:items-end gap-5 w-fit mx-auto lg:mr-0 lg:ml-auto md:mx-0">
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#b5945b] text-center lg:text-right">NOT-SO FRIENDLY REMINDERS</span>
-            <ul className="text-xs text-neutral-400 space-y-1.5 font-mono text-center lg:text-right border-r-4 border-[#664d49] pr-4">
-              <li>Playlists are for elevators</li>
-              <li>Support your local musicians</li>
-              <li>New country is bad country</li>
-              <li>Pop is a drink, not a genre</li>
-            </ul>
-          </div>
-
-          <div className="hidden lg:block h-10" />
-
-        </div>
-
       </section>
 
       {/* 5. Glassy Selectable Stream Channels Slider/Deck modules */}
@@ -647,13 +414,17 @@ export default function NebulaHomepage({
       </section>
 
       {/* 7. Beautiful Minimal Footer */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/95 uppercase tracking-widest gap-4">
-        <div className="flex items-center gap-1.5 uppercase">
-          <span>Broadcasted with</span>
-          <span className="animate-pulse text-[23px] leading-none">❤</span>
-          <span>from California</span>
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+        <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
+          <span>For Promotional Use Only</span>
+          <span>All Music Is The Property Of Its Respective Owners</span>
         </div>
-        <div>COPYRIGHT © JWBC 2026 • ALL RIGHTS RESERVED</div>
+        <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
+          <span className="flex items-center gap-1.5">
+            Designed with <span className="animate-pulse text-[14px] leading-none">❤</span> in California
+          </span>
+          <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
+        </div>
       </footer>
 
     </div>

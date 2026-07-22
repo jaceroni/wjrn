@@ -13,7 +13,7 @@ import dialGoldenBoombox from "./assets/images/dial-logos-gbs.png";
 import wjrnLogo from "./assets/images/wjrn-logo.svg";
 
 // Setup stable static structures
-const STATIONS: Station[] = [
+export const STATIONS: Station[] = [
   {
     id: "wjrn",
     name: "WJRN",
@@ -117,13 +117,8 @@ export default function App() {
     activeStationId,
     setActiveStationId,
     audioState,
-    volume,
-    setVolume,
-    isMuted,
-    setIsMuted,
     metadata,
     toggleStation,
-    audioRef,
   } = usePlayer();
 
   // Load configuration from local storage or defaults
@@ -137,7 +132,6 @@ export default function App() {
     return DEFAULT_CONFIG;
   });
 
-  const [visualizerType, setVisualizerType] = useState<"bars" | "wave" | "retro">("bars");
   const [utcTime, setUtcTime] = useState("");
 
   // DOM Refs for direct styling to avoid high-frequency React re-renders
@@ -274,15 +268,6 @@ export default function App() {
     }
   };
 
-  // Cycle visualizer styling on card click
-  const cycleVisualizer = () => {
-    setVisualizerType(prev => {
-      if (prev === "bars") return "wave";
-      if (prev === "wave") return "retro";
-      return "bars";
-    });
-  };
-
   return (
     <NebulaHomepage
       STATIONS={STATIONS}
@@ -290,17 +275,10 @@ export default function App() {
       setActiveStationId={setActiveStationId}
       toggleStation={toggleStation}
       audioState={audioState}
-      volume={volume}
-      setVolume={setVolume}
-      isMuted={isMuted}
-      setIsMuted={setIsMuted}
       metadata={metadata}
       utcTime={utcTime}
       currentConfig={currentConfig}
-      visualizerType={visualizerType}
-      setVisualizerType={setVisualizerType}
       onToggleView={() => {}}
-      audioRef={audioRef}
     />
   );
 }

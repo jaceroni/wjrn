@@ -46,6 +46,7 @@ import { navigate } from "../navigate";
 | `/the-rock-garden` | `StationLanding` (stationId: `rock_garden`) |
 | `/bridge-city-hang-suite` | `StationLanding` (stationId: `bridge_city`) |
 | `/the-golden-boombox` | `StationLanding` (stationId: `golden_boombox`) |
+| `/about-wjrn` | `AboutWjrn` (team page) |
 
 Nginx has explicit `location` blocks for each of these that serve `index.html`.
 
@@ -63,8 +64,9 @@ src/
 ├── context/
 │   └── PlayerContext.tsx            # ALL audio state — live + on-demand
 └── components/
-    ├── NebulaHomepage.tsx           # Full homepage UI (hero, phone player, station cards, Twitch)
+    ├── NebulaHomepage.tsx           # Full homepage UI (hero player embed, station cards, Twitch)
     ├── StationLanding.tsx           # Per-station landing page + on-demand episode feed
+    ├── AboutWjrn.tsx                # About WJRN page (team grid)
     ├── MiniPlayer.tsx               # Persistent bottom bar player
     ├── TwitchScheduleRetro.tsx      # Twitch embed + weekly schedule
     └── AudioVisualizer.tsx          # Waveform visualizer component

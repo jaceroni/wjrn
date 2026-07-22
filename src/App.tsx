@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
-import AppRetro from "./AppRetro";
+import AppRetro, { STATIONS } from "./AppRetro";
 import StationLanding from "./components/StationLanding";
+import AboutWjrn from "./components/AboutWjrn";
 import { PlayerProvider } from "./context/PlayerContext";
 import MiniPlayer from "./components/MiniPlayer";
 import PopoutWidget from "./components/PopoutWidget";
@@ -14,11 +15,13 @@ const SLUG_TO_STATION: { [key: string]: string } = {
 
 type ViewState =
   | { type: "retro" }
-  | { type: "station"; stationId: string };
+  | { type: "station"; stationId: string }
+  | { type: "about" };
 
 function resolveView(): ViewState {
   if (typeof window === "undefined") return { type: "retro" };
   const path = window.location.pathname;
+  if (path.startsWith("/about-wjrn")) return { type: "about" };
   for (const [slug, id] of Object.entries(SLUG_TO_STATION)) {
     if (path.startsWith(slug)) return { type: "station", stationId: id };
   }
@@ -112,6 +115,7 @@ export default function App() {
       {view.type === "station" && (
         <StationLanding stationId={(view as { type: "station"; stationId: string }).stationId} />
       )}
+      {view.type === "about" && <AboutWjrn STATIONS={STATIONS} />}
       {view.type === "retro" && <AppRetro />}
 
       {/* Mini player — hidden while PiP widget is active */}
