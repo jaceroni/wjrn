@@ -48,7 +48,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   return (
     <div
       id="about_wjrn_layout"
-      className="relative min-h-screen w-full text-white flex flex-col justify-between overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none"
+      className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none"
       style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}
     >
       {/* Nebula Cosmic Fire Background */}
@@ -64,7 +64,8 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </div>
 
       {/* Header — Logo / Nav / Live Indicator */}
-      <header className="relative z-30 w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
+      <div className="relative z-30">
+      <header className="w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
         <a href="/" onClick={go("/")} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
@@ -112,10 +113,11 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           </span>
         </div>
       </header>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-6xl mx-auto relative z-10" />
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-6xl mx-auto" />
+      </div>
 
       {/* Hero */}
-      <section className="relative z-10 w-full max-w-5xl mx-auto mt-2 mb-14 md:mb-20 text-center flex flex-col items-center">
+      <section className="relative z-10 w-full max-w-5xl mx-auto text-center flex flex-col items-center">
         <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#b5945b] mb-3">About WJRN</span>
         <h1 className="text-[36px] sm:text-5xl md:text-6xl font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display">
           The People Behind The Signal
@@ -128,7 +130,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </section>
 
       {/* Team */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto mb-6">
+      <section className="relative z-10 w-full max-w-6xl mx-auto">
         <div className="flex flex-col gap-5 mb-8">
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#b5945b]">The Team</span>
         </div>
@@ -159,7 +161,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>

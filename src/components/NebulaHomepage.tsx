@@ -113,7 +113,7 @@ export default function NebulaHomepage({
   }, [activeStationId, audioState, toggleStation, togglePlayback]);
 
   return (
-    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col justify-between overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>
+    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>
 
       {/* 1. Nebula Cosmic Fire Background in soft brown and mustard #664d49 spectrum */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -132,7 +132,8 @@ export default function NebulaHomepage({
       </div>
 
       {/* 2. Top Header - Logo / Nav / Live Indicator */}
-      <header className="relative z-30 w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
+      <div className="relative z-30">
+      <header className="w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
         {/* Logo lockup (Far Upper Left) */}
         <a
           href="/"
@@ -214,10 +215,11 @@ export default function NebulaHomepage({
           </span>
         </div>
       </header>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-6xl mx-auto relative z-10" />
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-6xl mx-auto" />
+      </div>
 
       {/* 3. Hero — Vintage Receiver Player Embed */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto mt-2 mb-16">
+      <section className="relative z-10 w-full max-w-6xl mx-auto">
         <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_35px_70px_rgba(0,0,0,0.55)]">
           <iframe
             ref={playerIframeRef}
@@ -230,7 +232,7 @@ export default function NebulaHomepage({
       </section>
 
       {/* 5. Glassy Selectable Stream Channels Slider/Deck modules */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto mt-10 md:-mt-[7px] mb-6">
+      <section className="relative z-10 w-full max-w-6xl mx-auto">
         <div className="flex flex-col gap-5">
           <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
 
@@ -459,7 +461,7 @@ export default function NebulaHomepage({
       </section>
 
       {/* 6. Live Twitch Center Embed inside the Secondary layout */}
-      <section className="relative z-10 w-full max-w-6xl mx-auto pt-8 mt-4 pb-20">
+      <section className="relative z-10 w-full max-w-6xl mx-auto">
         <TwitchSchedule
           twitchChannel={currentConfig.twitchChannel}
           scheduledDaysText={currentConfig.twitchLiveSchedule}
@@ -467,7 +469,7 @@ export default function NebulaHomepage({
       </section>
 
       {/* 7. Beautiful Minimal Footer */}
-      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>
