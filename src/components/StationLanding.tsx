@@ -808,13 +808,17 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* ------------------------------------------------------------------ */}
       {/* Footer                                                              */}
       {/* ------------------------------------------------------------------ */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/95 uppercase tracking-widest gap-4">
-        <div className="flex items-center gap-1.5 uppercase">
-          <span>Broadcasted with</span>
-          <span className="animate-pulse text-[23px] leading-none">❤</span>
-          <span>from California</span>
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+        <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
+          <span>For Promotional Use Only</span>
+          <span>All Music Is The Property Of Its Respective Owners</span>
         </div>
-        <div>COPYRIGHT © JWBC 2026 • ALL RIGHTS RESERVED</div>
+        <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
+          <span className="flex items-center gap-1.5">
+            Designed with <span className="animate-pulse text-[20px] leading-none mb-1">❤</span> in California
+          </span>
+          <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
+        </div>
       </footer>
     </div>
   );
