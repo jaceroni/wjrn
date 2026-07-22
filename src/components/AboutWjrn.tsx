@@ -64,9 +64,9 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </div>
 
       {/* Header — Logo / Nav / Live Indicator */}
-      <header className="relative z-10 w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+      <header className="relative z-30 w-full flex items-center justify-between pb-6 max-w-6xl mx-auto gap-4">
         <a href="/" onClick={go("/")} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
-          <img src={wjrnLogoCubed} alt="WJRN" className="h-6 md:h-7 w-auto object-contain" />
+          <img src={wjrnLogoCubed} alt="WJRN" className="logo-base h-6 md:h-7 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
             <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
@@ -112,7 +112,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           </span>
         </div>
       </header>
-      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-7xl mx-auto relative z-10" />
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent mb-8 opacity-20 max-w-6xl mx-auto relative z-10" />
 
       {/* Hero */}
       <section className="relative z-10 w-full max-w-5xl mx-auto mt-2 mb-14 md:mb-20 text-center flex flex-col items-center">
@@ -128,7 +128,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </section>
 
       {/* Team */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto mb-6">
+      <section className="relative z-10 w-full max-w-6xl mx-auto mb-6">
         <div className="flex flex-col gap-5 mb-8">
           <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#b5945b]">The Team</span>
         </div>
@@ -159,7 +159,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-6xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>
