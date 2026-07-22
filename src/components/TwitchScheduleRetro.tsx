@@ -1,5 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tv, Calendar, Bell, ArrowRight } from "lucide-react";
+
+declare global {
+  interface Window {
+    Twitch?: any;
+  }
+}
 
 interface BroadcastEvent {
   day: string;
@@ -38,12 +44,62 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   const [countdownText, setCountdownText] = useState("");
   const [isLiveActive, setIsLiveActive] = useState(false);
   const [parentDomain, setParentDomain] = useState("radio.jacewonmusic.com");
+  const embedContainerRef = useRef<HTMLDivElement>(null);
+  const embedRef = useRef<any>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setParentDomain(window.location.hostname);
     }
   }, []);
+
+  // Mount the official Twitch Embed SDK so we get real ONLINE/OFFLINE events
+  // instead of guessing live status from the broadcast schedule.
+  useEffect(() => {
+    if (typeof window === "undefined" || !embedContainerRef.current) return;
+
+    let cancelled = false;
+
+    function createEmbed() {
+      if (cancelled || !embedContainerRef.current || !window.Twitch) return;
+      embedContainerRef.current.innerHTML = "";
+      const embed = new window.Twitch.Embed(embedContainerRef.current, {
+        width: "100%",
+        height: "100%",
+        channel: twitchChannel,
+        parent: [parentDomain],
+        layout: "video",
+        autoplay: true,
+        muted: true,
+      });
+      embedRef.current = embed;
+      embed.addEventListener(window.Twitch.Embed.VIDEO_READY, () => {
+        const player = embed.getPlayer();
+        player.addEventListener(window.Twitch.Player.ONLINE, () => setIsLiveActive(true));
+        player.addEventListener(window.Twitch.Player.OFFLINE, () => setIsLiveActive(false));
+      });
+    }
+
+    if (window.Twitch) {
+      createEmbed();
+    } else {
+      const existingScript = document.getElementById("twitch-embed-sdk");
+      if (existingScript) {
+        existingScript.addEventListener("load", createEmbed);
+      } else {
+        const script = document.createElement("script");
+        script.id = "twitch-embed-sdk";
+        script.src = "https://embed.twitch.tv/embed/v1.js";
+        script.async = true;
+        script.onload = createEmbed;
+        document.body.appendChild(script);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [twitchChannel, parentDomain]);
 
   useEffect(() => {
     function calculateCountdown() {
@@ -66,7 +122,6 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
       
       // Find the next occurrence
       let minDiffMs = Infinity;
-      let isLiveNow = false;
 
       // Check all target days
       targetDays.forEach((targetDay) => {
@@ -94,25 +149,12 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
           targetDate.setUTCHours(targetUTCHour, targetMinute, 0, 0);
 
           const diffMs = targetDate.getTime() - now.getTime();
-          
-          // If within the typical 3-hour broadcast duration, count as LIVE!
-          const broadcastDurationMs = 3 * 60 * 60 * 1000;
-          if (diffMs < 0 && Math.abs(diffMs) < broadcastDurationMs) {
-            isLiveNow = true;
-          }
 
           if (diffMs > 0 && diffMs < minDiffMs) {
             minDiffMs = diffMs;
           }
         }
       });
-
-      setIsLiveActive(isLiveNow);
-
-      if (isLiveNow) {
-        setCountdownText("LIVE NOW BROADCASTING!");
-        return;
-      }
 
       if (minDiffMs === Infinity) {
         setCountdownText("Searching next show...");
@@ -208,12 +250,12 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
         <div className="lg:col-span-7 flex flex-col justify-center gap-4">
           <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/5 bg-[#080605] shadow-inner group">
             
-            {/* Live stream player embed */}
-            <iframe
-              src={`https://player.twitch.tv/?channel=${twitchChannel}&parent=${parentDomain}&muted=true&autoplay=true`}
-              className="absolute top-0 left-0 w-full h-full border-0 z-0"
-              allowFullScreen
-            ></iframe>
+            {/* Live stream player embed (Twitch Embed SDK — reports real ONLINE/OFFLINE status) */}
+            <div
+              id="twitch-live-embed"
+              ref={embedContainerRef}
+              className="absolute top-0 left-0 w-full h-full z-0"
+            />
 
             {/* Countdown Overlay (Hidden if stream is active) */}
             {!isLiveActive && (
