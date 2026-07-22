@@ -284,6 +284,10 @@ function animateTicker(ts) {
 // ── VU NEEDLE ─────────────────────────────────────────────────────────────────
 var vuAngle = Math.PI / 4, vuTarget = Math.PI / 4;
 var freqData = null;
+// When synced, the parent feeds real levels from the one actually-audible
+// audio graph (sidesteps cross-frame autoplay uncertainty for this copy's own
+// local playback). Null means "no override, use local analyser/idle wobble".
+var externalVuLevel = null;
 
 function startVU() {
   freqData = new Uint8Array(analyser.frequencyBinCount);
@@ -291,7 +295,9 @@ function startVU() {
 
 function drawVU() {
   requestAnimationFrame(drawVU);
-  if (analyser && playerState === 2 && freqData) {
+  if (isSynced && externalVuLevel !== null) {
+    vuTarget = Math.PI / 4 + externalVuLevel * (Math.PI / 2);
+  } else if (analyser && playerState === 2 && freqData) {
     analyser.getByteFrequencyData(freqData);
     var sum = 0;
     for (var i = 2; i <= 12; i++) sum += freqData[i];
@@ -745,6 +751,8 @@ fetch(STATIONS[0].api)
         if (audioEl && audioEl.paused) audioEl.play().catch(function() {});
       } else if (data.type === 'pause') {
         if (audioEl && !audioEl.paused) audioEl.pause();
+      } else if (data.type === 'vuLevel') {
+        externalVuLevel = (typeof data.level === 'number') ? data.level : null;
       }
     });
 

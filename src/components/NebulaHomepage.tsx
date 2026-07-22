@@ -70,6 +70,7 @@ export default function NebulaHomepage({
     setEqLoudness,
     setEqMono,
     setEqBalance,
+    analyserRef,
   } = usePlayer();
 
   // Cross-frame sync with the embedded vintage player (public/player/index.html).
@@ -144,6 +145,38 @@ export default function NebulaHomepage({
     setEqMono,
     setEqBalance,
   ]);
+
+  // Feed the embedded player's VU meter from the one real (audible) analyser
+  // instead of relying on the embedded copy's own local playback — sidesteps
+  // any cross-frame autoplay uncertainty entirely, since this audio is
+  // guaranteed to already be playing (it's what you actually hear).
+  useEffect(() => {
+    if (audioState !== "playing") return;
+    let rafId: number;
+    let freqData: Uint8Array | null = null;
+
+    const tick = () => {
+      rafId = requestAnimationFrame(tick);
+      const analyser = analyserRef.current;
+      const win = playerIframeRef.current?.contentWindow;
+      if (!analyser || !win) return;
+      if (!freqData || freqData.length !== analyser.frequencyBinCount) {
+        freqData = new Uint8Array(analyser.frequencyBinCount);
+      }
+      analyser.getByteFrequencyData(freqData);
+      let sum = 0;
+      for (let i = 2; i <= 12; i++) sum += freqData[i] ?? 0;
+      const avg = sum / 11 / 255;
+      win.postMessage({ source: "wjrn-app", type: "vuLevel", level: avg }, "*");
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+      const win = playerIframeRef.current?.contentWindow;
+      if (win) win.postMessage({ source: "wjrn-app", type: "vuLevel", level: null }, "*");
+    };
+  }, [audioState, analyserRef]);
 
   return (
     <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>

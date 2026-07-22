@@ -143,6 +143,10 @@ interface PlayerContextValue {
   togglePlayback: () => void;
   stopPlayback: () => void;
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
+  // Real-time frequency data for whatever is actually audible right now —
+  // lets any UI (e.g. the embedded vintage player) drive a truthful VU meter
+  // off the one real audio graph instead of needing its own local playback.
+  analyserRef: React.MutableRefObject<AnalyserNode | null>;
   // On-demand
   onDemandItem: OnDemandItem | null;
   isOnDemand: boolean;
@@ -209,6 +213,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // whenever a new <audio> element is created (station switch / on-demand play).
   const audioCtxRef = useRef<AudioContext | null>(null);
   const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
   const bassFilterRef = useRef<BiquadFilterNode | null>(null);
   const midFilterRef = useRef<BiquadFilterNode | null>(null);
   const trebleFilterRef = useRef<BiquadFilterNode | null>(null);
@@ -257,6 +262,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     audioCtxRef.current = ctx;
 
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyserRef.current = analyser;
+
     const bassFilter = ctx.createBiquadFilter();
     bassFilter.type = "lowshelf";
     bassFilter.frequency.value = 350;
@@ -288,6 +297,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     gainNode.gain.value = 1;
     gainNodeRef.current = gainNode;
 
+    analyser.connect(bassFilter);
     bassFilter.connect(midFilter);
     midFilter.connect(trebleFilter);
     trebleFilter.connect(shaper);
@@ -307,7 +317,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     try {
       const source = ctx.createMediaElementSource(audio);
       mediaSourceRef.current = source;
-      source.connect(bassFilterRef.current!);
+      source.connect(analyserRef.current!);
     } catch {
       // Some browsers (older iOS Safari) don't support routing live-stream
       // elements through Web Audio — playback still works, just without EQ.
@@ -586,6 +596,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         togglePlayback,
         stopPlayback,
         audioRef,
+        analyserRef,
         onDemandItem,
         isOnDemand: onDemandItem !== null,
         playEpisode,
