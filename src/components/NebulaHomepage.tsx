@@ -34,6 +34,13 @@ const DIAL_LOGOS: { [key: string]: string } = {
   golden_boombox: dialLogoGbs,
 };
 
+// Nav dropdown hover colors — matches each station's brand accent used on the cards below
+const NAV_HOVER_COLOR: { [key: string]: string } = {
+  rock_garden: "hover:text-emerald-400",
+  bridge_city: "hover:text-pink-400",
+  golden_boombox: "hover:text-yellow-400",
+};
+
 interface NebulaHomepageProps {
   STATIONS: Station[];
   activeStationId: string | null;
@@ -250,7 +257,7 @@ export default function NebulaHomepage({
                       e.preventDefault();
                       navigate(`/${STATION_SLUGS[station.id]}`);
                     }}
-                    className="px-6 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap text-center"
+                    className={`px-6 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:bg-white/5 transition-colors whitespace-nowrap text-center ${NAV_HOVER_COLOR[station.id] ?? "hover:text-white"}`}
                   >
                     {station.name}
                   </a>

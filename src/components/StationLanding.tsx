@@ -28,6 +28,13 @@ const NAV_STATIONS = [
   { id: "golden_boombox", name: "THE GOLDEN BOOMBOX", slug: "the-golden-boombox" },
 ];
 
+// Nav dropdown hover colors — matches each station's brand accent
+const NAV_HOVER_COLOR: { [key: string]: string } = {
+  rock_garden: "hover:text-emerald-400",
+  bridge_city: "hover:text-pink-400",
+  golden_boombox: "hover:text-yellow-400",
+};
+
 interface OnDemandEpisode {
   title: string;
   subtitle: string;
@@ -457,7 +464,9 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                       navigate(`/${station.slug}`);
                     }}
                     className={`px-6 py-2.5 text-[10px] tracking-[0.15em] transition-colors whitespace-nowrap text-center hover:bg-white/5 ${
-                      station.id === stationId ? config.textColorClass : "text-white/70 hover:text-white"
+                      station.id === stationId
+                        ? config.textColorClass
+                        : `text-white/70 ${NAV_HOVER_COLOR[station.id] ?? "hover:text-white"}`
                     }`}
                   >
                     {station.name}

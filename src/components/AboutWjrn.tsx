@@ -14,6 +14,13 @@ interface TeamMember {
   bio: string;
 }
 
+// Nav dropdown hover colors — matches each station's brand accent
+const NAV_HOVER_COLOR: { [key: string]: string } = {
+  rock_garden: "hover:text-emerald-400",
+  bridge_city: "hover:text-pink-400",
+  golden_boombox: "hover:text-yellow-400",
+};
+
 const TEAM: TeamMember[] = [
   {
     name: "Team Member",
@@ -93,7 +100,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                     key={station.id}
                     href={`/${STATION_SLUGS[station.id]}`}
                     onClick={go(`/${STATION_SLUGS[station.id]}`)}
-                    className="px-6 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:text-white hover:bg-white/5 transition-colors whitespace-nowrap text-center"
+                    className={`px-6 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:bg-white/5 transition-colors whitespace-nowrap text-center ${NAV_HOVER_COLOR[station.id] ?? "hover:text-white"}`}
                   >
                     {station.name}
                   </a>
