@@ -152,6 +152,20 @@ interface PlayerContextValue {
   seekToStart: () => void;
   onDemandCurrentTime: number;
   onDemandDuration: number;
+  // EQ — remote-controlled by the vintage player's knobs, applied to the one
+  // real shared audio graph so the effect is genuinely audible everywhere.
+  eqBassCut: boolean;
+  setEqBassCut: (cut: boolean) => void;
+  eqMidCut: boolean;
+  setEqMidCut: (cut: boolean) => void;
+  eqTrebleCut: boolean;
+  setEqTrebleCut: (cut: boolean) => void;
+  eqLoudness: boolean;
+  setEqLoudness: (on: boolean) => void;
+  eqMono: boolean;
+  setEqMono: (on: boolean) => void;
+  eqBalance: 0 | 1 | 2;
+  setEqBalance: (state: 0 | 1 | 2) => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -181,6 +195,149 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // Debounce timer for seek operations
   const seekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // EQ state — remote-controlled by the vintage player's knobs
+  const [eqBassCut, setEqBassCutState] = useState(false);
+  const [eqMidCut, setEqMidCutState] = useState(false);
+  const [eqTrebleCut, setEqTrebleCutState] = useState(false);
+  const [eqLoudness, setEqLoudnessState] = useState(false);
+  const [eqMono, setEqMonoState] = useState(false);
+  const [eqBalance, setEqBalanceState] = useState<0 | 1 | 2>(0);
+
+  // Shared Web Audio graph — one persistent AudioContext + filter chain for the
+  // whole session. Only the MediaElementSourceNode at the front gets swapped out
+  // whenever a new <audio> element is created (station switch / on-demand play).
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const bassFilterRef = useRef<BiquadFilterNode | null>(null);
+  const midFilterRef = useRef<BiquadFilterNode | null>(null);
+  const trebleFilterRef = useRef<BiquadFilterNode | null>(null);
+  const shaperRef = useRef<WaveShaperNode | null>(null);
+  const pannerRef = useRef<StereoPannerNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+
+  const makeFlatCurve = () => {
+    const c = new Float32Array(256);
+    for (let i = 0; i < 256; i++) c[i] = (i * 2 / 255) - 1;
+    return c;
+  };
+  const makeTubeCurve = () => {
+    const c = new Float32Array(256);
+    const drive = 4.0;
+    const denom = Math.tanh(drive);
+    for (let i = 0; i < 256; i++) {
+      const x = (i * 2 / 255) - 1;
+      c[i] = Math.tanh(drive * x) / denom;
+    }
+    return c;
+  };
+
+  // Wires panner -> gainNode directly (stereo) or via a splitter/merger (mono)
+  const applyMonoRouting = (mono: boolean) => {
+    const ctx = audioCtxRef.current;
+    const panner = pannerRef.current;
+    const gain = gainNodeRef.current;
+    if (!ctx || !panner || !gain) return;
+    try { panner.disconnect(); } catch { /* not yet connected */ }
+    if (mono) {
+      const splitter = ctx.createChannelSplitter(2);
+      const merger = ctx.createChannelMerger(2);
+      panner.connect(splitter);
+      splitter.connect(merger, 0, 0);
+      splitter.connect(merger, 0, 1);
+      merger.connect(gain);
+    } else {
+      panner.connect(gain);
+    }
+  };
+
+  // Builds the persistent filter chain once; safe to call repeatedly
+  const ensureAudioGraph = () => {
+    if (audioCtxRef.current) return;
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    audioCtxRef.current = ctx;
+
+    const bassFilter = ctx.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 350;
+    bassFilter.gain.value = eqBassCut ? -16 : 0;
+    bassFilterRef.current = bassFilter;
+
+    const midFilter = ctx.createBiquadFilter();
+    midFilter.type = "peaking";
+    midFilter.frequency.value = 1000;
+    midFilter.Q.value = 0.7;
+    midFilter.gain.value = eqMidCut ? -12 : 0;
+    midFilterRef.current = midFilter;
+
+    const trebleFilter = ctx.createBiquadFilter();
+    trebleFilter.type = "highshelf";
+    trebleFilter.frequency.value = 2500;
+    trebleFilter.gain.value = eqTrebleCut ? -16 : 0;
+    trebleFilterRef.current = trebleFilter;
+
+    const shaper = ctx.createWaveShaper();
+    shaper.curve = eqLoudness ? makeTubeCurve() : makeFlatCurve();
+    shaperRef.current = shaper;
+
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = [0, -1, 1][eqBalance];
+    pannerRef.current = panner;
+
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 1;
+    gainNodeRef.current = gainNode;
+
+    bassFilter.connect(midFilter);
+    midFilter.connect(trebleFilter);
+    trebleFilter.connect(shaper);
+    shaper.connect(panner);
+    applyMonoRouting(eqMono);
+    gainNode.connect(ctx.destination);
+  };
+
+  // Routes a freshly-created <audio> element through the persistent EQ chain
+  const connectAudioGraph = (audio: HTMLAudioElement) => {
+    ensureAudioGraph();
+    const ctx = audioCtxRef.current!;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    if (mediaSourceRef.current) {
+      try { mediaSourceRef.current.disconnect(); } catch { /* already disconnected */ }
+    }
+    try {
+      const source = ctx.createMediaElementSource(audio);
+      mediaSourceRef.current = source;
+      source.connect(bassFilterRef.current!);
+    } catch {
+      // Some browsers (older iOS Safari) don't support routing live-stream
+      // elements through Web Audio — playback still works, just without EQ.
+    }
+  };
+
+  const setEqBassCut = (cut: boolean) => {
+    setEqBassCutState(cut);
+    if (bassFilterRef.current) bassFilterRef.current.gain.value = cut ? -16 : 0;
+  };
+  const setEqMidCut = (cut: boolean) => {
+    setEqMidCutState(cut);
+    if (midFilterRef.current) midFilterRef.current.gain.value = cut ? -12 : 0;
+  };
+  const setEqTrebleCut = (cut: boolean) => {
+    setEqTrebleCutState(cut);
+    if (trebleFilterRef.current) trebleFilterRef.current.gain.value = cut ? -16 : 0;
+  };
+  const setEqLoudness = (on: boolean) => {
+    setEqLoudnessState(on);
+    if (shaperRef.current) shaperRef.current.curve = on ? makeTubeCurve() : makeFlatCurve();
+  };
+  const setEqMono = (on: boolean) => {
+    setEqMonoState(on);
+    applyMonoRouting(on);
+  };
+  const setEqBalance = (state: 0 | 1 | 2) => {
+    setEqBalanceState(state);
+    if (pannerRef.current) pannerRef.current.pan.value = [0, -1, 1][state];
+  };
 
   // Keep volume in sync whenever it changes
   useEffect(() => {
@@ -324,6 +481,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.preload = "auto";
     audio.volume = isMuted ? 0 : volume;
     audioRef.current = audio;
+    connectAudioGraph(audio);
 
     audio.onplay = () => setAudioState("playing");
     audio.onplaying = () => setAudioState("playing");
@@ -374,9 +532,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setOnDemandItem(ep);
 
     const audio = new Audio(ep.streamUrl);
+    audio.crossOrigin = "anonymous";
     audio.preload = "auto";
     audio.volume = isMuted ? 0 : volume;
     audioRef.current = audio;
+    connectAudioGraph(audio);
 
     audio.onplay    = () => setAudioState("playing");
     audio.onplaying = () => setAudioState("playing");
@@ -434,6 +594,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         seekToStart,
         onDemandCurrentTime,
         onDemandDuration,
+        eqBassCut,
+        setEqBassCut,
+        eqMidCut,
+        setEqMidCut,
+        eqTrebleCut,
+        setEqTrebleCut,
+        eqLoudness,
+        setEqLoudness,
+        eqMono,
+        setEqMono,
+        eqBalance,
+        setEqBalance,
       }}
     >
       {children}

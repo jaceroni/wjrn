@@ -61,7 +61,16 @@ export default function NebulaHomepage({
     golden_boombox: "the-golden-boombox",
   };
 
-  const { togglePlayback } = usePlayer();
+  const {
+    togglePlayback,
+    setIsMuted,
+    setEqBassCut,
+    setEqMidCut,
+    setEqTrebleCut,
+    setEqLoudness,
+    setEqMono,
+    setEqBalance,
+  } = usePlayer();
 
   // Cross-frame sync with the embedded vintage player (public/player/index.html).
   // The iframe keeps its own audio graph alive (VU meter, ticker, art all stay
@@ -105,12 +114,36 @@ export default function NebulaHomepage({
           if (data.playing && !isPlaying) togglePlayback();
           if (!data.playing && isPlaying) togglePlayback();
         }
+        return;
+      }
+      if (data.type === "eqControl") {
+        switch (data.control) {
+          case "mute": setIsMuted(!!data.value); break;
+          case "bass": setEqBassCut(!!data.value); break;
+          case "mid": setEqMidCut(!!data.value); break;
+          case "treble": setEqTrebleCut(!!data.value); break;
+          case "loudness": setEqLoudness(!!data.value); break;
+          case "mono": setEqMono(!!data.value); break;
+          case "balance": setEqBalance(data.value as 0 | 1 | 2); break;
+        }
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [activeStationId, audioState, toggleStation, togglePlayback]);
+  }, [
+    activeStationId,
+    audioState,
+    toggleStation,
+    togglePlayback,
+    setIsMuted,
+    setEqBassCut,
+    setEqMidCut,
+    setEqTrebleCut,
+    setEqLoudness,
+    setEqMono,
+    setEqBalance,
+  ]);
 
   return (
     <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>

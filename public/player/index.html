@@ -164,6 +164,13 @@ function notifyPlayStateChanged(playing) {
   } catch (e) {}
 }
 
+function notifyControl(control, value) {
+  if (!isSynced) return;
+  try {
+    window.parent.postMessage({ source: 'wjrn-player', type: 'eqControl', control: control, value: value }, '*');
+  } catch (e) {}
+}
+
 var bassActive = false, midActive = false, trebleActive = false;
 var loudnessActive = false, monoActive = false, isMuted = false;
 var savedGain = 0.8, balanceState = 0; // 0=center, 1=left, 2=right
@@ -582,24 +589,28 @@ document.getElementById('hz-volume').addEventListener('click', function() {
   isMuted = !isMuted;
   if (gainNode) gainNode.gain.value = isMuted ? 0 : savedGain;
   tickerTakeover(isMuted ? 'MUTED' : 'VOLUME – RESTORED');
+  notifyControl('mute', isMuted);
 });
 
 document.getElementById('hz-bass').addEventListener('click', function() {
   bassActive = !bassActive;
   if (bassFilter) bassFilter.gain.value = bassActive ? -16 : 0;
   tickerTakeover(bassActive ? 'BASS – CUT' : 'BASS – RESTORED');
+  notifyControl('bass', bassActive);
 });
 
 document.getElementById('hz-mid').addEventListener('click', function() {
   midActive = !midActive;
   if (midFilter) midFilter.gain.value = midActive ? -12 : 0;
   tickerTakeover(midActive ? 'MID – CUT' : 'MID – RESTORED');
+  notifyControl('mid', midActive);
 });
 
 document.getElementById('hz-treble').addEventListener('click', function() {
   trebleActive = !trebleActive;
   if (trebleFilter) trebleFilter.gain.value = trebleActive ? -16 : 0;
   tickerTakeover(trebleActive ? 'TREBLE – CUT' : 'TREBLE – RESTORED');
+  notifyControl('treble', trebleActive);
 });
 
 document.getElementById('hz-balance').addEventListener('click', function() {
@@ -608,12 +619,14 @@ document.getElementById('hz-balance').addEventListener('click', function() {
   var msgs = ['BALANCE – CENTER', 'BALANCE – LEFT CHANNEL', 'BALANCE – RIGHT CHANNEL'];
   if (panner) panner.pan.value = panVals[balanceState];
   tickerTakeover(msgs[balanceState]);
+  notifyControl('balance', balanceState);
 });
 
 document.getElementById('hz-loudness').addEventListener('click', function() {
   loudnessActive = !loudnessActive;
   if (shaper) shaper.curve = loudnessActive ? makeTubeCurve() : makeFlatCurve();
   tickerTakeover(loudnessActive ? 'LOUDNESS – ON' : 'LOUDNESS – OFF');
+  notifyControl('loudness', loudnessActive);
 });
 
 document.getElementById('hz-mono').addEventListener('click', function() {
@@ -632,6 +645,7 @@ document.getElementById('hz-mono').addEventListener('click', function() {
     }
   }
   tickerTakeover(monoActive ? 'MONO – ON' : 'STEREO – RESTORED');
+  notifyControl('mono', monoActive);
 });
 
 document.getElementById('hz-power').addEventListener('click', function() {
@@ -639,6 +653,7 @@ document.getElementById('hz-power').addEventListener('click', function() {
   isMuted = !isMuted;
   if (gainNode) gainNode.gain.value = isMuted ? 0 : savedGain;
   tickerTakeover(isMuted ? 'POWER – OFF' : 'POWER – ON');
+  notifyControl('mute', isMuted);
 });
 
 // ── INITIAL STATE ─────────────────────────────────────────────────────────────
