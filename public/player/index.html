@@ -469,6 +469,12 @@ function initAudio(startIndex) {
 
   audioEl = new Audio();
   audioEl.crossOrigin = 'anonymous';
+  // Muted playback is always allowed to autoplay, even without a direct user
+  // gesture in this frame (e.g. triggered by a postMessage from the parent).
+  // The analyser still taps the real decoded signal via the Web Audio graph
+  // below regardless of this flag — only native/speaker output is affected,
+  // and that's already cut off downstream for synced instances anyway.
+  if (isSynced) audioEl.muted = true;
   audioEl.src = STATIONS[currentStation].stream;
 
   mediaSource = audioCtx.createMediaElementSource(audioEl);
