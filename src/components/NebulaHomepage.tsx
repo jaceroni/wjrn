@@ -13,20 +13,32 @@ import TwitchSchedule from "./TwitchScheduleRetro";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 
-// Premium imported assets for the high-end station player cards
-import vinylLogoTrg from "../assets/images/vinyl-logo-trg.png";
-import vinylLogoBchs from "../assets/images/vinyl-logo-bchs.png";
-import vinylLogoGbs from "../assets/images/vinyl-logo-gbs.png";
-
 import dialLogoTrg from "../assets/images/dial-logos-trg.png";
 import dialLogoBchs from "../assets/images/dial-logos-bchs.png";
 import dialLogoGbs from "../assets/images/dial-logos-gbs.png";
 
-const VINYL_ARTWORKS: { [key: string]: string } = {
-  rock_garden: vinylLogoTrg,
-  bridge_city: vinylLogoBchs,
-  golden_boombox: vinylLogoGbs,
+// Vintage turntable station card assets
+import stationCardCabinetTop from "../assets/images/station-card-cabinet-top.png";
+import stationCardTonearm from "../assets/images/station-card-tonearm.png";
+import stationCardPlatterTrg from "../assets/images/station-card-platter-trg.png";
+import stationCardPlatterBchs from "../assets/images/station-card-platter-bchs.png";
+import stationCardPlatterGbs from "../assets/images/station-card-platter-gbs.png";
+
+const PLATTER_ARTWORKS: { [key: string]: string } = {
+  rock_garden: stationCardPlatterTrg,
+  bridge_city: stationCardPlatterBchs,
+  golden_boombox: stationCardPlatterGbs,
 };
+
+// Anchor points measured against the native station-card-cabinet-top.png canvas (388x308).
+// Keeping these as percentages lets the whole turntable graphic scale responsively with the card.
+const PLATTER_POSITION = { left: "4.639%", top: "5.844%", width: "68.557%" };
+const TONEARM_POSITION = { left: "68.814%", top: "5.195%", width: "20.619%" };
+// Pivot dot measured inside station-card-tonearm.png (80x277) — must match the white dot
+// baked into station-card-cabinet-top.png so the swivel rotates around the correct hinge.
+const TONEARM_TRANSFORM_ORIGIN = "66.25% 22.2%";
+const TONEARM_REST_DEG = 0;
+const TONEARM_PLAYING_DEG = -45;
 
 const DIAL_LOGOS: { [key: string]: string } = {
   rock_garden: dialLogoTrg,
@@ -361,55 +373,76 @@ export default function NebulaHomepage({
                       "hover:bg-[#b5945b] hover:border-[#b5945b]";
 
               const isOnline = !!station.streamUrl;
-              const vinylArt = VINYL_ARTWORKS[station.id] || station.logoUrl;
+              const platterArt = PLATTER_ARTWORKS[station.id] || station.logoUrl;
+              const isSpinning = isActive && audioState === "playing";
 
               return (
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className={`pt-7 pb-7 px-7 rounded-3xl border bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 cursor-pointer flex flex-col justify-between min-h-[440px] relative overflow-hidden group ${isActive
+                  className={`rounded-3xl border bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 cursor-pointer flex flex-col justify-between min-h-[440px] relative overflow-hidden group ${isActive
                       ? `${activeBorderColor} shadow-2xl -translate-y-1.5 bg-white/[0.045] ${shadowActiveClass}`
                       : `${stationColorClass} hover:shadow-2xl hover:-translate-y-1.5`
                     }`}
                 >
-                  {/* Premium analog dotted board background matrix on hover */}
-                  <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"
-                    }`} />
+                  {/* VINTAGE TURNTABLE CABINET — background, spinning platter, pivoting tonearm */}
+                  <div className="relative w-full shrink-0">
+                    {isActive && (
+                      <div
+                        className="absolute rounded-full blur-3xl animate-performant-pulse pointer-events-none"
+                        style={{ backgroundColor: glowColorBg, left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
+                      />
+                    )}
+                    {station.id === "rock_garden" && (
+                      <div
+                        className="absolute rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 pointer-events-none transition-all duration-500"
+                        style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
+                      />
+                    )}
 
-                  {/* Subtle top edge custom color accent strip */}
-                  <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-current to-transparent transition-opacity duration-500 ${textColorClass} ${isActive ? "opacity-60" : "opacity-0 group-hover:opacity-60"
-                    }`} />
+                    <img
+                      src={stationCardCabinetTop}
+                      alt=""
+                      draggable={false}
+                      className="relative z-0 w-full h-auto block select-none pointer-events-none"
+                    />
 
-                  {/* STATION CORE TITLE, ROTATING VINYL & BRANDING */}
-                  <div className="mt-6 mb-6 flex flex-col gap-6 relative z-10 flex-1 justify-center items-center text-center">
-                    {/* Beautiful Vinyl Spinning Disc Cover Artwork with Reflection Glare */}
-                    <div className="relative">
-                      {isActive && (
-                        <div
-                          className="absolute -inset-10 rounded-full blur-3xl animate-performant-pulse"
-                          style={{ backgroundColor: glowColorBg }}
-                        />
-                      )}
-                      {/* For rock garden always show a subtle faint green glow behind it */}
-                      {station.id === "rock_garden" && (
-                        <div className="absolute -inset-10 rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 pointer-events-none transition-all duration-500" />
-                      )}
-                      <div className={`w-56 h-56 rounded-full overflow-hidden shrink-0 shadow-[0_15px_35px_rgba(0,0,0,0.8)] flex items-center justify-center bg-black duration-700 transition-transform relative ${isActive ? "scale-105" : "group-hover:scale-105"
-                        }`}>
-                        <img
-                          src={vinylArt}
-                          alt={`${station.name} spinning vinyl`}
-                          className={`w-full h-full object-cover rounded-full ${isActive && audioState === "playing" ? "animate-[spin_8s_linear_infinite]" : ""
-                            }`}
-                          referrerPolicy="no-referrer"
-                        />
-                        {/* Realistic vinyl shine projection layer */}
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-black/20 via-white/[0.04] to-black/40 pointer-events-none mix-blend-overlay" />
-                      </div>
-                    </div>
+                    <img
+                      src={platterArt}
+                      alt={`${station.name} vinyl on turntable platter`}
+                      draggable={false}
+                      referrerPolicy="no-referrer"
+                      className={`absolute z-[1] rounded-full select-none pointer-events-none shadow-[0_8px_20px_rgba(0,0,0,0.6)] ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
+                      style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
+                    />
+
+                    <img
+                      src={stationCardTonearm}
+                      alt=""
+                      draggable={false}
+                      className="absolute z-[2] select-none pointer-events-none transition-transform duration-700 ease-out"
+                      style={{
+                        left: TONEARM_POSITION.left,
+                        top: TONEARM_POSITION.top,
+                        width: TONEARM_POSITION.width,
+                        transformOrigin: TONEARM_TRANSFORM_ORIGIN,
+                        transform: `rotate(${isSpinning ? TONEARM_PLAYING_DEG : TONEARM_REST_DEG}deg)`,
+                      }}
+                    />
+                  </div>
+
+                  {/* CONTENT — station title/genre, now playing, metrics, learn more (unchanged from before) */}
+                  <div className="px-7 pt-5 pb-7 flex flex-col gap-4 relative z-10 flex-1">
+                    {/* Premium analog dotted board background matrix on hover */}
+                    <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"
+                      }`} />
+
+                    {/* Subtle top edge custom color accent strip */}
+                    <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-current to-transparent transition-opacity duration-500 ${textColorClass} ${isActive ? "opacity-60" : "opacity-0 group-hover:opacity-60"
+                      }`} />
 
                     {/* Core Station Header & Secondary Genres Centered */}
-                    <div className="space-y-2 max-w-[270vw]">
+                    <div className="space-y-2 max-w-[270vw] relative z-10 text-center">
                       <h4 className="text-xl sm:text-2xl font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
                         {station.name}
                       </h4>
@@ -417,10 +450,9 @@ export default function NebulaHomepage({
                         {station.genre.replace(/,/g, " •")}
                       </span>
                     </div>
-                  </div>
 
-                  {/* NOW PLAYING CONTAINER FOR SONGS & LIVE CONTROL */}
-                  <div className="pt-5 flex flex-col gap-4 relative z-10 mt-auto">
+                    {/* NOW PLAYING CONTAINER FOR SONGS & LIVE CONTROL */}
+                    <div className="pt-1 flex flex-col gap-4 relative z-10 mt-auto">
 
                     <div className="relative overflow-hidden rounded-2xl bg-[#090605]/80 border border-white/5 p-3 flex flex-col gap-3 transition-colors duration-300 group-hover:bg-[#0b0807]/90 group-hover:border-white/10 shadow-inner">
 
@@ -525,6 +557,7 @@ export default function NebulaHomepage({
                       Learn More <span className="hidden sm:inline">About This Station</span> <ArrowRight className="w-3 h-3" />
                     </a>
 
+                  </div>
                   </div>
                 </div>
               );
