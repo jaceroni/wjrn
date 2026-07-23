@@ -39,9 +39,12 @@ const TONEARM_POSITION = { left: "68.814%", top: "2.721%", width: "20.619%" };
 const TONEARM_TRANSFORM_ORIGIN = "66.25% 22.2%";
 const TONEARM_REST_DEG = 0;
 const TONEARM_PLAYING_DEG = 45;
-// The cabinet graphic's blank lower drawer, where card content (title, now playing, etc.)
-// sits directly on top of the illustration instead of a separate background panel.
-const CONTENT_ZONE = { top: "54%", bottom: "6%", left: "9%", right: "9%" };
+// The cabinet graphic's blank lower drawer is actually drawn as two sub-panels, split by a
+// subtle seam (~y=381 of 588). Title/genre floats centered in the smaller top panel (between
+// the gold divider at ~y=307 and that seam); the now playing block centers in the larger
+// bottom panel (between the seam and the bottom frame at ~y=567).
+const TITLE_ZONE = { top: "52.2%", bottom: "35.2%", left: "9%", right: "9%" };
+const PLAYER_ZONE = { top: "64.8%", bottom: "6%", left: "9%", right: "9%" };
 
 const DIAL_LOGOS: { [key: string]: string } = {
   rock_garden: dialLogoTrg,
@@ -432,27 +435,30 @@ export default function NebulaHomepage({
                     }}
                   />
 
-                  {/* CONTENT — sits directly on top of the cabinet graphic's blank lower drawer */}
+                  {/* TITLE — floats centered (both axes) in the cabinet's upper drawer sub-panel */}
                   <div
-                    className="absolute z-[3] flex flex-col justify-between gap-3"
-                    style={{ top: CONTENT_ZONE.top, bottom: CONTENT_ZONE.bottom, left: CONTENT_ZONE.left, right: CONTENT_ZONE.right }}
+                    className="absolute z-[3] flex flex-col items-center justify-center text-center"
+                    style={{ top: TITLE_ZONE.top, bottom: TITLE_ZONE.bottom, left: TITLE_ZONE.left, right: TITLE_ZONE.right }}
+                  >
+                    <h4 className="text-lg sm:text-xl font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
+                      {station.name}
+                    </h4>
+                    <span className={`mt-1.5 text-[9.5px] font-mono uppercase tracking-[0.18em] block leading-snug font-bold ${textColorClass}`}>
+                      {station.genre.replace(/,/g, " •")}
+                    </span>
+                  </div>
+
+                  {/* PLAYER — floats centered in the cabinet's lower drawer sub-panel */}
+                  <div
+                    className="absolute z-[3] flex flex-col justify-center"
+                    style={{ top: PLAYER_ZONE.top, bottom: PLAYER_ZONE.bottom, left: PLAYER_ZONE.left, right: PLAYER_ZONE.right }}
                   >
                     {/* Premium analog dotted board background matrix on hover */}
                     <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"
                       }`} />
 
-                    {/* Core Station Header & Secondary Genres Centered */}
-                    <div className="space-y-1.5 relative z-10 text-center shrink-0">
-                      <h4 className="text-base sm:text-lg font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
-                        {station.name}
-                      </h4>
-                      <span className={`text-[8.5px] font-mono uppercase tracking-[0.18em] block leading-snug font-bold ${textColorClass}`}>
-                        {station.genre.replace(/,/g, " •")}
-                      </span>
-                    </div>
-
                     {/* NOW PLAYING CONTAINER FOR SONGS & LIVE CONTROL */}
-                    <div className="flex flex-col gap-2 relative z-10 shrink-0">
+                    <div className="relative z-10 shrink-0">
 
                     <div className="relative overflow-hidden rounded-2xl bg-[#090605]/85 border border-white/5 p-2.5 flex flex-col gap-2 transition-colors duration-300 group-hover:bg-[#0b0807]/90 group-hover:border-white/10 shadow-inner">
 
@@ -517,7 +523,7 @@ export default function NebulaHomepage({
                     </div>
 
                     {/* METRICS & LISTENER TELEMETRY WITH RELOCATED BADGES */}
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 uppercase tracking-widest font-semibold">
+                    <div className="mt-3 flex items-center justify-between text-[10px] font-mono text-neutral-500 uppercase tracking-widest font-semibold">
                       {/* Bottom Left: ON THE AIR component */}
                       <span className="text-[9px] uppercase font-mono tracking-[0.2em] font-extrabold flex items-center gap-1.5">
                         {isOnline ? (
@@ -552,7 +558,7 @@ export default function NebulaHomepage({
                         e.preventDefault();
                         navigate(`/${STATION_SLUGS[station.id]}`);
                       }}
-                      className={`w-full py-2.5 px-4 rounded-xl border text-[10px] font-mono font-semibold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 bg-white/[0.03] hover:text-black ${textColorClass} border-current ${learnMoreHoverClass}`}
+                      className={`mt-2 w-full py-2.5 px-4 rounded-xl border text-[10px] font-mono font-semibold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 bg-white/[0.03] hover:text-black ${textColorClass} border-current ${learnMoreHoverClass}`}
                     >
                       Learn More <span className="hidden sm:inline">About This Station</span> <ArrowRight className="w-3 h-3" />
                     </a>
