@@ -38,7 +38,9 @@ const TONEARM_POSITION = { left: "68.814%", top: "2.721%", width: "20.619%" };
 // baked into station-card-cabinet.png so the swivel rotates around the correct hinge.
 const TONEARM_TRANSFORM_ORIGIN = "66.25% 22.2%";
 const TONEARM_REST_DEG = 0;
-const TONEARM_PLAYING_DEG = 45;
+// Swing distance reduced 40% (was 45deg) so the headshell lands on the vinyl grooves
+// instead of overshooting onto the center label.
+const TONEARM_PLAYING_DEG = 27;
 // The cabinet graphic's blank lower drawer is actually drawn as two sub-panels, split by a
 // subtle seam (~y=381 of 588). Title/genre floats centered in the smaller top panel (between
 // the gold divider at ~y=307 and that seam); the now playing block centers in the larger
@@ -417,7 +419,7 @@ export default function NebulaHomepage({
                     alt={`${station.name} vinyl on turntable platter`}
                     draggable={false}
                     referrerPolicy="no-referrer"
-                    className={`absolute z-[1] rounded-full select-none pointer-events-none shadow-[0_8px_20px_rgba(0,0,0,0.6)] ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
+                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
                     style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
                   />
 
@@ -425,7 +427,7 @@ export default function NebulaHomepage({
                     src={stationCardTonearm}
                     alt=""
                     draggable={false}
-                    className="absolute z-[2] select-none pointer-events-none transition-transform duration-700 ease-out"
+                    className="absolute z-[2] select-none pointer-events-none transition-transform duration-1000 ease-out"
                     style={{
                       left: TONEARM_POSITION.left,
                       top: TONEARM_POSITION.top,
