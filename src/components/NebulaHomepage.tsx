@@ -38,10 +38,10 @@ const TONEARM_POSITION = { left: "68.814%", top: "2.721%", width: "20.619%" };
 // baked into station-card-cabinet.png so the swivel rotates around the correct hinge.
 const TONEARM_TRANSFORM_ORIGIN = "66.25% 22.2%";
 const TONEARM_REST_DEG = 0;
-const TONEARM_PLAYING_DEG = -45;
+const TONEARM_PLAYING_DEG = 45;
 // The cabinet graphic's blank lower drawer, where card content (title, now playing, etc.)
 // sits directly on top of the illustration instead of a separate background panel.
-const CONTENT_ZONE = { top: "52.211%", bottom: "3.571%", left: "4.381%", right: "4.897%" };
+const CONTENT_ZONE = { top: "54%", bottom: "6%", left: "9%", right: "9%" };
 
 const DIAL_LOGOS: { [key: string]: string } = {
   rock_garden: dialLogoTrg,
@@ -434,7 +434,7 @@ export default function NebulaHomepage({
 
                   {/* CONTENT — sits directly on top of the cabinet graphic's blank lower drawer */}
                   <div
-                    className="absolute z-[3] flex flex-col justify-between gap-2"
+                    className="absolute z-[3] flex flex-col justify-between gap-3"
                     style={{ top: CONTENT_ZONE.top, bottom: CONTENT_ZONE.bottom, left: CONTENT_ZONE.left, right: CONTENT_ZONE.right }}
                   >
                     {/* Premium analog dotted board background matrix on hover */}
@@ -442,7 +442,7 @@ export default function NebulaHomepage({
                       }`} />
 
                     {/* Core Station Header & Secondary Genres Centered */}
-                    <div className="space-y-1 relative z-10 text-center shrink-0">
+                    <div className="space-y-1.5 relative z-10 text-center shrink-0">
                       <h4 className="text-base sm:text-lg font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
                         {station.name}
                       </h4>
