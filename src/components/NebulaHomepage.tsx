@@ -32,7 +32,7 @@ const PLATTER_ARTWORKS: { [key: string]: string } = {
 
 // Anchor points measured against the native station-card-cabinet.png canvas (388x588).
 // Keeping these as percentages lets the whole turntable graphic scale responsively with the card.
-const PLATTER_POSITION = { left: "4.639%", top: "3.061%", width: "68.557%" };
+const PLATTER_POSITION = { left: "7.8%", top: "4.5%", width: "68.557%" };
 const TONEARM_POSITION = { left: "68.814%", top: "2.721%", width: "20.619%" };
 // Pivot dot measured inside station-card-tonearm.png (80x277) — must match the white dot
 // baked into station-card-cabinet.png so the swivel rotates around the correct hinge.
