@@ -18,7 +18,7 @@ import dialLogoBchs from "../assets/images/dial-logos-bchs.png";
 import dialLogoGbs from "../assets/images/dial-logos-gbs.png";
 
 // Vintage turntable station card assets
-import stationCardCabinetTop from "../assets/images/station-card-cabinet-top.png";
+import stationCardCabinet from "../assets/images/station-card-cabinet.png";
 import stationCardTonearm from "../assets/images/station-card-tonearm.png";
 import stationCardPlatterTrg from "../assets/images/station-card-platter-trg.png";
 import stationCardPlatterBchs from "../assets/images/station-card-platter-bchs.png";
@@ -30,15 +30,18 @@ const PLATTER_ARTWORKS: { [key: string]: string } = {
   golden_boombox: stationCardPlatterGbs,
 };
 
-// Anchor points measured against the native station-card-cabinet-top.png canvas (388x308).
+// Anchor points measured against the native station-card-cabinet.png canvas (388x588).
 // Keeping these as percentages lets the whole turntable graphic scale responsively with the card.
-const PLATTER_POSITION = { left: "4.639%", top: "5.844%", width: "68.557%" };
-const TONEARM_POSITION = { left: "68.814%", top: "5.195%", width: "20.619%" };
+const PLATTER_POSITION = { left: "4.639%", top: "3.061%", width: "68.557%" };
+const TONEARM_POSITION = { left: "68.814%", top: "2.721%", width: "20.619%" };
 // Pivot dot measured inside station-card-tonearm.png (80x277) — must match the white dot
-// baked into station-card-cabinet-top.png so the swivel rotates around the correct hinge.
+// baked into station-card-cabinet.png so the swivel rotates around the correct hinge.
 const TONEARM_TRANSFORM_ORIGIN = "66.25% 22.2%";
 const TONEARM_REST_DEG = 0;
 const TONEARM_PLAYING_DEG = -45;
+// The cabinet graphic's blank lower drawer, where card content (title, now playing, etc.)
+// sits directly on top of the illustration instead of a separate background panel.
+const CONTENT_ZONE = { top: "52.211%", bottom: "3.571%", left: "4.381%", right: "4.897%" };
 
 const DIAL_LOGOS: { [key: string]: string } = {
   rock_garden: dialLogoTrg,
@@ -380,85 +383,82 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className={`rounded-3xl border bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 cursor-pointer flex flex-col justify-between min-h-[440px] relative overflow-hidden group ${isActive
-                      ? `${activeBorderColor} shadow-2xl -translate-y-1.5 bg-white/[0.045] ${shadowActiveClass}`
+                  className={`rounded-3xl border transition-all duration-500 cursor-pointer relative overflow-hidden group ${isActive
+                      ? `${activeBorderColor} shadow-2xl -translate-y-1.5 ${shadowActiveClass}`
                       : `${stationColorClass} hover:shadow-2xl hover:-translate-y-1.5`
                     }`}
                 >
-                  {/* VINTAGE TURNTABLE CABINET — background, spinning platter, pivoting tonearm */}
-                  <div className="relative w-full shrink-0">
-                    {isActive && (
-                      <div
-                        className="absolute rounded-full blur-3xl animate-performant-pulse pointer-events-none"
-                        style={{ backgroundColor: glowColorBg, left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
-                      />
-                    )}
-                    {station.id === "rock_garden" && (
-                      <div
-                        className="absolute rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 pointer-events-none transition-all duration-500"
-                        style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
-                      />
-                    )}
+                  {/* VINTAGE TURNTABLE CABINET GRAPHIC — defines the card's shape; everything below overlays on top of it */}
+                  <img
+                    src={stationCardCabinet}
+                    alt=""
+                    draggable={false}
+                    className="relative z-0 w-full h-auto block select-none pointer-events-none"
+                  />
 
-                    <img
-                      src={stationCardCabinetTop}
-                      alt=""
-                      draggable={false}
-                      className="relative z-0 w-full h-auto block select-none pointer-events-none"
+                  {isActive && (
+                    <div
+                      className="absolute rounded-full blur-3xl animate-performant-pulse pointer-events-none"
+                      style={{ backgroundColor: glowColorBg, left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
                     />
-
-                    <img
-                      src={platterArt}
-                      alt={`${station.name} vinyl on turntable platter`}
-                      draggable={false}
-                      referrerPolicy="no-referrer"
-                      className={`absolute z-[1] rounded-full select-none pointer-events-none shadow-[0_8px_20px_rgba(0,0,0,0.6)] ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
-                      style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
+                  )}
+                  {station.id === "rock_garden" && (
+                    <div
+                      className="absolute rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 pointer-events-none transition-all duration-500"
+                      style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
                     />
+                  )}
 
-                    <img
-                      src={stationCardTonearm}
-                      alt=""
-                      draggable={false}
-                      className="absolute z-[2] select-none pointer-events-none transition-transform duration-700 ease-out"
-                      style={{
-                        left: TONEARM_POSITION.left,
-                        top: TONEARM_POSITION.top,
-                        width: TONEARM_POSITION.width,
-                        transformOrigin: TONEARM_TRANSFORM_ORIGIN,
-                        transform: `rotate(${isSpinning ? TONEARM_PLAYING_DEG : TONEARM_REST_DEG}deg)`,
-                      }}
-                    />
-                  </div>
+                  <img
+                    src={platterArt}
+                    alt={`${station.name} vinyl on turntable platter`}
+                    draggable={false}
+                    referrerPolicy="no-referrer"
+                    className={`absolute z-[1] rounded-full select-none pointer-events-none shadow-[0_8px_20px_rgba(0,0,0,0.6)] ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
+                    style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
+                  />
 
-                  {/* CONTENT — station title/genre, now playing, metrics, learn more (unchanged from before) */}
-                  <div className="px-7 pt-5 pb-7 flex flex-col gap-4 relative z-10 flex-1">
+                  <img
+                    src={stationCardTonearm}
+                    alt=""
+                    draggable={false}
+                    className="absolute z-[2] select-none pointer-events-none transition-transform duration-700 ease-out"
+                    style={{
+                      left: TONEARM_POSITION.left,
+                      top: TONEARM_POSITION.top,
+                      width: TONEARM_POSITION.width,
+                      transformOrigin: TONEARM_TRANSFORM_ORIGIN,
+                      transform: `rotate(${isSpinning ? TONEARM_PLAYING_DEG : TONEARM_REST_DEG}deg)`,
+                    }}
+                  />
+
+                  {/* CONTENT — sits directly on top of the cabinet graphic's blank lower drawer */}
+                  <div
+                    className="absolute z-[3] flex flex-col justify-between gap-2"
+                    style={{ top: CONTENT_ZONE.top, bottom: CONTENT_ZONE.bottom, left: CONTENT_ZONE.left, right: CONTENT_ZONE.right }}
+                  >
                     {/* Premium analog dotted board background matrix on hover */}
                     <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none transition-opacity duration-700 ${isActive ? "opacity-100" : "opacity-40 group-hover:opacity-100"
                       }`} />
 
-                    {/* Subtle top edge custom color accent strip */}
-                    <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-current to-transparent transition-opacity duration-500 ${textColorClass} ${isActive ? "opacity-60" : "opacity-0 group-hover:opacity-60"
-                      }`} />
-
                     {/* Core Station Header & Secondary Genres Centered */}
-                    <div className="space-y-2 max-w-[270vw] relative z-10 text-center">
-                      <h4 className="text-xl sm:text-2xl font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
+                    <div className="space-y-1 relative z-10 text-center shrink-0">
+                      <h4 className="text-base sm:text-lg font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
                         {station.name}
                       </h4>
-                      <span className={`text-[9.5px] font-mono uppercase tracking-[0.22em] block leading-snug font-bold ${textColorClass}`}>
+                      <span className={`text-[8.5px] font-mono uppercase tracking-[0.18em] block leading-snug font-bold ${textColorClass}`}>
                         {station.genre.replace(/,/g, " •")}
                       </span>
                     </div>
 
                     {/* NOW PLAYING CONTAINER FOR SONGS & LIVE CONTROL */}
-                    <div className="pt-1 flex flex-col gap-4 relative z-10 mt-auto">
+                    <div className="flex flex-col gap-2 relative z-10 shrink-0">
 
-                    <div className="relative overflow-hidden rounded-2xl bg-[#090605]/80 border border-white/5 p-3 flex flex-col gap-3 transition-colors duration-300 group-hover:bg-[#0b0807]/90 group-hover:border-white/10 shadow-inner">
+                    <div className="relative overflow-hidden rounded-2xl bg-[#090605]/85 border border-white/5 p-2.5 flex flex-col gap-2 transition-colors duration-300 group-hover:bg-[#0b0807]/90 group-hover:border-white/10 shadow-inner">
 
                       {/* Compact Now Playing visual header inside the box */}
-                      <div className="flex items-center justify-between border-b border-white/5 pb-1.5 w-full">
-                        <span className={`text-[8.5px] font-mono uppercase tracking-[0.2em] font-extrabold ${textColorClass}`}>
+                      <div className="flex items-center justify-between border-b border-white/5 pb-1 w-full">
+                        <span className={`text-[8px] font-mono uppercase tracking-[0.2em] font-extrabold ${textColorClass}`}>
                           Now Playing
                         </span>
                         {isActive && audioState === "playing" && (
@@ -474,7 +474,7 @@ export default function NebulaHomepage({
                       <div className="flex items-center justify-between gap-3 w-full">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           {meta.artUrl ? (
-                            <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-white/15 shrink-0 shadow-lg bg-black">
+                            <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-white/15 shrink-0 shadow-lg bg-black">
                               <img
                                 src={meta.artUrl}
                                 alt="Track visual"
@@ -485,15 +485,15 @@ export default function NebulaHomepage({
                               <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
                             </div>
                           ) : (
-                            <div className="w-11 h-11 rounded-lg bg-neutral-900 border border-white/10 shrink-0 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-neutral-900 border border-white/10 shrink-0 flex items-center justify-center">
                               <Radio className="w-5 h-5 text-neutral-600" />
                             </div>
                           )}
                           <div className="min-w-0 flex-1 flex flex-col justify-center">
-                            <span className="text-[11.5px] font-mono text-white/95 truncate block uppercase tracking-wide leading-tight font-black">
+                            <span className="text-[11px] font-mono text-white/95 truncate block uppercase tracking-wide leading-tight font-black">
                               {meta.trackTitle}
                             </span>
-                            <span className="text-[8.5px] font-mono text-white/40 truncate block uppercase tracking-widest mt-1">
+                            <span className="text-[8px] font-mono text-white/40 truncate block uppercase tracking-widest mt-0.5">
                               {meta.trackArtist}
                             </span>
                           </div>
@@ -501,14 +501,14 @@ export default function NebulaHomepage({
 
                         {/* HIGH FIDELITY CLICK TRIGGER PLAY BUTTON FOR STREAM SELECTION */}
                         <div className="shrink-0 relative z-10">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${isActive
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${isActive
                               ? `${textColorClass} bg-white/10 border border-white/20 scale-105`
                               : "text-neutral-400 bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20"
                             }`}>
                             {isActive && audioState === "playing" ? (
-                              <Pause className="w-4 h-4 ml-0" />
+                              <Pause className="w-3.5 h-3.5 ml-0" />
                             ) : (
-                              <Play className="w-4 h-4 translate-x-0.5" />
+                              <Play className="w-3.5 h-3.5 translate-x-0.5" />
                             )}
                           </div>
                         </div>
@@ -517,7 +517,7 @@ export default function NebulaHomepage({
                     </div>
 
                     {/* METRICS & LISTENER TELEMETRY WITH RELOCATED BADGES */}
-                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 mt-1 uppercase tracking-widest font-semibold">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 uppercase tracking-widest font-semibold">
                       {/* Bottom Left: ON THE AIR component */}
                       <span className="text-[9px] uppercase font-mono tracking-[0.2em] font-extrabold flex items-center gap-1.5">
                         {isOnline ? (
@@ -552,12 +552,12 @@ export default function NebulaHomepage({
                         e.preventDefault();
                         navigate(`/${STATION_SLUGS[station.id]}`);
                       }}
-                      className={`mt-1 w-full py-4 px-4 rounded-xl border text-[11px] font-mono font-semibold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 bg-white/[0.03] hover:text-black ${textColorClass} border-current ${learnMoreHoverClass}`}
+                      className={`w-full py-2.5 px-4 rounded-xl border text-[10px] font-mono font-semibold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 bg-white/[0.03] hover:text-black ${textColorClass} border-current ${learnMoreHoverClass}`}
                     >
                       Learn More <span className="hidden sm:inline">About This Station</span> <ArrowRight className="w-3 h-3" />
                     </a>
 
-                  </div>
+                    </div>
                   </div>
                 </div>
               );
