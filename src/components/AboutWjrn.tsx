@@ -42,7 +42,7 @@ const TEAM: TeamMember[] = [
   {
     name: "Phil Callings",
     role: "Chief Technical Officer",
-    bio: "Phil didn't just stumble into a tech gig at a radio station. He heard what Jace and Cindy were trying to build and knew immediately how to get it done. An independent, around the clock broadcast network doesn't run on good taste alone. It runs on infrastructure, and Phil is the reason ours stays up, clean and clear without interuption.",
+    bio: "Phil didn't just stumble into a tech gig at a radio station. He heard what Jace and Cindy were trying to build and knew immediately how to get it done. An independent, around the clock broadcast network doesn't run on good taste alone. It runs on infrastructure, and Phil is the reason ours stays up, clean and clear without interruption.",
     photo: photoPhil,
   },
 ];
