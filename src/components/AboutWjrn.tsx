@@ -72,7 +72,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   // Bust "looks toward" the cursor — tracked as -0.5..0.5 offset from center
   const [bustTilt, setBustTilt] = useState<Record<number, { x: number; y: number }>>({});
   const handleBustMouseMove = (idx: number) => (e: React.MouseEvent<HTMLDivElement>) => {
-    if ((clickStage[idx] ?? 0) === 0) return;
+    if ((clickStage[idx] ?? 0) === 2) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -199,7 +199,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                 onMouseMove={handleBustMouseMove(idx)}
                 onMouseLeave={() => resetBustTilt(idx)}
                 className={`relative w-full aspect-[383/434] cursor-pointer ${
-                  stage === 0 ? "shadow-[0_20px_40px_rgba(0,0,0,0.45)]" : ""
+                  stage === 2 ? "shadow-[0_20px_40px_rgba(0,0,0,0.45)]" : ""
                 }`}
               >
                 <img
@@ -208,7 +208,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   draggable={false}
                   style={{ transition: "opacity 500ms ease" }}
                   className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none ${
-                    stage === 0 ? "opacity-100" : "opacity-0"
+                    stage === 2 ? "opacity-100" : "opacity-0"
                   }`}
                 />
                 <img
@@ -220,7 +220,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                     transform: bustTransform,
                   }}
                   className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
-                    stage === 1 ? "opacity-100" : "opacity-0"
+                    stage === 0 ? "opacity-100" : "opacity-0"
                   }`}
                 />
                 <img
@@ -232,7 +232,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                     transform: bustTransform,
                   }}
                   className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
-                    stage === 2 ? "opacity-100" : "opacity-0"
+                    stage === 1 ? "opacity-100" : "opacity-0"
                   }`}
                 />
               </div>
