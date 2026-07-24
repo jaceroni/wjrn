@@ -151,12 +151,15 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TEAM.map((member, idx) => (
             <div key={idx} className="flex flex-col gap-[12.15px]">
-              <img
-                src={member.photo}
-                alt={member.name}
-                draggable={false}
-                className="w-full h-auto select-none pointer-events-none"
-              />
+              <div className="w-full overflow-hidden">
+                <img
+                  src={member.photo}
+                  alt={member.name}
+                  draggable={false}
+                  className="w-full h-auto block select-none pointer-events-none"
+                  style={{ transform: "scale(1.068, 1.058)" }}
+                />
+              </div>
               <div className="pt-8 pb-7 px-7 rounded-3xl border border-[#d7b158]/15 hover:border-[#d7b158]/60 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5">
                 <div className="space-y-1.5">
                   <h4 className="text-lg font-bold tracking-normal text-white uppercase leading-tight font-display">
