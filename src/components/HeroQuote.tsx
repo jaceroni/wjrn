@@ -106,16 +106,16 @@ export default function HeroQuote() {
   const bustTransform = `perspective(1000px) rotateY(${tiltDeg}deg)`;
 
   return (
-    <section className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:items-start gap-10 lg:gap-14">
+    <section className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
       <div
         className="flex-1 min-w-0 text-center lg:text-left transition-opacity ease-out"
         style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
       >
-        <p className="text-[32px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[0.95] tracking-normal uppercase select-none font-display">
+        <p className="text-[32px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
           <span className="text-[#d7b158]">&#8220;</span>
           <span className="text-[#faf6f0]">{entry.quote}</span>
-          <span className="text-[#d7b158]">&#8221;</span>{" "}
-          <span className="text-white text-[22px] tracking-wide align-middle whitespace-nowrap">
+          <span className="text-[#d7b158]">&#8221;</span>
+          <span className="float-right ml-4 text-white text-[22px] tracking-wide whitespace-nowrap">
             &ndash; {entry.attribution.toUpperCase()}
           </span>
         </p>
