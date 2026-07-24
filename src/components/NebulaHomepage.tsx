@@ -244,7 +244,7 @@ export default function NebulaHomepage({
             at tile boundaries even though the source PNG is pixel-perfectly seamless. */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
           <pattern id="wjrnTilePattern" x="0" y="0" width="618" height="618" patternUnits="userSpaceOnUse">
-            <image href={wjrnTileBg} x="0" y="0" width="618" height="618" />
+            <image href={wjrnTileBg} x="0" y="0" width="619" height="619" style={{ imageRendering: "pixelated" }} />
           </pattern>
           <rect width="100%" height="100%" fill="url(#wjrnTilePattern)" />
         </svg>

@@ -487,7 +487,10 @@ function initAudio(startIndex) {
   outputSilencer = audioCtx.createGain();
   outputSilencer.gain.value = isSynced ? 0 : 1;
   outputSilencer.connect(audioCtx.destination);
-  noiseGain.connect(outputSilencer);
+  // Tuner static bypasses the silencer entirely — it's a decorative one-shot
+  // effect on station change, not the actual stream, so there's no double-audio
+  // risk from letting it play even when this instance is synced/embedded.
+  noiseGain.connect(audioCtx.destination);
 
   audioEl = new Audio();
   audioEl.crossOrigin = 'anonymous';
