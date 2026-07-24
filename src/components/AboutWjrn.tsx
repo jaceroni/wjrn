@@ -10,6 +10,9 @@ import photoPhil from "../assets/images/about-phil-photo.png";
 import bustJace from "../assets/images/bust-jace-default.png";
 import bustCindy from "../assets/images/bust-cindy-default.png";
 import bustPhil from "../assets/images/bust-phil-default.png";
+import bustJaceAlt from "../assets/images/bust-jace-alt.png";
+import bustCindyAlt from "../assets/images/bust-cindy-alt.png";
+import bustPhilAlt from "../assets/images/bust-phil-alt.png";
 
 interface AboutWjrnProps {
   STATIONS: Station[];
@@ -21,6 +24,7 @@ interface TeamMember {
   bio: string;
   photo: string;
   bust: string;
+  bustAlt: string;
 }
 
 // Nav dropdown hover colors — matches each station's brand accent
@@ -37,6 +41,7 @@ const TEAM: TeamMember[] = [
     bio: "Jace started DJing in 1993. By the late 90s he was working at one of Los Angeles's biggest FM stations, learning how the machine worked and eventually why it wasn't for him. So he walked away, and when the technology finally caught up to his vision, he built WJRN. No restrictions. Just a steady flow of killer tunes across every genre and era that we've grown to love.",
     photo: photoJace,
     bust: bustJace,
+    bustAlt: bustJaceAlt,
   },
   {
     name: "Cindy Whopper",
@@ -44,6 +49,7 @@ const TEAM: TeamMember[] = [
     bio: "Cindy's appetite for music rivals the size of her namesake. When Jace was building WJRN from the ground up, he needed someone who could match his hunger, record for record. Cindy showed up with a whopper of a resume and an even bigger list of what she felt deserves airtime. She keeps the library authentic and makes sure the outside world knows we exist.",
     photo: photoCindy,
     bust: bustCindy,
+    bustAlt: bustCindyAlt,
   },
   {
     name: "Phil Callings",
@@ -51,21 +57,22 @@ const TEAM: TeamMember[] = [
     bio: "Phil didn't just stumble into a tech gig at a radio station. He heard what Jace and Cindy were trying to build and knew immediately how to get it done. An independent, around the clock broadcast network doesn't run on good taste alone. It runs on infrastructure, and Phil is the reason ours stays up, clean and clear without interruption.",
     photo: photoPhil,
     bust: bustPhil,
+    bustAlt: bustPhilAlt,
   },
 ];
 
 export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const { isMiniPlayerVisible } = usePlayer();
 
-  // Easter egg: click a teammate's headshot to reveal their sculpted bust
-  const [revealedBusts, setRevealedBusts] = useState<Record<number, boolean>>({});
-  const toggleBust = (idx: number) =>
-    setRevealedBusts((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  // Easter egg: click a teammate's headshot to cycle photo -> default bust -> alt bust -> photo...
+  const [clickStage, setClickStage] = useState<Record<number, number>>({});
+  const cycleBust = (idx: number) =>
+    setClickStage((prev) => ({ ...prev, [idx]: ((prev[idx] ?? 0) + 1) % 3 }));
 
   // Bust "looks toward" the cursor — tracked as -0.5..0.5 offset from center
   const [bustTilt, setBustTilt] = useState<Record<number, { x: number; y: number }>>({});
   const handleBustMouseMove = (idx: number) => (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!revealedBusts[idx]) return;
+    if ((clickStage[idx] ?? 0) === 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -173,23 +180,26 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       {/* Team */}
       <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[16.84px]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
-          {TEAM.map((member, idx) => (
+          {TEAM.map((member, idx) => {
+            const stage = clickStage[idx] ?? 0;
+            const bustTransform = `perspective(600px) scale(1.035) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg) rotateX(${-(bustTilt[idx]?.y ?? 0) * 24}deg)`;
+            return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div
                 role="button"
                 tabIndex={0}
-                aria-label={`Reveal ${member.name}'s sculpted bust`}
-                onClick={() => toggleBust(idx)}
+                aria-label={`Cycle ${member.name}'s photo and sculpted bust`}
+                onClick={() => cycleBust(idx)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    toggleBust(idx);
+                    cycleBust(idx);
                   }
                 }}
                 onMouseMove={handleBustMouseMove(idx)}
                 onMouseLeave={() => resetBustTilt(idx)}
                 className={`relative w-full aspect-[383/434] cursor-pointer ${
-                  revealedBusts[idx] ? "" : "shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+                  stage === 0 ? "shadow-[0_20px_40px_rgba(0,0,0,0.45)]" : ""
                 }`}
               >
                 <img
@@ -198,7 +208,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   draggable={false}
                   style={{ transition: "opacity 500ms ease" }}
                   className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none ${
-                    revealedBusts[idx] ? "opacity-0" : "opacity-100"
+                    stage === 0 ? "opacity-100" : "opacity-0"
                   }`}
                 />
                 <img
@@ -207,10 +217,22 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   draggable={false}
                   style={{
                     transition: "opacity 500ms ease, transform 150ms ease-out",
-                    transform: `perspective(600px) scale(1.15) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg) rotateX(${-(bustTilt[idx]?.y ?? 0) * 24}deg)`,
+                    transform: bustTransform,
                   }}
                   className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
-                    revealedBusts[idx] ? "opacity-100" : "opacity-0"
+                    stage === 1 ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+                <img
+                  src={member.bustAlt}
+                  alt={`${member.name} alternate sculpted bust`}
+                  draggable={false}
+                  style={{
+                    transition: "opacity 500ms ease, transform 150ms ease-out",
+                    transform: bustTransform,
+                  }}
+                  className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
+                    stage === 2 ? "opacity-100" : "opacity-0"
                   }`}
                 />
               </div>
@@ -228,7 +250,8 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                 </p>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
