@@ -141,6 +141,38 @@ Always include on animated blob divs:
 
 ---
 
+## Station cards — vintage turntable design (`NebulaHomepage.tsx`)
+
+Each of the 3 station cards on the homepage is a vintage turntable cabinet graphic with functional overlays, not a plain gradient card. Assets live in `src/assets/images/`:
+
+- `station-card-cabinet.png` (388×588, full cabinet incl. blank lower "drawer" where card content sits)
+- `station-card-tonearm.png` (80×277)
+- `station-card-platter-{trg,bchs,gbs}.png` (266×267, one per station, includes the vinyl label logo)
+
+All overlay positions are **percentages measured against the native cabinet PNG**, defined as constants near the top of `NebulaHomepage.tsx` (`PLATTER_POSITION`, `TONEARM_POSITION`, `TONEARM_TRANSFORM_ORIGIN`, `TITLE_ZONE`, `PLAYER_ZONE`) — this lets the whole graphic scale responsively with card width. The cabinet PNG is drawn with a subtle seam splitting its lower drawer into two sub-panels; `TITLE_ZONE` floats centered in the smaller upper one, `PLAYER_ZONE` (now playing box, metrics, learn more) centers in the larger lower one.
+
+**Tonearm mechanics**: `TONEARM_TRANSFORM_ORIGIN` (`66.25% 22.2%`) is a pivot dot baked into both the cabinet PNG (white dot) and the tonearm PNG (black dot) — found via alpha-channel pixel search, not eyeballed. `TONEARM_PLAYING_DEG` (currently `27`) is the rotation that lands the headshell on the vinyl grooves (not the label) — this was tuned empirically after the first two guesses (45°, then -45°) over/undershot.
+
+**Hover vs. click behavior** (as of 2026-07-23):
+- Hovering a card spins its platter (`group-hover:animate-[spin_8s_linear_infinite]` on the platter `<img>`) — purely visual, no audio, stops the instant the cursor leaves if not actually playing.
+- Clicking is what swings the tonearm and starts real playback (`isSpinning = isActive && audioState === "playing"` drives both the tonearm rotation and a second, JS-driven spin class that persists after mouse-leave while genuinely playing).
+- **No hover lift/grow/shadow effect and no border of any kind** on the card, in any state (static, hover, or active/playing) — explicitly requested and removed. The only state indicator is the CSS animation itself; don't reintroduce `translate-y`, `shadow-2xl`, or `border` classes on the outer card div.
+- All top-level cards on the homepage (station cards + Twitch module) use `rounded-2xl` uniformly — not `rounded-3xl`.
+
+## Twitch section — cabinet + knockout video window (`TwitchScheduleRetro.tsx`)
+
+Same faceplate-with-knockout technique as `public/player/wjrn-receiver-front-ko.png` (see below), applied to the Twitch live section. Assets in `src/assets/images/`: `twitch-card-bg.png` / `twitch-card-bg-ko.png` (desktop, 923×388) and `twitch-card-bg-mobile.png` / `twitch-card-bg-ko-mobile.png` (mobile, 582×657, screen on top / content below).
+
+- The **non-KO** variant (opaque glass) is the base state; the **KO** variant (real alpha-transparent cutout, found via pixel search — not just visually white) swaps in once `isLiveActive` is true, revealing the Twitch Embed SDK video mounted underneath at the exact same `SCREEN_WINDOW`/`MOBILE_SCREEN_WINDOW` coordinates.
+- `isLiveActive` comes from the real Twitch Embed SDK `ONLINE`/`OFFLINE` player events (`embed.getPlayer().addEventListener(...)`), not a schedule-based guess.
+- **Responsive breakpoint, not responsive text-shrinking**: below 768px (`DESKTOP_BREAKPOINT_QUERY`, tracked via `window.matchMedia` + a `isDesktopLayout` state, not CSS `hidden`/`block`) the component renders an entirely different mobile JSX tree with the mobile graphic. This matters because the desktop graphic's wide 2.38:1 aspect ratio physically runs out of height for the schedule list at anything narrower — cramming smaller text into it was tried first and hit a hard floor. The `isDesktopLayout` matchMedia approach (rather than CSS-hiding both trees) means only one Twitch Embed ever mounts at a time — mounting two hidden live video embeds simultaneously would double bandwidth for nothing.
+- The "JOIN THE LIVE CHAT" button sits **inside** the cabinet frame, in the blank space directly below the screen window (`JOIN_BUTTON_ZONE`), not below the whole card — this was a repeated point of confusion during development (the card's total height includes a lot of blank cabinet below the screen before the frame's bottom edge).
+- **No hover effect and no border** on `#twitch_schedule_module`, matching the station cards.
+
+**Debugging pattern that mattered repeatedly in this redesign**: when the user reports a visual bug that a local dev-server screenshot can't reproduce, check the *actual deployed* `radio.jacewonmusic.com` with a real Playwright screenshot before assuming the user is looking at a stale page — but also don't assume your own measurements are correct just because a screenshot "looks right" at one viewport; the real bugs turned out to be (a) an unmeasured/eyeballed asset position that was simply wrong, and (b) content overflowing at viewport widths (768–1279px) that hadn't been tested, not caching or user error. Test multiple realistic widths, not just one.
+
+---
+
 ## Social share image
 `public/assets/images/wjrn-thumbnail.jpg` — referenced in `index.html` OG/Twitter meta tags. To update: replace the file, run `deploy.sh`. No code changes needed.
 

@@ -217,7 +217,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   if (!isDesktopLayout) {
     return (
       <div className="flex flex-col gap-4">
-        <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden shadow-xl animate-fade-in group">
+        <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden animate-fade-in group">
 
           {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
           <div
@@ -305,6 +305,9 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
               })}
             </div>
           </div>
+
+          {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
+          <div className="absolute inset-0 z-[3] rounded-2xl pointer-events-none shadow-[inset_0_2px_14px_rgba(0,0,0,0.55),inset_0_-1px_4px_rgba(0,0,0,0.3)]" />
         </div>
 
         {/* JOIN THE LIVE CHAT — full width, matching the content zone below */}
@@ -324,7 +327,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
   return (
     <div className="flex flex-col gap-4">
-      <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden shadow-xl animate-fade-in group">
+      <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden animate-fade-in group">
 
         {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
         <div
@@ -432,6 +435,9 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
           </a>
         </div>
+
+        {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
+        <div className="absolute inset-0 z-[3] rounded-2xl pointer-events-none shadow-[inset_0_2px_14px_rgba(0,0,0,0.55),inset_0_-1px_4px_rgba(0,0,0,0.3)]" />
       </div>
     </div>
   );

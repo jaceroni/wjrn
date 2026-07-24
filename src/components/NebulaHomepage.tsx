@@ -313,7 +313,7 @@ export default function NebulaHomepage({
 
       {/* 3. Hero — Vintage Receiver Player Embed */}
       <section className="relative z-10 w-full max-w-7xl mx-auto">
-        <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_35px_70px_rgba(0,0,0,0.55)]">
+        <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_10px_50px_rgba(0,0,0,0.55)]">
           <iframe
             ref={playerIframeRef}
             src="https://radio.jacewonmusic.com/player/?popout=true&sync=1"
@@ -552,6 +552,9 @@ export default function NebulaHomepage({
 
                     </div>
                   </div>
+
+                  {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
+                  <div className="absolute inset-0 z-[4] rounded-2xl pointer-events-none shadow-[inset_0_2px_14px_rgba(0,0,0,0.55),inset_0_-1px_4px_rgba(0,0,0,0.3)]" />
                 </div>
               );
             })}
