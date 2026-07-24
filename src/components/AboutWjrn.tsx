@@ -155,7 +155,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                 src={member.photo}
                 alt={member.name}
                 draggable={false}
-                className="w-full h-auto select-none pointer-events-none"
+                className="w-full h-auto select-none pointer-events-none shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
               />
               <div className="pt-8 pb-7 px-7 rounded-3xl border border-[#d7b158]/15 hover:border-[#d7b158]/60 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5">
                 <div className="space-y-1.5">
