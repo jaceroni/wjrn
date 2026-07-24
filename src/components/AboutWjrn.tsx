@@ -128,23 +128,19 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
 
       {/* Hero */}
       <section className="relative z-10 w-full max-w-5xl mx-auto text-center flex flex-col items-center">
-        <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#d7b158] mb-3">About WJRN</span>
-        <h1 className="text-[36px] sm:text-5xl md:text-6xl font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display">
+        <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#d7b158] mb-3">WJRN California USA</span>
+        <h1 className="max-w-[12.2em] text-[36px] sm:text-5xl md:text-6xl font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display">
           The People Behind The Signal
         </h1>
         <p className="text-xs md:text-sm lg:text-base text-neutral-400 leading-relaxed font-light font-mono mt-6 max-w-2xl">
-          WJRN is an independent, 24/7 broadcast network built and run out of California — no algorithm, no
-          playlist committee, just shows mixed live in front of a studio audience and kept in rotation around
-          the clock. Here's the crew keeping the signal on.
+          WJRN is an independent, 24/7 broadcast network built and run out of California. No algorithm, no
+          label commitments, just a series of shows that are mixed live in front of a studio audience and
+          kept in rotation around the clock. Here's the crew that's keeping it fresh...
         </p>
       </section>
 
       {/* Team */}
       <section className="relative z-10 w-full max-w-7xl mx-auto">
-        <div className="flex flex-col gap-5 mb-8">
-          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#d7b158]">The Team</span>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TEAM.map((member, idx) => (
             <div
