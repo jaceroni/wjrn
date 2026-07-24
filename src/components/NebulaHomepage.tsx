@@ -330,7 +330,7 @@ export default function NebulaHomepage({
         <div className="flex flex-col gap-5">
           <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-20">
             {STATIONS.filter((s) => s.id !== "wjrn").map((station) => {
               const isActive = activeStationId === station.id;
               const meta = metadata[station.id] || {
@@ -373,7 +373,7 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className="w-[90%] mx-auto rounded-2xl cursor-pointer relative overflow-hidden group"
+                  className="rounded-2xl cursor-pointer relative overflow-hidden group"
                 >
                   {/* VINTAGE TURNTABLE CABINET GRAPHIC — defines the card's shape; everything below overlays on top of it */}
                   <img
