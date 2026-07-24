@@ -619,7 +619,17 @@ document.getElementById('hz-ticker').addEventListener('click', function() {
 });
 
 document.getElementById('hz-logo').addEventListener('click', function() {
-  window.open('https://radio.jacewonmusic.com', '_blank');
+  if (isSynced) {
+    // Embedded on the homepage — pop out the real standalone player instead
+    // of just reopening the homepage (which is where this embed already lives).
+    window.open(
+      'https://radio.jacewonmusic.com/player/?popout=true',
+      'WJRN',
+      'width=1280,height=443,resizable=no,scrollbars=no'
+    );
+  } else {
+    window.open('https://radio.jacewonmusic.com', '_blank');
+  }
 });
 
 document.getElementById('hz-volume').addEventListener('click', function() {
