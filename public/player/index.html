@@ -60,7 +60,7 @@ html, body {
 #art-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3; opacity: 0; transition: opacity 0.3s ease; }
 #art-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #f1e3c8; font-size: 26px; display: flex; align-items: center; justify-content: center; }
 #vu-canvas { position: absolute; left: 423px; top: 104px; width: 151px; height: 79px; z-index: 3; }
-#ticker-wrap { position: absolute; left: 410px; top: 214px; width: 569px; height: 48px; z-index: 3; overflow: hidden; display: flex; align-items: center; }
+#ticker-wrap { position: absolute; left: 410px; top: 213px; width: 460px; height: 48px; z-index: 3; overflow: hidden; display: flex; align-items: center; }
 #ticker-text { white-space: nowrap; font-family: monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: #23bf91; text-shadow: 0 0 8px rgba(35,191,145,0.6); line-height: 1; }
 #tuner-tick { position: absolute; top: 133px; width: 4px; height: 38px; background: #ff3333; z-index: 3; transition: left 0.6s cubic-bezier(0.25,0.1,0.25,1); box-shadow: 1px 2px 4px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.35); }
 #faceplate { position: absolute; left: 0; top: 0; width: 1280px; height: 443px; z-index: 2; pointer-events: none; display: block; }
@@ -82,7 +82,8 @@ html, body {
       <div class="hit" id="hz-tuner-screen"  style="left:411px;top:90px;width:766px;height:104px"></div>
       <div class="hit" id="hz-tuning-knob"   style="left:993px;top:212px;width:188px;height:67px"></div>
     <div class="hit" id="hz-art"           style="left:111px;top:101px;width:274px;height:274px"></div>
-    <div class="hit" id="hz-ticker"        style="left:410px;top:214px;width:569px;height:48px"></div>
+    <div class="hit" id="hz-ticker"        style="left:410px;top:213px;width:460px;height:48px"></div>
+    <div class="hit" id="hz-preset"        style="left:884px;top:213px;width:98px;height:48px"></div>
     <div class="hit" id="hz-logo"          style="left:553px;top:46px;width:173px;height:30px"></div>
     <div class="hit" id="hz-volume"        style="left:1015px;top:285px;width:74px;height:79px"></div>
     <div class="hit" id="hz-bass"          style="left:468px;top:284px;width:69px;height:75px"></div>
@@ -186,7 +187,7 @@ var mediaSource = null;
 var tickerMode = 'A'; // 'A'=static centered, 'B'=metadata scroll, 'C'=description scroll
 var tickerPreTakeover = 'A';
 var tickerTakeoverTimer = null;
-var tickerX = 569;
+var tickerX = 460;
 var tickerContent = '';
 var lastTickerTime = null;
 var tickerWidth = 1;
@@ -224,10 +225,10 @@ function setTickerScroll(text, mode) {
     // Measure single-copy width then repeat for seamless loop
     el.textContent = text;
     var singleW = el.scrollWidth || 1;
-    var repeats = Math.ceil(569 / singleW) + 1;
+    var repeats = Math.ceil(460 / singleW) + 1;
     tickerContent = text.repeat(repeats);
     el.textContent = tickerContent;
-    tickerX = 569;
+    tickerX = 460;
     tickerWidth = singleW;
     el.style.transform = 'translateX(' + tickerX + 'px)'; // prevent one-frame flash
   }
@@ -596,6 +597,12 @@ document.getElementById('hz-tuner-screen').addEventListener('click', function() 
 
 document.getElementById('hz-tuning-knob').addEventListener('click', function() {
   if (playerState === 1) { initAudio(); } else { switchStation(); }
+});
+
+// WJRN preset — jumps straight to the unlisted 24/7 instrumental default (station
+// index 0), regardless of whatever's currently tuned in, instead of cycling.
+document.getElementById('hz-preset').addEventListener('click', function() {
+  if (playerState === 1) { initAudio(0); } else { goToStation(0); }
 });
 
 document.getElementById('hz-art').addEventListener('click', function() {
