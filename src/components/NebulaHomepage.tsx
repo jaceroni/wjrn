@@ -111,8 +111,9 @@ export default function NebulaHomepage({
 
   // Station-card platter "backspin" on hover — once started it plays to completion
   // even if the cursor leaves early, since it's driven by this state (cleared only
-  // when the animation itself ends), not by CSS :hover directly.
-  const [backspinningStation, setBackspinningStation] = useState<string | null>(null);
+  // when the animation itself ends), not by CSS :hover directly. Keyed per-station
+  // so backspinning one card can't cancel another card's still-running animation.
+  const [backspinningStations, setBackspinningStations] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const sendCurrentState = () => {
@@ -398,12 +399,12 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => {
-                    setBackspinningStation(null);
+                    setBackspinningStations((prev) => ({ ...prev, [station.id]: false }));
                     toggleStation(station.id);
                   }}
                   onMouseEnter={() => {
-                    if (!isSpinning && backspinningStation !== station.id) {
-                      setBackspinningStation(station.id);
+                    if (!isSpinning && !backspinningStations[station.id]) {
+                      setBackspinningStations((prev) => ({ ...prev, [station.id]: true }));
                     }
                   }}
                   className="rounded-2xl cursor-pointer relative overflow-hidden group shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
@@ -422,12 +423,14 @@ export default function NebulaHomepage({
                     draggable={false}
                     referrerPolicy="no-referrer"
                     onAnimationEnd={() => {
-                      if (backspinningStation === station.id) setBackspinningStation(null);
+                      if (backspinningStations[station.id]) {
+                        setBackspinningStations((prev) => ({ ...prev, [station.id]: false }));
+                      }
                     }}
                     className={`absolute z-[1] rounded-full select-none pointer-events-none ${
                       isSpinning
                         ? "animate-[spin_8s_linear_infinite]"
-                        : backspinningStation === station.id
+                        : backspinningStations[station.id]
                           ? "animate-[platterBackspin_1200ms_ease-out]"
                           : ""
                     }`}
