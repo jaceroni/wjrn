@@ -10,6 +10,9 @@ import logoRockGarden from "../assets/images/miniplayer-logo-trg.svg";
 import logoBridgeCity from "../assets/images/miniplayer-logo-bchs.svg";
 import logoGoldenBoombox from "../assets/images/miniplayer-logo-gbs.svg";
 import djBoothBg from "../assets/images/wjrn-thumbnail.jpg";
+import tileBgRockGarden from "../assets/images/wjrn-tile-bg-trg-1a.png";
+import tileBgBridgeCity from "../assets/images/wjrn-tile-bg-bchs-1a.png";
+import tileBgGoldenBoombox from "../assets/images/wjrn-tile-bg-gbs-1a.png";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,6 +56,7 @@ interface StationConfig {
     feelsLike: string;
   };
   meshGradient: string;
+  tileBg: string;
   primaryColor: string;
   glowColorA: string;
   glowColorB: string;
@@ -85,6 +89,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
       feelsLike: "The Open Road",
     },
     meshGradient: "radial-gradient(circle at 80% 20% in oklab, #222b15 0%, #121809 100%)",
+    tileBg: tileBgRockGarden,
     primaryColor: "#74b338",
     glowColorA: "rgba(116,179,56,0.36)",
     glowColorB: "rgba(116,179,56,0.12)",
@@ -139,6 +144,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
       feelsLike: "2AM on a Friday",
     },
     meshGradient: "radial-gradient(circle at 80% 20% in oklab, #3a1725 0%, #13050b 100%)",
+    tileBg: tileBgBridgeCity,
     primaryColor: "#ff0066",
     glowColorA: "rgba(255,0,102,0.34)",
     glowColorB: "rgba(255,0,102,0.1)",
@@ -193,6 +199,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
       feelsLike: "1993",
     },
     meshGradient: "radial-gradient(circle at 80% 20% in oklab, #372e16 0%, #161205 100%)",
+    tileBg: tileBgGoldenBoombox,
     primaryColor: "#e2ac00",
     glowColorA: "rgba(226,172,0,0.32)",
     glowColorB: "rgba(226,172,0,0.1)",
@@ -393,6 +400,15 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* Background blobs                                                   */}
       {/* ------------------------------------------------------------------ */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        {/* Tiled damask background, tinted per-station — SVG <pattern> with a symmetric
+            1px overdraw on each tile so no seam shows between repeats (see NebulaHomepage.tsx). */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <pattern id="wjrnTilePatternStation" x="0" y="0" width="618" height="618" patternUnits="userSpaceOnUse" overflow="visible" style={{ overflow: "visible" }}>
+            <image href={config.tileBg} x="-1" y="-1" width="620" height="620" style={{ imageRendering: "pixelated" }} />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#wjrnTilePatternStation)" />
+        </svg>
+
         {/* Noise overlay */}
         <svg
           className="absolute inset-0 w-full h-full opacity-[0.025] pointer-events-none z-10"

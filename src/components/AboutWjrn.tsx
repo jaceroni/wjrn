@@ -4,6 +4,7 @@ import { Station } from "../types";
 import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
+import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
 import photoJace from "../assets/images/about-jace-photo.png";
 import photoCindy from "../assets/images/about-cindy-photo.png";
 import photoPhil from "../assets/images/about-phil-photo.png";
@@ -101,6 +102,15 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
     >
       {/* Nebula Cosmic Fire Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        {/* Tiled damask background — SVG <pattern> with a symmetric 1px overdraw on
+            each tile so no seam shows between repeats (see NebulaHomepage.tsx). */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <pattern id="wjrnTilePatternAbout" x="0" y="0" width="618" height="618" patternUnits="userSpaceOnUse" overflow="visible" style={{ overflow: "visible" }}>
+            <image href={wjrnTileBg} x="-1" y="-1" width="620" height="620" style={{ imageRendering: "pixelated" }} />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#wjrnTilePatternAbout)" />
+        </svg>
+
         <svg className="absolute inset-0 w-full h-full opacity-[0.025] pointer-events-none z-10" xmlns="http://www.w3.org/2000/svg">
           <filter id="aboutNoiseFilter">
             <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch" />
