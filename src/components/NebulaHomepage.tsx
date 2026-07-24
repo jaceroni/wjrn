@@ -408,7 +408,7 @@ export default function NebulaHomepage({
                     alt={`${station.name} vinyl on turntable platter`}
                     draggable={false}
                     referrerPolicy="no-referrer"
-                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${isSpinning ? "animate-[spin_8s_linear_infinite]" : "group-hover:animate-[platterBackspin_600ms_ease-out]"}`}
+                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${isSpinning ? "animate-[spin_8s_linear_infinite]" : "group-hover:animate-[platterBackspin_1200ms_ease-out]"}`}
                     style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
                   />
 
