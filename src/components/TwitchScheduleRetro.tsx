@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Tv, Calendar, Bell, ArrowRight } from "lucide-react";
+import { Tv, Calendar, ArrowRight } from "lucide-react";
 import twitchCardBg from "../assets/images/twitch-card-bg.png";
 import twitchCardBgKo from "../assets/images/twitch-card-bg-ko.png";
 
@@ -13,7 +13,7 @@ declare global {
 // The KO variant has a transparent cutout at this exact spot so the live video shows through
 // its glass "window" — same faceplate-with-knockout technique as the vintage player.
 const SCREEN_WINDOW = { left: "47.887%", top: "19.588%", width: "41.170%", height: "50.258%" };
-const LEFT_PANEL = { left: "4%", right: "55%", top: "6%", bottom: "6%" };
+const LEFT_PANEL = { left: "4%", right: "59%", top: "13%", bottom: "6%" };
 
 interface BroadcastEvent {
   day: string;
@@ -237,26 +237,26 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
         {/* Left panel content — description & weekly schedule timeline */}
         <div
-          className="absolute z-[2] flex flex-col justify-between gap-4"
+          className="absolute z-[2]"
           style={{ left: LEFT_PANEL.left, right: LEFT_PANEL.right, top: LEFT_PANEL.top, bottom: LEFT_PANEL.bottom }}
         >
           <div>
-            <div className="flex items-end gap-3 mb-3">
-              <Tv className="w-8 h-8 text-purple-500 animate-pulse shrink-0 mb-0.5" />
-              <h3 className="font-display font-bold text-xl sm:text-2xl text-[#faf6f0] uppercase tracking-normal leading-none">
+            <div className="flex items-end gap-2 xl:gap-3 mb-1.5 xl:mb-3">
+              <Tv className="w-5 h-5 xl:w-8 xl:h-8 text-purple-500 animate-pulse shrink-0 mb-0.5" />
+              <h3 className="font-display font-bold text-sm xl:text-2xl text-[#faf6f0] uppercase tracking-normal leading-tight xl:leading-none">
                 WATCH, LISTEN, & CHAT LIVE!
               </h3>
             </div>
-            <p className="text-sm text-neutral-400 leading-relaxed mb-6 font-light">
+            <p className="text-[11px] xl:text-sm text-neutral-400 leading-snug xl:leading-relaxed mb-2 xl:mb-6 font-light line-clamp-3 xl:line-clamp-none">
               Tune in LIVE for our on-camera shows three times a week on Twitch.tv! Experience interactive chats, unique visuals, redemptions, and live camera views of the WJRN broadcast studio. For continuous music and replays of past tributes, tune into our 24/7 audio-only stations above!
             </p>
 
-            <div className="flex items-center gap-2 mb-3.5">
-              <Calendar className="w-4 h-4 text-purple-500" />
-              <span className="text-xs font-mono uppercase text-white tracking-widest font-semibold">WEEKLY LIVE BROADCAST SCHEDULE</span>
+            <div className="flex items-center gap-2 mb-1 xl:mb-3.5">
+              <Calendar className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-purple-500" />
+              <span className="text-[10px] xl:text-xs font-mono uppercase text-white tracking-widest font-semibold">WEEKLY LIVE BROADCAST SCHEDULE</span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-1 xl:space-y-3">
               {BROADCAST_EVENTS.map((evt, idx) => {
                 let showColor = "#b5945b"; // Default theme gold
                 if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
@@ -266,17 +266,17 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                 return (
                   <div
                     key={idx}
-                    className="group/item flex items-start gap-3.5 p-3 rounded-xl bg-[#090605]/80 border border-white/5 hover:bg-[#0b0807]/90 hover:border-white/10 transition-all duration-200"
+                    className="group/item flex items-start gap-2 xl:gap-3.5 p-1 xl:p-3 rounded-xl bg-[#090605]/80 border border-white/5 hover:bg-[#0b0807]/90 hover:border-white/10 transition-all duration-200"
                   >
-                    <div className="w-20 shrink-0">
-                      <div className="text-xs font-mono font-bold uppercase" style={{ color: showColor }}>{evt.day}</div>
-                      <div className="text-[10px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
+                    <div className="w-16 xl:w-20 shrink-0">
+                      <div className="text-[10px] xl:text-xs font-mono font-bold uppercase" style={{ color: showColor }}>{evt.day}</div>
+                      <div className="text-[9px] xl:text-[10px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-semibold text-[#faf6f0] group-hover/item:brightness-125 transition-all">
+                      <h4 className="text-[11px] xl:text-xs font-semibold text-[#faf6f0] group-hover/item:brightness-125 transition-all">
                         {evt.title}
                       </h4>
-                      <p className="text-[11px] text-neutral-400 leading-normal line-clamp-1 mt-0.5">
+                      <p className="hidden xl:block text-[11px] text-neutral-400 leading-normal line-clamp-1 mt-0.5">
                         {evt.description}
                       </p>
                     </div>
@@ -284,13 +284,6 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                 );
               })}
             </div>
-          </div>
-
-          <div className="border-t border-white/5 pt-3 text-xs text-neutral-400 flex items-center gap-2">
-            <Bell className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
-            <span>
-              LIVE Every Tuesday, Wednesday, and Friday @ 7PM PT on Twitch.tv
-            </span>
           </div>
         </div>
       </div>
