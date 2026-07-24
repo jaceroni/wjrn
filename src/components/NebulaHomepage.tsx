@@ -439,14 +439,26 @@ export default function NebulaHomepage({
                         setBackspinningStations((prev) => ({ ...prev, [station.id]: false }));
                       }
                     }}
-                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${
+                    className={`absolute z-[1] aspect-square rounded-full select-none pointer-events-none ${
                       isSpinning
                         ? "animate-[spin_8s_linear_infinite]"
                         : backspinningStations[station.id]
                           ? "animate-[platterBackspin_1200ms_ease-out]"
                           : ""
                     }`}
-                    style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
+                    style={{
+                      left: PLATTER_POSITION.left,
+                      top: PLATTER_POSITION.top,
+                      width: PLATTER_POSITION.width,
+                      // Keeps this on a stable GPU layer permanently, rather than the
+                      // browser promoting/demoting it right as the rotation starts and
+                      // stops — that promotion is what reads as a visible size "pop".
+                      // (A static `transform: translateZ(0)` here wouldn't help: the
+                      // spin/backspin keyframes replace `transform` outright whenever
+                      // they're running, clobbering it at the exact moment it matters.)
+                      willChange: "transform",
+                      backfaceVisibility: "hidden",
+                    }}
                   />
 
                   <img

@@ -133,6 +133,6 @@ button:not(:disabled) {
    to a stop, like a record being spun back by hand and let go. A full -360deg turn
    lands back at the same visual orientation, so it rests seamlessly with no snap. */
 @keyframes platterBackspin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(-360deg); }
+  from { transform: rotate(0deg) translateZ(0); }
+  to   { transform: rotate(-360deg) translateZ(0); }
 }
