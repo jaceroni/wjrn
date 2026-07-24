@@ -217,7 +217,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   if (!isDesktopLayout) {
     return (
       <div className="flex flex-col gap-4">
-        <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 relative overflow-hidden shadow-xl animate-fade-in group">
+        <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden shadow-xl animate-fade-in group">
 
           {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
           <div
@@ -324,7 +324,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
   return (
     <div className="flex flex-col gap-4">
-      <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 relative overflow-hidden shadow-xl animate-fade-in group">
+      <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden shadow-xl animate-fade-in group">
 
         {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
         <div

@@ -342,29 +342,21 @@ export default function NebulaHomepage({
                 isPlayingLive: false,
                 nextTrack: null
               };
-              let stationColorClass = "border-[#b5945b]/15";
-              let activeBorderColor = "border-[#b5945b]/60";
               let textColorClass = "text-[#b5945b]";
               let pulseColorBg = "bg-[#b5945b]";
               let glowColorBg = "rgba(181,148,91,0.22)";
 
               if (station.id === "rock_garden") {
-                stationColorClass = "border-emerald-500/15";
-                activeBorderColor = "border-emerald-500/60";
                 textColorClass = "text-emerald-400";
                 pulseColorBg = "bg-emerald-500";
                 glowColorBg = "rgba(116,179,56,0.35)";
               }
               if (station.id === "bridge_city") {
-                stationColorClass = "border-pink-500/15";
-                activeBorderColor = "border-pink-500/60";
                 textColorClass = "text-pink-400";
                 pulseColorBg = "bg-pink-500";
                 glowColorBg = "rgba(255,0,102,0.22)";
               }
               if (station.id === "golden_boombox") {
-                stationColorClass = "border-yellow-500/15";
-                activeBorderColor = "border-yellow-500/60";
                 textColorClass = "text-yellow-400";
                 pulseColorBg = "bg-yellow-500";
                 glowColorBg = "rgba(226,172,0,0.22)";
@@ -384,7 +376,7 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className={`rounded-3xl border transition-colors duration-500 cursor-pointer relative overflow-hidden group ${isActive ? activeBorderColor : stationColorClass}`}
+                  className="rounded-2xl cursor-pointer relative overflow-hidden group"
                 >
                   {/* VINTAGE TURNTABLE CABINET GRAPHIC — defines the card's shape; everything below overlays on top of it */}
                   <img
