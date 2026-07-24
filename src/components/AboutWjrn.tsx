@@ -24,19 +24,19 @@ const NAV_HOVER_COLOR: { [key: string]: string } = {
 
 const TEAM: TeamMember[] = [
   {
-    name: "Team Member",
-    role: "Role Title",
-    bio: "Short bio placeholder text goes here — a couple of sentences about what this person does for WJRN and why they're part of the crew.",
+    name: "Jace Brown",
+    role: "Program Director",
+    bio: "Over 30 years in the crates and he's still diggin! Jace missed old school radio, so he built one. The vision, the vinyl, the voice, that's all him. If it's on WJRN, it passed through his ears first.",
   },
   {
-    name: "Team Member",
-    role: "Role Title",
-    bio: "Short bio placeholder text goes here — a couple of sentences about what this person does for WJRN and why they're part of the crew.",
+    name: "Cindy Whopper",
+    role: "Music Librarian + Promotions",
+    bio: "Jace knew that you needed more than just good music. You need a deeeeeep catalog. Cindy keeps the library stacked, the rotation honest, and makes sure the world knows WJRN iisn't playin. Her appetite for records is bottomless.",
   },
   {
-    name: "Team Member",
-    role: "Role Title",
-    bio: "Short bio placeholder text goes here — a couple of sentences about what this person does for WJRN and why they're part of the crew.",
+    name: "Phil Callings",
+    role: "Chief Technical Officer",
+    bio: "When the signal drops or the server crashes at 3am, Phil jumps on it. He is the reason WJRN is on the air around the clock and if you listen closely, you can hear him tinkering in the air tonight...you hear it?",
   },
 ];
 
