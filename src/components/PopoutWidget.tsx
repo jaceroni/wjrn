@@ -25,11 +25,14 @@ interface Props {
 
 export default function PopoutWidget({ onClose }: Props) {
   const {
-    activeStationId, audioState, metadata,
+    displayStationId, audioState, metadata,
     toggleStation, isMuted, setIsMuted,
   } = usePlayer();
 
-  const stationId = activeStationId || "wjrn";
+  // displayStationId (not activeStationId) — pausing a live station sets
+  // activeStationId to null, but the popout should still show whatever was
+  // last playing rather than snapping to the WJRN default (fixed 2026-07-24).
+  const stationId = displayStationId || "wjrn";
   const accent    = STATION_COLORS[stationId] ?? "#d7b158";
   const meta      = metadata[stationId];
   const isPlaying = audioState === "playing";
