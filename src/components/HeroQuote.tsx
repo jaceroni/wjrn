@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import bustPeteRock from "../assets/images/bust-pete-rock-default.png";
 import bustPeteRockAlt from "../assets/images/bust-pete-rock-alt.png";
+import bustBobDylan from "../assets/images/bust-bob-dylan-default.png";
+import bustBobDylanAlt from "../assets/images/bust-bob-dylan-alt.png";
 
 interface HeroQuoteEntry {
   // Each string is one hand-set visual line (mirrors how the mockup itself was
@@ -26,6 +28,16 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
     attribution: "Pete Rock",
     bust: bustPeteRock,
     bustAlt: bustPeteRockAlt,
+  },
+  {
+    quoteLines: [
+      "I've learned as much",
+      "from Cézanne as I have",
+      "from Woody Guthrie...",
+    ],
+    attribution: "Bob Dylan",
+    bust: bustBobDylan,
+    bustAlt: bustBobDylanAlt,
   },
 ];
 
