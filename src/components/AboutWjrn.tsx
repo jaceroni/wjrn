@@ -5,9 +5,6 @@ import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
-import photoJace from "../assets/images/about-jace-photo.png";
-import photoCindy from "../assets/images/about-cindy-photo.png";
-import photoPhil from "../assets/images/about-phil-photo.png";
 import bustJace from "../assets/images/bust-jace-default.png";
 import bustCindy from "../assets/images/bust-cindy-default.png";
 import bustPhil from "../assets/images/bust-phil-default.png";
@@ -23,7 +20,6 @@ interface TeamMember {
   name: string;
   role: string;
   bio: string;
-  photo: string;
   bust: string;
   bustAlt: string;
 }
@@ -40,7 +36,6 @@ const TEAM: TeamMember[] = [
     name: "Jace Brown",
     role: "Program Director",
     bio: "Jace started DJing in 1993. By the late 90s he was working at one of Los Angeles's biggest FM stations, learning how the machine worked and eventually why it wasn't for him. So he walked away, and when the technology finally caught up to his vision, he built WJRN. No restrictions. Just a steady flow of killer tunes across every genre and era that we've grown to love.",
-    photo: photoJace,
     bust: bustJace,
     bustAlt: bustJaceAlt,
   },
@@ -48,7 +43,6 @@ const TEAM: TeamMember[] = [
     name: "Cindy Whopper",
     role: "Music Librarian + Promotions",
     bio: "Cindy's appetite for music rivals the size of her namesake. When Jace was building WJRN from the ground up, he needed someone who could match his hunger, record for record. Cindy showed up with a whopper of a resume and an even bigger list of what she felt deserves airtime. She keeps the library authentic and makes sure the outside world knows we exist.",
-    photo: photoCindy,
     bust: bustCindy,
     bustAlt: bustCindyAlt,
   },
@@ -56,7 +50,6 @@ const TEAM: TeamMember[] = [
     name: "Phil Callings",
     role: "Chief Technical Officer",
     bio: "Phil didn't just stumble into a tech gig at a radio station. He heard what Jace and Cindy were trying to build and knew immediately how to get it done. An independent, around the clock broadcast network doesn't run on good taste alone. It runs on infrastructure, and Phil is the reason ours stays up, clean and clear without interruption.",
-    photo: photoPhil,
     bust: bustPhil,
     bustAlt: bustPhilAlt,
   },
@@ -65,10 +58,10 @@ const TEAM: TeamMember[] = [
 export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const { isMiniPlayerVisible, totalListeners } = usePlayer();
 
-  // Easter egg: click (no drag) a teammate's headshot to cycle photo -> default bust -> alt bust -> photo...
+  // Easter egg: click (no drag) a teammate's bust to toggle default <-> alt pose
   const [clickStage, setClickStage] = useState<Record<number, number>>({});
   const cycleBust = (idx: number) =>
-    setClickStage((prev) => ({ ...prev, [idx]: ((prev[idx] ?? 0) + 1) % 3 }));
+    setClickStage((prev) => ({ ...prev, [idx]: ((prev[idx] ?? 0) + 1) % 2 }));
 
   // Ambient tilt — all busts track the cursor's left-right position across the
   // whole page (-0.5..0.5), the whole time you're here, like they're watching you
@@ -231,13 +224,13 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           {TEAM.map((member, idx) => {
             const stage = clickStage[idx] ?? 0;
             const tiltX = draggedIdx === idx ? draggedTiltX : ambientTiltX;
-            const bustTransform = `perspective(600px) rotateY(${tiltX * 24}deg)`;
+            const bustTransform = `perspective(1000px) rotateY(${tiltX * 14}deg)`;
             return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div
                 role="button"
                 tabIndex={0}
-                aria-label={`Cycle ${member.name}'s photo and sculpted bust — click and drag to turn`}
+                aria-label={`Toggle ${member.name}'s sculpted bust pose — click and drag to turn`}
                 onMouseDown={handleBustMouseDown(idx)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -247,17 +240,8 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                 }}
                 className={`relative w-full aspect-[383/434] select-none ${
                   draggedIdx === idx ? "cursor-grabbing" : "cursor-grab"
-                } ${stage === 2 ? "shadow-[0_20px_40px_rgba(0,0,0,0.45)]" : ""}`}
+                }`}
               >
-                <img
-                  src={member.photo}
-                  alt={member.name}
-                  draggable={false}
-                  style={{ transition: "opacity 500ms ease" }}
-                  className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none ${
-                    stage === 2 ? "opacity-100" : "opacity-0"
-                  }`}
-                />
                 <img
                   src={member.bust}
                   alt={`${member.name} sculpted bust`}
