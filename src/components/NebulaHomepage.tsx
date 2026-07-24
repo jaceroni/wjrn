@@ -234,10 +234,20 @@ export default function NebulaHomepage({
   }, [audioState, analyserRef]);
 
   return (
-    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ backgroundImage: `url(${wjrnTileBg})`, backgroundRepeat: "repeat", backgroundSize: "618px 618px", backgroundColor: "#120e0b" }}>
+    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ backgroundColor: "#120e0b" }}>
 
       {/* 1. Nebula Cosmic Fire Background in soft brown and mustard #664d49 spectrum */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+
+        {/* Tiled damask background — an SVG <pattern> instead of a raw CSS background-repeat,
+            since the latter showed a faint seam between tiles from browser texture-sampling
+            at tile boundaries even though the source PNG is pixel-perfectly seamless. */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <pattern id="wjrnTilePattern" x="0" y="0" width="618" height="618" patternUnits="userSpaceOnUse">
+            <image href={wjrnTileBg} x="0" y="0" width="618" height="618" />
+          </pattern>
+          <rect width="100%" height="100%" fill="url(#wjrnTilePattern)" />
+        </svg>
 
         {/* SVG Procedural Analog Noise Overlay to soften gradients and prevent banding */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.025] pointer-events-none z-10" xmlns="http://www.w3.org/2000/svg">
