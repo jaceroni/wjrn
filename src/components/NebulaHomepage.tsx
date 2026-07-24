@@ -326,7 +326,7 @@ export default function NebulaHomepage({
       </section>
 
       {/* 5. Glassy Selectable Stream Channels Slider/Deck modules */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto">
+      <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[3.5px] -mb-[3.5px]">
         <div className="flex flex-col gap-5">
           <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
 
