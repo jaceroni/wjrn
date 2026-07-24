@@ -16,6 +16,13 @@
   --color-yellow-300: #ffd133;
 }
 
+/* Tailwind v4 preflight dropped the old default that gave <button> a pointer
+   cursor — restore it site-wide so every clickable button shows a pointer,
+   not just links (which still get one from the browser regardless of CSS). */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 /* Custom glow effects and keyframes */
 @keyframes pulseGlow {
   0%, 100% {
