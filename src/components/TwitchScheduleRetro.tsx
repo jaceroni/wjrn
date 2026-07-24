@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Tv, Calendar, ArrowRight } from "lucide-react";
 import twitchCardBg from "../assets/images/twitch-card-bg.png";
 import twitchCardBgKo from "../assets/images/twitch-card-bg-ko.png";
+import twitchCardBgMobile from "../assets/images/twitch-card-bg-mobile.png";
+import twitchCardBgKoMobile from "../assets/images/twitch-card-bg-ko-mobile.png";
 
 declare global {
   interface Window {
@@ -14,6 +16,12 @@ declare global {
 // its glass "window" — same faceplate-with-knockout technique as the vintage player.
 const SCREEN_WINDOW = { left: "47.887%", top: "19.588%", width: "41.170%", height: "50.258%" };
 const LEFT_PANEL = { left: "4%", right: "59%", top: "13%", bottom: "6%" };
+
+// Measured against the native twitch-card-bg(-ko)-mobile.png canvas (582x657) — screen on top,
+// schedule content below, used below the "md" breakpoint where the wide layout has no room.
+const MOBILE_SCREEN_WINDOW = { left: "17.354%", top: "11.568%", width: "65.292%", height: "29.680%" };
+const MOBILE_CONTENT_ZONE = { left: "7%", right: "7%", top: "44%", bottom: "5%" };
+const DESKTOP_BREAKPOINT_QUERY = "(min-width: 768px)";
 
 interface BroadcastEvent {
   day: string;
@@ -52,6 +60,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   const [countdownText, setCountdownText] = useState("");
   const [isLiveActive, setIsLiveActive] = useState(false);
   const [parentDomain, setParentDomain] = useState("radio.jacewonmusic.com");
+  const [isDesktopLayout, setIsDesktopLayout] = useState(true);
   const embedContainerRef = useRef<HTMLDivElement>(null);
   const embedRef = useRef<any>(null);
 
@@ -59,6 +68,17 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
     if (typeof window !== "undefined") {
       setParentDomain(window.location.hostname);
     }
+  }, []);
+
+  // Below this breakpoint the wide cabinet graphic has no room for the schedule list, so we
+  // swap to the mobile graphic (screen on top, content below) instead of shrinking text forever.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(DESKTOP_BREAKPOINT_QUERY);
+    setIsDesktopLayout(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktopLayout(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
   // Mount the official Twitch Embed SDK so we get real ONLINE/OFFLINE events
@@ -107,7 +127,9 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
     return () => {
       cancelled = true;
     };
-  }, [twitchChannel, parentDomain]);
+    // isDesktopLayout is included so the embed remounts into whichever container
+    // (desktop or mobile) is actually in the DOM after a breakpoint switch.
+  }, [twitchChannel, parentDomain, isDesktopLayout]);
 
   useEffect(() => {
     function calculateCountdown() {
@@ -188,6 +210,116 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
     const interval = setInterval(calculateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  if (!isDesktopLayout) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 hover:border-purple-500/55 relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-0.5 shadow-xl animate-fade-in group">
+          {/* Top accent strip */}
+          <div className="absolute top-0 left-0 right-0 h-[3px] z-[4] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none" />
+
+          {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
+          <div
+            className="absolute z-0 overflow-hidden rounded-2xl bg-[#080605]"
+            style={{ left: MOBILE_SCREEN_WINDOW.left, top: MOBILE_SCREEN_WINDOW.top, width: MOBILE_SCREEN_WINDOW.width, height: MOBILE_SCREEN_WINDOW.height }}
+          >
+            <div id="twitch-live-embed" ref={embedContainerRef} className="w-full h-full" />
+          </div>
+
+          {/* Vintage TV cabinet graphic (mobile proportions) — normal glass when idle, knockout window once live */}
+          <img
+            src={isLiveActive ? twitchCardBgKoMobile : twitchCardBgMobile}
+            alt=""
+            draggable={false}
+            className="relative z-[1] w-full h-auto block select-none pointer-events-none"
+          />
+
+          {/* Screen contents overlay — countdown when idle, LIVE badge once live */}
+          <div
+            className="absolute z-[2] pointer-events-none"
+            style={{ left: MOBILE_SCREEN_WINDOW.left, top: MOBILE_SCREEN_WINDOW.top, width: MOBILE_SCREEN_WINDOW.width, height: MOBILE_SCREEN_WINDOW.height }}
+          >
+            {!isLiveActive && (
+              <div className="w-full h-full flex flex-col items-center justify-center text-center px-2">
+                <p className="text-[8px] font-mono text-neutral-400 mb-1 uppercase tracking-wider">
+                  NEXT LIVE STREAM COUNTDOWN:
+                </p>
+                <div className="font-mono text-base font-bold tracking-tight select-all">
+                  <span className="font-mono tabular-nums" style={{ color: "#b5945b" }}>{countdownText}</span>
+                </div>
+              </div>
+            )}
+            {isLiveActive && (
+              <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-2 py-0.5 bg-red-600/90 backdrop-blur-sm text-white font-mono text-[8px] font-bold tracking-wider uppercase rounded-full shadow-lg select-none pointer-events-auto">
+                <span className="h-1 w-1 rounded-full bg-white animate-ping"></span>
+                <span className="h-1 w-1 rounded-full bg-white absolute"></span>
+                <span>LIVE NOW</span>
+              </div>
+            )}
+          </div>
+
+          {/* Content — title, description & weekly schedule timeline, below the screen */}
+          <div
+            className="absolute z-[2]"
+            style={{ left: MOBILE_CONTENT_ZONE.left, right: MOBILE_CONTENT_ZONE.right, top: MOBILE_CONTENT_ZONE.top, bottom: MOBILE_CONTENT_ZONE.bottom }}
+          >
+            <div className="flex items-end gap-2 mb-1.5">
+              <Tv className="w-5 h-5 text-purple-500 animate-pulse shrink-0 mb-0.5" />
+              <h3 className="font-display font-bold text-sm text-[#faf6f0] uppercase tracking-normal leading-tight">
+                WATCH, LISTEN, & CHAT LIVE!
+              </h3>
+            </div>
+            <p className="text-[10px] text-neutral-400 leading-snug mb-2 font-light line-clamp-2">
+              Tune in LIVE for our on-camera shows three times a week on Twitch.tv! Experience interactive chats, unique visuals, redemptions, and live camera views of the WJRN broadcast studio.
+            </p>
+
+            <div className="flex items-center gap-1.5 mb-1">
+              <Calendar className="w-3 h-3 text-purple-500" />
+              <span className="text-[9px] font-mono uppercase text-white tracking-widest font-semibold">WEEKLY LIVE BROADCAST SCHEDULE</span>
+            </div>
+
+            <div className="space-y-1">
+              {BROADCAST_EVENTS.map((evt, idx) => {
+                let showColor = "#b5945b"; // Default theme gold
+                if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
+                if (evt.title.includes("Bridge City")) showColor = "#ff0066"; // bridge pink
+                if (evt.title.includes("Golden Boombox")) showColor = "#e2ac00"; // golden yellow
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 p-1 rounded-lg bg-[#090605]/80 border border-white/5"
+                  >
+                    <div className="w-14 shrink-0">
+                      <div className="text-[9px] font-mono font-bold uppercase" style={{ color: showColor }}>{evt.day}</div>
+                      <div className="text-[8px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[10px] font-semibold text-[#faf6f0] truncate">
+                        {evt.title}
+                      </h4>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* JOIN THE LIVE CHAT — full width, matching the content zone below */}
+        <div className="flex" style={{ paddingLeft: MOBILE_CONTENT_ZONE.left, paddingRight: MOBILE_CONTENT_ZONE.right }}>
+          <a
+            href="https://www.twitch.tv/jacewonmusic"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
+          >
+            JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
