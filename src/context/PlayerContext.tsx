@@ -32,6 +32,34 @@ const STATION_STREAM_MAP: Record<string, { streamUrl: string; shortcode: string;
   },
 };
 
+// Deterministic-but-organically-fluctuating "listener count" per station, shown
+// in place of the real (currently very low) Azuracast listener totals. It's a
+// continuous function of wall-clock time rather than a fresh random draw, so a
+// page refresh a few seconds or minutes later shows a number close to what was
+// there before, while still drifting naturally over longer stretches — never a
+// jarring jump. Range is bounded to (roughly) 50-150, with a different phase
+// per station so the three don't move in lockstep.
+function hashSeed(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function fakeListenerCount(stationId: string, min = 50, max = 150): number {
+  const seed = hashSeed(stationId);
+  const t = Date.now() / 1000;
+  const phase1 = seed % 1000;
+  const phase2 = (seed * 7) % 1000;
+  const phase3 = (seed * 13) % 1000;
+  const wave =
+    Math.sin(t / 3000 + phase1) * 0.6 +
+    Math.sin(t / 900 + phase2) * 0.3 +
+    Math.sin(t / 300 + phase3) * 0.1;
+  const mid = (min + max) / 2;
+  const amplitude = (max - min) / 2;
+  return Math.min(max - 1, Math.max(min + 1, Math.round(mid + wave * amplitude)));
+}
+
 // Fallback mock track data for when Azuracast is unreachable
 const MOCK_PLAYLISTS: Record<string, Array<{ title: string; artist: string; album: string; nextTitle: string; nextArtist: string }>> = {
   wjrn: [
@@ -64,7 +92,7 @@ const INITIAL_METADATA: Record<string, NowPlaying> = {
     trackArtist: "WJRN",
     album: "Instrumental 24/7",
     artUrl: wjrnThumbnail,
-    listeners: 50,
+    listeners: fakeListenerCount("wjrn"),
     isPlayingLive: false,
     isOnline: true,
     nextTrack: null,
@@ -74,7 +102,7 @@ const INITIAL_METADATA: Record<string, NowPlaying> = {
     trackArtist: "The Doors",
     album: "L.A. Woman",
     artUrl: "https://picsum.photos/seed/rockgarden/300/300",
-    listeners: 142,
+    listeners: fakeListenerCount("rock_garden"),
     isPlayingLive: false,
     isOnline: true,
     nextTrack: { title: "Sunshine of Your Love", artist: "Cream" },
@@ -84,7 +112,7 @@ const INITIAL_METADATA: Record<string, NowPlaying> = {
     trackArtist: "Kem",
     album: "Album II",
     artUrl: "https://picsum.photos/seed/bridgecity/300/300",
-    listeners: 98,
+    listeners: fakeListenerCount("bridge_city"),
     isPlayingLive: true,
     isOnline: true,
     nextTrack: { title: "Prototype", artist: "Outkast" },
@@ -94,7 +122,7 @@ const INITIAL_METADATA: Record<string, NowPlaying> = {
     trackArtist: "Wu-Tang Clan",
     album: "Enter the Wu-Tang (36 Chambers)",
     artUrl: "https://picsum.photos/seed/goldenboom/300/300",
-    listeners: 215,
+    listeners: fakeListenerCount("golden_boombox"),
     isPlayingLive: false,
     isOnline: true,
     nextTrack: { title: "N.Y. State of Mind", artist: "Nas" },
@@ -174,6 +202,9 @@ interface PlayerContextValue {
   displayStationId: string | null;
   isMiniPlayerVisible: boolean;
   dismissMiniPlayer: () => void;
+  // Sum of the 3 advertised stations' listener counts (excludes the unlisted
+  // "wjrn" default stream) — shown in each page header's "Broadcasting to..." line.
+  totalListeners: number;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -384,8 +415,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       setMetadata((prev) => {
         const next = { ...prev };
         Object.keys(next).forEach((id) => {
-          const drift = Math.random() > 0.6 ? (Math.random() > 0.5 ? 2 : -2) : 0;
-          next[id] = { ...next[id], listeners: Math.max(12, next[id].listeners + drift) };
+          next[id] = { ...next[id], listeners: fakeListenerCount(id) };
           if (Math.random() > 0.96) {
             const list = MOCK_PLAYLISTS[id];
             if (list) {
@@ -450,7 +480,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
               trackArtist: isOnline ? (np?.song?.artist || "WJRN DJ Set") : "WJRN Broadcast Network",
               album: isOnline ? (np?.song?.album || "Live") : "Offline",
               artUrl: isOnline ? (np?.song?.art || prev[matchId]?.artUrl || defaultArt) : defaultArt,
-              listeners: isOnline ? (azStation.listeners?.total || azStation.listeners?.unique || 0) : 0,
+              // Real listener totals are shown nowhere — the actual counts are still
+              // low this early on, so we show the same realistic-looking fluctuating
+              // number used everywhere else instead (see fakeListenerCount above).
+              listeners: isOnline ? fakeListenerCount(matchId) : 0,
               isPlayingLive: isOnline ? (azStation.live?.is_active || false) : false,
               isOnline,
               nextTrack:
@@ -601,6 +634,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (audioRef.current) audioRef.current.currentTime = 0;
   };
 
+  const totalListeners =
+    (metadata.rock_garden?.listeners || 0) +
+    (metadata.bridge_city?.listeners || 0) +
+    (metadata.golden_boombox?.listeners || 0);
+
   return (
     <PlayerContext.Provider
       value={{
@@ -640,6 +678,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         displayStationId,
         isMiniPlayerVisible,
         dismissMiniPlayer,
+        totalListeners,
       }}
     >
       {children}
