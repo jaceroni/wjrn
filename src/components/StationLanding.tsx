@@ -428,7 +428,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
-            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
+            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#d7b158]">
               Jacewon Radio Network
             </span>
           </span>
@@ -442,14 +442,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               e.preventDefault();
               navigate("/");
             }}
-            className="text-white/80 hover:text-[#b5945b] transition-colors"
+            className="text-white/80 hover:text-[#d7b158] transition-colors"
           >
             Home
           </a>
-          <span className="text-white/20">&middot;</span>
+          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
 
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[#b5945b] transition-colors cursor-default">
+            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-default">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
@@ -476,7 +476,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
             </div>
           </div>
 
-          <span className="text-white/20">&middot;</span>
+          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
           <a
             href="/about-wjrn"
             onClick={(e: React.MouseEvent) => {
@@ -484,13 +484,13 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               e.preventDefault();
               navigate("/about-wjrn");
             }}
-            className="text-white/80 hover:text-[#b5945b] transition-colors"
+            className="text-white/80 hover:text-[#d7b158] transition-colors"
           >
             About WJRN
           </a>
         </nav>
 
-        <div className="hidden md:flex items-center gap-1.5 shrink-0">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
           <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
             Live From California

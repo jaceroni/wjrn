@@ -241,7 +241,7 @@ export default function NebulaHomepage({
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
-            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
+            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#d7b158]">
               Jacewon Radio Network
             </span>
           </span>
@@ -256,15 +256,15 @@ export default function NebulaHomepage({
               e.preventDefault();
               navigate("/");
             }}
-            className="text-white/80 hover:text-[#b5945b] transition-colors"
+            className="text-white/80 hover:text-[#d7b158] transition-colors"
           >
             Home
           </a>
-          <span className="text-white/20">&middot;</span>
+          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
 
           {/* Our Stations — hover dropdown */}
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[#b5945b] transition-colors cursor-default">
+            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-default">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
@@ -287,7 +287,7 @@ export default function NebulaHomepage({
             </div>
           </div>
 
-          <span className="text-white/20">&middot;</span>
+          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
           <a
             href="/about-wjrn"
             onClick={(e) => {
@@ -295,14 +295,14 @@ export default function NebulaHomepage({
               e.preventDefault();
               navigate("/about-wjrn");
             }}
-            className="text-white/80 hover:text-[#b5945b] transition-colors"
+            className="text-white/80 hover:text-[#d7b158] transition-colors"
           >
             About WJRN
           </a>
         </nav>
 
         {/* Live Indicator (Far Upper Right) */}
-        <div className="hidden md:flex items-center gap-1.5 shrink-0">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
           <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
             Live From California
@@ -343,9 +343,9 @@ export default function NebulaHomepage({
                 isPlayingLive: false,
                 nextTrack: null
               };
-              let textColorClass = "text-[#b5945b]";
-              let pulseColorBg = "bg-[#b5945b]";
-              let glowColorBg = "rgba(181,148,91,0.22)";
+              let textColorClass = "text-[#d7b158]";
+              let pulseColorBg = "bg-[#d7b158]";
+              let glowColorBg = "rgba(215,177,88,0.22)";
 
               if (station.id === "rock_garden") {
                 textColorClass = "text-emerald-400";
@@ -367,7 +367,7 @@ export default function NebulaHomepage({
                 station.id === "rock_garden" ? "hover:bg-emerald-500 hover:border-emerald-500" :
                   station.id === "bridge_city" ? "hover:bg-pink-500 hover:border-pink-500" :
                     station.id === "golden_boombox" ? "hover:bg-yellow-500 hover:border-yellow-500" :
-                      "hover:bg-[#b5945b] hover:border-[#b5945b]";
+                      "hover:bg-[#d7b158] hover:border-[#d7b158]";
 
               const isOnline = !!station.streamUrl;
               const platterArt = PLATTER_ARTWORKS[station.id] || station.logoUrl;

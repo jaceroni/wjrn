@@ -80,20 +80,20 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
-            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/70">
+            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#d7b158]">
               Jacewon Radio Network
             </span>
           </span>
         </a>
 
         <nav className="hidden md:flex items-center gap-5 text-[11px] font-mono uppercase tracking-[0.2em]">
-          <a href="/" onClick={go("/")} className="text-white/80 hover:text-[#b5945b] transition-colors">
+          <a href="/" onClick={go("/")} className="text-white/80 hover:text-[#d7b158] transition-colors">
             Home
           </a>
-          <span className="text-white/20">&middot;</span>
+          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
 
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[#b5945b] transition-colors cursor-default">
+            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-default">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
@@ -112,11 +112,11 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
             </div>
           </div>
 
-          <span className="text-white/20">&middot;</span>
-          <span className="text-[#b5945b]">About WJRN</span>
+          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
+          <span className="text-[#d7b158]">About WJRN</span>
         </nav>
 
-        <div className="hidden md:flex items-center gap-1.5 shrink-0">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
           <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
             Live From California
@@ -128,7 +128,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
 
       {/* Hero */}
       <section className="relative z-10 w-full max-w-5xl mx-auto text-center flex flex-col items-center">
-        <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#b5945b] mb-3">About WJRN</span>
+        <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#d7b158] mb-3">About WJRN</span>
         <h1 className="text-[36px] sm:text-5xl md:text-6xl font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display">
           The People Behind The Signal
         </h1>
@@ -142,14 +142,14 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       {/* Team */}
       <section className="relative z-10 w-full max-w-7xl mx-auto">
         <div className="flex flex-col gap-5 mb-8">
-          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#b5945b]">The Team</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.25em] text-[#d7b158]">The Team</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TEAM.map((member, idx) => (
             <div
               key={idx}
-              className="pt-8 pb-7 px-7 rounded-3xl border border-[#b5945b]/15 hover:border-[#b5945b]/60 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5 group"
+              className="pt-8 pb-7 px-7 rounded-3xl border border-[#d7b158]/15 hover:border-[#d7b158]/60 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5 group"
             >
               <div className="w-28 h-28 rounded-full overflow-hidden shrink-0 shadow-[0_15px_35px_rgba(0,0,0,0.8)] flex items-center justify-center bg-white/[0.03] border border-white/10 transition-transform duration-500 group-hover:scale-105">
                 <User className="w-10 h-10 text-white/20" />
@@ -158,7 +158,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                 <h4 className="text-lg font-bold tracking-normal text-white uppercase leading-tight font-display">
                   {member.name}
                 </h4>
-                <span className="text-[9.5px] font-mono uppercase tracking-[0.22em] block leading-snug font-bold text-[#b5945b]">
+                <span className="text-[9.5px] font-mono uppercase tracking-[0.22em] block leading-snug font-bold text-[#d7b158]">
                   {member.role}
                 </span>
               </div>

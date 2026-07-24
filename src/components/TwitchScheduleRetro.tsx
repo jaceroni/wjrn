@@ -246,7 +246,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                   NEXT LIVE STREAM COUNTDOWN:
                 </p>
                 <div className="font-mono text-base font-bold tracking-tight select-all">
-                  <span className="font-mono tabular-nums" style={{ color: "#b5945b" }}>{countdownText}</span>
+                  <span className="font-mono tabular-nums" style={{ color: "#d7b158" }}>{countdownText}</span>
                 </div>
               </div>
             )}
@@ -281,7 +281,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
             <div className="space-y-1">
               {BROADCAST_EVENTS.map((evt, idx) => {
-                let showColor = "#b5945b"; // Default theme gold
+                let showColor = "#d7b158"; // Default theme gold
                 if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
                 if (evt.title.includes("Bridge City")) showColor = "#ff0066"; // bridge pink
                 if (evt.title.includes("Golden Boombox")) showColor = "#e2ac00"; // golden yellow
@@ -353,7 +353,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                 NEXT LIVE STREAM COUNTDOWN:
               </p>
               <div className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight select-all">
-                <span className="font-mono tabular-nums" style={{ color: "#b5945b" }}>{countdownText}</span>
+                <span className="font-mono tabular-nums" style={{ color: "#d7b158" }}>{countdownText}</span>
               </div>
             </div>
           )}
@@ -389,7 +389,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
             <div className="space-y-1 xl:space-y-3">
               {BROADCAST_EVENTS.map((evt, idx) => {
-                let showColor = "#b5945b"; // Default theme gold
+                let showColor = "#d7b158"; // Default theme gold
                 if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
                 if (evt.title.includes("Bridge City")) showColor = "#ff0066"; // bridge pink
                 if (evt.title.includes("Golden Boombox")) showColor = "#e2ac00"; // golden yellow

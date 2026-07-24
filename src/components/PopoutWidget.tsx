@@ -9,7 +9,7 @@ const STATION_LOGOS: Record<string, string> = {
   wjrn: logoWjrn, rock_garden: logoTrg, bridge_city: logoBchs, golden_boombox: logoGbs,
 };
 const STATION_COLORS: Record<string, string> = {
-  wjrn: "#b5945b", rock_garden: "#74b338", bridge_city: "#ff0066", golden_boombox: "#e2ac00",
+  wjrn: "#d7b158", rock_garden: "#74b338", bridge_city: "#ff0066", golden_boombox: "#e2ac00",
 };
 const STATION_NAMES: Record<string, string> = {
   wjrn: "WJRN", rock_garden: "THE ROCK GARDEN", bridge_city: "BRIDGE CITY HANG SUITE", golden_boombox: "THE GOLDEN BOOMBOX",
@@ -30,7 +30,7 @@ export default function PopoutWidget({ onClose }: Props) {
   } = usePlayer();
 
   const stationId = activeStationId || "wjrn";
-  const accent    = STATION_COLORS[stationId] ?? "#b5945b";
+  const accent    = STATION_COLORS[stationId] ?? "#d7b158";
   const meta      = metadata[stationId];
   const isPlaying = audioState === "playing";
   const isConnecting = audioState === "connecting";

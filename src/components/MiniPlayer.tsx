@@ -29,7 +29,7 @@ const STATION_SLUGS: Record<string, string> = {
 };
 
 const STATION_COLORS: Record<string, string> = {
-  wjrn: "#b5945b",
+  wjrn: "#d7b158",
   rock_garden: "#74b338",
   bridge_city: "#ff0066",
   golden_boombox: "#e2ac00",
