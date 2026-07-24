@@ -39,6 +39,8 @@ import { navigate } from "../navigate";
 
 `App.tsx` listens for `popstate` and `spa-navigate` events and swaps the view component without unmounting the tree.
 
+**Navigating must never interrupt whatever's currently playing, on any page.** E.g. if Rock Garden is playing and the user goes to the About page then clicks Home/the logo, playback must keep going — don't add a `stopPlayback()` call to nav-link handlers to "fix" some other homepage-specific issue (tried and reverted 2026-07-24; the actual ask turned out to need a vintage-player preset button instead, not a playback reset tied to navigation).
+
 ### URL → Component map
 | URL | Component |
 |-----|-----------|
@@ -94,6 +96,8 @@ isOnDemand === false →  use toggleStation(stationId)
 
 This applies in: `MiniPlayer`, `StationLanding` player card, `NebulaHomepage` phone player.
 
+`MiniPlayer`'s center station logo and its "Go to this station" link both `navigate()` to that station's landing page (logo click was previously dead — fixed 2026-07-24).
+
 ### On-demand exports from PlayerContext
 ```ts
 formatTime(seconds)        // exported utility — "1:23:45"
@@ -118,26 +122,42 @@ Fetched in `StationLanding.tsx` on mount. Public — no auth required.
 - Bridge City: `https://radio.jacewonmusic.com/public/4/podcast/1f163af9-33ea-6eb0-a61f-152390e696af/feed`
 - Golden Boombox: `https://radio.jacewonmusic.com/public/3/podcast/1f163b5a-9eb7-6bc4-b5cd-43d7c7b481e2/feed`
 
+### Listener counts are fake (intentionally)
+Real Azuracast listener totals are low this early on, so `PlayerContext.tsx` overrides them with `fakeListenerCount(stationId)` — a deterministic function of wall-clock time (not `Math.random()` per render), bounded to roughly 50–150, with a different phase per station so they don't move in lockstep. It's a continuous function of time specifically so a page refresh a few seconds or minutes later shows a number close to what was there before, while still drifting naturally over longer stretches. Applied in three places: `INITIAL_METADATA` (module-load fallback), the pre-live mock-tick effect, and the real Azuracast fetch handler (replaces `azStation.listeners.total` outright — real online/offline status and now-playing metadata are untouched, only the listener number is faked). `totalListeners` (sum of the 3 advertised stations, excluding the unlisted `wjrn` default stream) is exposed via context and drives the "Broadcasting (icon) X Listeners" line in the header on all three pages (replaced "Live From California" 2026-07-24).
+
 ---
 
 ## Design system
 
-**Brand accent**: `#b5945b` (gold/tan) — used for WJRN homepage elements  
+**Brand accent**: `#d7b158` (gold) — used for WJRN elements site-wide (updated 2026-07-24 from `#b5945b`; more accessible on dark backgrounds). If you find a stray `#b5945b` it's stale — replace it.
 **Fonts**: `font-display` = Montserrat (headlines), `font-mono` = JetBrains Mono (UI labels)  
-**Background**: `#050201` homepage, station pages have per-station dark bg
+**Background**: flat `#120e0b` ("WJRN surface" color) on the homepage, About page, and station landing pages (station pages layer their own per-station radial mesh gradient on top). All three also render a tiled damask pattern on top of that base color — see below.
+
+### Tiled background pattern (Homepage, About, Station pages)
+`wjrn-tile-bg-1a.png` (neutral gold) on Home/About, `wjrn-tile-bg-{trg,bchs,gbs}.png` (station-tinted) per station page — all 618×618, in `src/assets/images/`. **Rendered as an SVG `<pattern>`, not a CSS `background-image: repeat`** — the CSS approach showed a persistent faint seam between tiles from browser texture-sampling at tile boundaries even though the source PNGs are pixel-perfectly seamless (verified via pixel sampling). The fix that actually worked:
+```jsx
+<pattern id="..." x="0" y="0" width="618" height="618" patternUnits="userSpaceOnUse" overflow="visible" style={{ overflow: "visible" }}>
+  <image href={tileBg} x="-1" y="-1" width="620" height="620" style={{ imageRendering: "pixelated" }} />
+</pattern>
+```
+Each tile overdraws 1px on all four sides (620×620 image inside a 618×618 cell). **`overflow="visible"` is required** — SVG `<pattern>` clips content to its own tile box by default, which silently defeats the overdraw if omitted (this was the actual bug the first two fix attempts missed).
 
 ### Shared CSS classes (`index.css`)
 - `.animate-glow-one/two/three` — shared lava lamp blob animations
-- `.animate-marquee` + `.mask-marquee` — scrolling text for long track titles
+- `.animate-marquee` + `.mask-marquee` — scrolling text for long track titles (6%/94% edge fade via `mask-image`)
 - `.logo-base` / `.logo-white-reveal` — logo always-white treatment (no hover distortion effect — removed 2026-07-21)
 - `@keyframes verticalPulse` — used by phone visualizer bars
+- `@keyframes platterBackspin` — one-shot counterclockwise turn, see station cards section below
+- `button:not(:disabled) { cursor: pointer; }` — **Tailwind v4 preflight dropped the old default** that gave `<button>` a pointer cursor (present in v3, gone in v4). This restores it site-wide; don't assume a bare `<button>` shows a pointer cursor without this rule. `<a href>` is unaffected either way (browser default, not CSS-dependent).
 
-### Lava lamp blobs (anti-flicker rules)
-Always include on animated blob divs:
+### Lava lamp blobs / any rotating-via-CSS-transform element (anti-flicker rules)
+Always include on animated blob divs, and on anything rotated via CSS `transform` (platter, tonearm, etc.):
 - `will-change: transform`
 - `backface-visibility: hidden`
-- `transform: translateZ(0)`
+- `transform: translateZ(0)` **only if it's not itself the thing being animated** — a CSS animation's keyframes replace the `transform` property outright while running, so a static inline `transform: translateZ(0)` gets clobbered the instant the animation starts (exactly when you need it). Bake `translateZ(0)` into the keyframes themselves instead if the element has a custom animation; for Tailwind's built-in `animate-spin` (can't edit its keyframes), `will-change`/`backface-visibility` alone still help.
 - Use `px` blur values, **not** `vw` (vw recalculates every scroll frame)
+
+This class of bug shows up as a visible size "pop" right when a rotation starts/stops — the browser promotes/demotes the element to its own GPU compositing layer at that moment, and the promotion itself is what reads as sudden growth. Note this is a *mitigation*, not a complete fix for blur: any non-zero rotation of a raster image via CSS forces pixel resampling, which softens edges — there is no CSS-only way to keep a continuously-rotating bitmap perfectly crisp (tried and reverted 2026-07-24 on the About page busts: reducing angle/increasing perspective distance helped only marginally, not worth the added complexity).
 
 ---
 
@@ -153,10 +173,10 @@ All overlay positions are **percentages measured against the native cabinet PNG*
 
 **Tonearm mechanics**: `TONEARM_TRANSFORM_ORIGIN` (`66.25% 22.2%`) is a pivot dot baked into both the cabinet PNG (white dot) and the tonearm PNG (black dot) — found via alpha-channel pixel search, not eyeballed. `TONEARM_PLAYING_DEG` (currently `27`) is the rotation that lands the headshell on the vinyl grooves (not the label) — this was tuned empirically after the first two guesses (45°, then -45°) over/undershot.
 
-**Hover vs. click behavior** (as of 2026-07-23):
-- Hovering a card spins its platter (`group-hover:animate-[spin_8s_linear_infinite]` on the platter `<img>`) — purely visual, no audio, stops the instant the cursor leaves if not actually playing.
-- Clicking is what swings the tonearm and starts real playback (`isSpinning = isActive && audioState === "playing"` drives both the tonearm rotation and a second, JS-driven spin class that persists after mouse-leave while genuinely playing).
-- **No hover lift/grow/shadow effect and no border of any kind** on the card, in any state (static, hover, or active/playing) — explicitly requested and removed. The only state indicator is the CSS animation itself; don't reintroduce `translate-y`, `shadow-2xl`, or `border` classes on the outer card div.
+**Hover vs. click behavior** (updated 2026-07-24):
+- Hovering a card when **not** playing triggers a one-shot "backspin" — the platter does a single quick counterclockwise turn (`@keyframes platterBackspin`, -360deg, ease-out) like a record being spun back by hand, then rests (a full -360 turn lands at the same visual orientation, so there's no snap when it ends). This is JS-driven (`backspinningStations` state, set on `onMouseEnter`, cleared on the animation's own `onAnimationEnd`), **not** a pure CSS `:hover` animation — that was tried first and got cut off if the cursor left before the animation finished. State is keyed per-station so backspinning one card can't cancel another's still-running animation.
+- Clicking is what swings the tonearm and starts real playback (`isSpinning = isActive && audioState === "playing"` drives both the tonearm rotation and the continuous forward `animate-spin`, which persists after mouse-leave while genuinely playing). The backspin class only applies when `!isSpinning`; hovering a card that's actually playing does nothing extra.
+- **No hover lift/grow effect and no hover-triggered border/glow** on the card, in any state — explicitly requested and removed (including a brand-color blur glow behind the platter on `isActive` that survived several unrelated edits before being caught and removed — check for stray `blur-2xl`/`blur-3xl` glow divs here if touching this component). **A plain static `shadow-[0_20px_40px_rgba(0,0,0,0.45)]` is the one exception** — added 2026-07-25 for visual consistency with the hero player and About page headshots, which all share the same shadow value. Still no hover-triggered shadow changes.
 - All top-level cards on the homepage (station cards + Twitch module) use `rounded-2xl` uniformly — not `rounded-3xl`.
 
 ## Twitch section — cabinet + knockout video window (`TwitchScheduleRetro.tsx`)
@@ -170,6 +190,16 @@ Same faceplate-with-knockout technique as `public/player/wjrn-receiver-front-ko.
 - **No hover effect and no border** on `#twitch_schedule_module`, matching the station cards.
 
 **Debugging pattern that mattered repeatedly in this redesign**: when the user reports a visual bug that a local dev-server screenshot can't reproduce, check the *actual deployed* `radio.jacewonmusic.com` with a real Playwright screenshot before assuming the user is looking at a stale page — but also don't assume your own measurements are correct just because a screenshot "looks right" at one viewport; the real bugs turned out to be (a) an unmeasured/eyeballed asset position that was simply wrong, and (b) content overflowing at viewport widths (768–1279px) that hadn't been tested, not caching or user error. Test multiple realistic widths, not just one.
+
+## About WJRN team busts (`AboutWjrn.tsx`)
+
+Each team member card shows a sculpted terracotta bust (transparent-background PNG, `src/assets/images/bust-{jace,cindy,phil}-{default,alt}.png`) instead of a headshot photo (photos were tried first, then removed 2026-07-24 in favor of the busts alone). Interaction model:
+
+- **Click (mousedown, whether or not it turns into a drag) toggles default ↔ alt pose** — `clickStage` state, `% 2`. This is intentional: grabbing a bust to manually turn it also reveals the alt pose in the same motion, so the user discovers the alt exists just by interacting with the tilt. A second click flips back.
+- **Ambient tilt**: every bust continuously turns toward the cursor's horizontal position, computed independently **per bust from its own screen position** (`Math.atan2(cursorX - bustCenterX, TILT_DEPTH)`), not one shared page-wide ratio — a bust far from the cursor changes only slightly per pixel of cursor movement since `atan2`'s slope flattens out at wide angles, while a nearby bust sweeps a wide range for the same movement. This was a deliberate redesign from an earlier single-shared-value version, specifically to get "closer reacts faster" as an emergent property of real angle-to-cursor math rather than a bolted-on damping system.
+- **Click-and-drag overrides** the ambient tilt for that one bust only (tracked via `draggedIdx`/`draggedTiltDeg`, picks up from wherever the bust currently is — no jump on grab) while every other bust keeps following the ambient cursor position. Drag tracking is on `window`, not the element, so it keeps working if the cursor leaves the bust's box mid-drag.
+- Bust images are sized via intrinsic `w-auto h-auto` + `max-w/max-h` (never `object-fit: contain`, which stretches raster images past their native resolution on wide screens and blurs them — this was a real bug, fixed 2026-07-24).
+- Max tilt angle is 14° with `perspective(1000px)` — tuned down once already (24°→14°) for a "growing" GPU-layer-promotion artifact (see anti-flicker rules above) and blur was raised as a separate concern afterward, but further angle/perspective tuning didn't meaningfully help and was reverted — see the anti-flicker section note above before attempting this again.
 
 ---
 
@@ -260,8 +290,11 @@ const STATIONS = [
 ### Audio architecture
 - Standard `<audio>` element with `crossOrigin="anonymous"`
 - `AudioContext` → `AnalyserNode` (fftSize: 256) → `GainNode` → destination
-- Separate `noiseGain` node for white noise static (procedural AudioBuffer, no external files)
+- Separate `noiseGain` node for white noise static (procedural AudioBuffer, no external files). **Connects directly to `audioCtx.destination`, bypassing `outputSilencer`** (unlike `gainNode`, which routes through the silencer and is muted when `isSynced`) — the tuner static is a one-shot decorative effect on station change, not the actual stream, so there's no double-audio risk in letting it play even when this instance is embedded/synced on the homepage. If you ever hear "no static on the homepage embed" reported again, check this connection first.
 - All audio initialized on first user click (browser autoplay policy)
+
+### Cross-frame sync gotcha (`NebulaHomepage.tsx`'s `sendCurrentState`)
+The effect that keeps this embed in sync with the real (audible) player used to send the iframe a `pause` message whenever the real audio was merely `"connecting"` (buffering) — not just when genuinely idle. Since every fresh play passes through a connecting phase, this raced against the iframe's own just-started local (muted) playback and paused it right after it started, leaving the embed stuck showing "paused" with a dead ticker until a second interaction (fixed 2026-07-24). The current logic only mirrors a pause when the real player is genuinely idle-while-loaded or fully stopped — never during `"connecting"`. If touching this effect, preserve that distinction; it's easy to reintroduce by adding a blanket `audioState !== "playing"` check back in.
 
 ### Interactions
 - **Click anywhere** → init audio + start WJRN stream
@@ -277,9 +310,10 @@ const STATIONS = [
 
 ### Ticker Logic & Scrolling
 - **Modes**: `A` = static centered text (pre-play, paused, tuning/volume alerts), `B` = metadata marquee, `C` = station description marquee.
-- **Marquee Mechanism**: Seamless marquee loop measuring `el.scrollWidth` and duplicating text to fill the 569px width.
+- **Marquee Mechanism**: Seamless marquee loop measuring `el.scrollWidth` and duplicating text to fill the 460px width (was 569px before the 2026-07-24 faceplate redesign added the preset button — check for any other stray `569` literals if resizing again, there were three: initial `tickerX`, the repeat-count math, and the reset value in `setTickerScroll`).
 - **Vertical Alignment**: Centered vertically via `display: flex; align-items: center;` combined with horizontal offsets.
 - **Reset Prevention**: To prevent text from jumping back to the right side on the 15-second metadata polling interval, `setTickerScroll` checks `currentTickerText` and returns early if the mode and text have not changed.
+- **Edge fade**: `#ticker-wrap` has a `mask-image`/`-webkit-mask-image` linear-gradient fade (`transparent 0%, #000 6%, #000 94%, transparent 100%`, matching `.mask-marquee` in the React app's `index.css`) so scrolling text softens into the background at the edges instead of clipping hard.
 
 ### Responsive Scaling
 - Centered automatically in viewport using Flexbox.
