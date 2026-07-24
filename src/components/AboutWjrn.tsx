@@ -182,7 +182,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
           {TEAM.map((member, idx) => {
             const stage = clickStage[idx] ?? 0;
-            const bustTransform = `perspective(600px) scale(1.035) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg) rotateX(${-(bustTilt[idx]?.y ?? 0) * 24}deg)`;
+            const bustTransform = `perspective(600px) scale(1.035) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg)`;
             return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div

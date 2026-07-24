@@ -330,7 +330,7 @@ export default function NebulaHomepage({
 
       {/* 3. Hero — Vintage Receiver Player Embed */}
       <section className="relative z-10 w-full max-w-7xl mx-auto">
-        <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg">
+        <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_20px_40px_rgba(0,0,0,0.45)]">
           <iframe
             ref={playerIframeRef}
             src="https://radio.jacewonmusic.com/player/?popout=true&sync=1"
