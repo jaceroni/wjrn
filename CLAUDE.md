@@ -234,10 +234,14 @@ window.open(
 |---------|------|-----|-------|--------|
 | Album art | 111 | 101 | 274 | 274 |
 | VU meter canvas | 423 | 104 | 151 | 79 |
-| Metadata ticker | 410 | 214 | 569 | 48 |
+| Metadata ticker | 410 | 213 | 460 | 48 |
+| WJRN preset hit | 884 | 213 | 98 | 48 |
 | Tuner tick | computed | 133 | 6 | 38 |
 | Tuning knob hit | 993 | 212 | 188 | 67 |
 | Volume knob hit | 1015 | 285 | 74 | 79 |
+
+### WJRN preset button
+Added 2026-07-24 alongside a faceplate redesign that narrowed the metadata ticker to make room for it. Jumps straight to the unlisted 24/7 instrumental-only "WJRN" stream (`STATIONS[0]`, 89.1 MHz) regardless of what's currently tuned in — `goToStation(0)` if already playing/paused, `initAudio(0)` if the player hasn't started yet. Unlike the tuning knob/tuner screen (which cycle sequentially via `switchStation()`), this always targets index 0 directly.
 
 ### Stations
 ```javascript
