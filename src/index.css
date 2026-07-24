@@ -121,3 +121,11 @@
   0%, 100% { transform: scaleY(0.15); }
   50%       { transform: scaleY(0.95); }
 }
+
+/* Station-card platter hover "backspin" — one quick counterclockwise turn that eases
+   to a stop, like a record being spun back by hand and let go. A full -360deg turn
+   lands back at the same visual orientation, so it rests seamlessly with no snap. */
+@keyframes platterBackspin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
