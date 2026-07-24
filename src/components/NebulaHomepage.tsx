@@ -11,6 +11,7 @@ import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
 import TwitchSchedule from "./TwitchScheduleRetro";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
+import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 
 import dialLogoTrg from "../assets/images/dial-logos-trg.png";
@@ -233,7 +234,7 @@ export default function NebulaHomepage({
   }, [audioState, analyserRef]);
 
   return (
-    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "#120e0b" }}>
+    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ backgroundImage: `url(${wjrnTileBg})`, backgroundRepeat: "repeat", backgroundColor: "#120e0b" }}>
 
       {/* 1. Nebula Cosmic Fire Background in soft brown and mustard #664d49 spectrum */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
