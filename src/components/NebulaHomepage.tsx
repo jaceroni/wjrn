@@ -345,22 +345,18 @@ export default function NebulaHomepage({
               };
               let textColorClass = "text-[#d7b158]";
               let pulseColorBg = "bg-[#d7b158]";
-              let glowColorBg = "rgba(215,177,88,0.22)";
 
               if (station.id === "rock_garden") {
                 textColorClass = "text-emerald-400";
                 pulseColorBg = "bg-emerald-500";
-                glowColorBg = "rgba(116,179,56,0.35)";
               }
               if (station.id === "bridge_city") {
                 textColorClass = "text-pink-400";
                 pulseColorBg = "bg-pink-500";
-                glowColorBg = "rgba(255,0,102,0.22)";
               }
               if (station.id === "golden_boombox") {
                 textColorClass = "text-yellow-400";
                 pulseColorBg = "bg-yellow-500";
-                glowColorBg = "rgba(226,172,0,0.22)";
               }
 
               const learnMoreHoverClass =
@@ -386,19 +382,6 @@ export default function NebulaHomepage({
                     draggable={false}
                     className="relative z-0 w-full h-auto block select-none pointer-events-none"
                   />
-
-                  {isActive && (
-                    <div
-                      className="absolute rounded-full blur-3xl animate-performant-pulse pointer-events-none"
-                      style={{ backgroundColor: glowColorBg, left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
-                    />
-                  )}
-                  {station.id === "rock_garden" && (
-                    <div
-                      className="absolute rounded-full bg-emerald-500/5 blur-2xl pointer-events-none"
-                      style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
-                    />
-                  )}
 
                   <img
                     src={platterArt}
