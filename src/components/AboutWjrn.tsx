@@ -31,7 +31,7 @@ const TEAM: TeamMember[] = [
   {
     name: "Cindy Whopper",
     role: "Music Librarian + Promotions",
-    bio: "Jace knew that you needed more than just good music. You need a deeeeeep catalog. Cindy keeps the library stacked, the rotation honest, and makes sure the world knows WJRN iisn't playin. Her appetite for records is bottomless.",
+    bio: "Cindy knew that you needed more than just good music. You need a deep catalog. Cindy keeps the library stacked, the rotation honest, and makes sure the world knows WJRN isn't playin. Her appetite for records is bottomless.",
   },
   {
     name: "Phil Callings",
