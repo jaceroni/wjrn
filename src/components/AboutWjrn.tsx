@@ -210,10 +210,11 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           <span className="text-[#d7b158]">About WJRN</span>
         </nav>
 
-        <div className="hidden md:flex items-center gap-3 shrink-0">
-          <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
-          <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
-            Broadcasting To {totalListeners.toLocaleString()} Listeners
+        <div className="hidden md:flex items-center shrink-0">
+          <span className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
+            Broadcasting
+            <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0" />
+            {totalListeners.toLocaleString()} Listeners
           </span>
         </div>
       </header>
