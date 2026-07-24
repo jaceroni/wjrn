@@ -415,7 +415,10 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* Header — Logo / Nav / Live Indicator                               */}
       {/* ------------------------------------------------------------------ */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+      <header
+        className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4"
+        style={{ "--nav-accent": config.primaryColor } as React.CSSProperties}
+      >
         <a
           href="/"
           onClick={(e: React.MouseEvent) => {
@@ -428,7 +431,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
-            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#d7b158]">
+            <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--nav-accent)]">
               Jacewon Radio Network
             </span>
           </span>
@@ -442,14 +445,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               e.preventDefault();
               navigate("/");
             }}
-            className="text-white/80 hover:text-[#d7b158] transition-colors"
+            className="text-white/80 hover:text-[var(--nav-accent)] transition-colors"
           >
             Home
           </a>
-          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
+          <span className="text-[var(--nav-accent)] text-[30px] leading-none">&middot;</span>
 
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-default">
+            <span className="text-white/80 group-hover:text-[var(--nav-accent)] transition-colors cursor-default">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
@@ -476,7 +479,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
             </div>
           </div>
 
-          <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
+          <span className="text-[var(--nav-accent)] text-[30px] leading-none">&middot;</span>
           <a
             href="/about-wjrn"
             onClick={(e: React.MouseEvent) => {
@@ -484,7 +487,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               e.preventDefault();
               navigate("/about-wjrn");
             }}
-            className="text-white/80 hover:text-[#d7b158] transition-colors"
+            className="text-white/80 hover:text-[var(--nav-accent)] transition-colors"
           >
             About WJRN
           </a>
