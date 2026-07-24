@@ -556,17 +556,24 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audioRef.current = audio;
     connectAudioGraph(audio);
 
-    audio.onplay = () => setAudioState("playing");
-    audio.onplaying = () => setAudioState("playing");
-    audio.onwaiting = () => setAudioState("connecting");
+    // isCurrent guards every handler below against a stale event from an old,
+    // already-torn-down element still landing after audioRef has moved on to a
+    // newer one (e.g. a pause immediately followed by a new play) — without it,
+    // a late 'canplay' on the discarded element can call .play() on itself, fail
+    // (empty src), and stomp the new element's "connecting"/"playing" state with
+    // "error" a beat later (fixed 2026-07-24).
+    const isCurrent = () => audioRef.current === audio;
+    audio.onplay = () => { if (isCurrent()) setAudioState("playing"); };
+    audio.onplaying = () => { if (isCurrent()) setAudioState("playing"); };
+    audio.onwaiting = () => { if (isCurrent()) setAudioState("connecting"); };
     audio.oncanplay = () => {
-      if (!wantsPlaybackRef.current) return;
-      audio.play().catch(() => setAudioState("error"));
+      if (!isCurrent() || !wantsPlaybackRef.current) return;
+      audio.play().catch(() => { if (isCurrent()) setAudioState("error"); });
     };
-    audio.onerror = () => setAudioState("error");
+    audio.onerror = () => { if (isCurrent()) setAudioState("error"); };
 
     audio.load();
-    audio.play().then(() => setAudioState("playing")).catch(() => {});
+    audio.play().then(() => { if (isCurrent()) setAudioState("playing"); }).catch(() => {});
   };
 
   const stopPlayback = () => {
@@ -616,22 +623,30 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audioRef.current = audio;
     connectAudioGraph(audio);
 
-    audio.onplay    = () => setAudioState("playing");
-    audio.onplaying = () => setAudioState("playing");
+    // See the matching comment in toggleStation — guards against a stale event
+    // from a torn-down element landing after audioRef has moved on.
+    const isCurrent = () => audioRef.current === audio;
+    audio.onplay    = () => { if (isCurrent()) setAudioState("playing"); };
+    audio.onplaying = () => { if (isCurrent()) setAudioState("playing"); };
     audio.onwaiting = () => {};
     audio.oncanplay = () => {
-      if (!wantsPlaybackRef.current) return;
-      audio.play().catch(() => setAudioState("error"));
+      if (!isCurrent() || !wantsPlaybackRef.current) return;
+      audio.play().catch(() => { if (isCurrent()) setAudioState("error"); });
     };
-    audio.onerror   = () => setAudioState("error");
-    audio.onended   = () => { wantsPlaybackRef.current = false; setAudioState("idle"); setOnDemandItem(null); setOnDemandCurrentTime(0); setOnDemandDuration(0); };
+    audio.onerror   = () => { if (isCurrent()) setAudioState("error"); };
+    audio.onended   = () => {
+      if (!isCurrent()) return;
+      wantsPlaybackRef.current = false;
+      setAudioState("idle"); setOnDemandItem(null); setOnDemandCurrentTime(0); setOnDemandDuration(0);
+    };
     audio.ontimeupdate = () => {
+      if (!isCurrent()) return;
       setOnDemandCurrentTime(audio.currentTime);
       if (isFinite(audio.duration)) setOnDemandDuration(audio.duration);
     };
 
     audio.load();
-    audio.play().then(() => setAudioState("playing")).catch(() => {});
+    audio.play().then(() => { if (isCurrent()) setAudioState("playing"); }).catch(() => {});
   };
 
   // Debounced seeks — 250ms delay prevents flooding the server with range requests
