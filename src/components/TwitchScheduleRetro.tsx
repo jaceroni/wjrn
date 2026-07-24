@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 import { Tv, Calendar, Bell, ArrowRight } from "lucide-react";
+import twitchCardBg from "../assets/images/twitch-card-bg.png";
+import twitchCardBgKo from "../assets/images/twitch-card-bg-ko.png";
 
 declare global {
   interface Window {
     Twitch?: any;
   }
 }
+
+// Measured against the native twitch-card-bg(-ko).png canvas (923x388).
+// The KO variant has a transparent cutout at this exact spot so the live video shows through
+// its glass "window" — same faceplate-with-knockout technique as the vintage player.
+const SCREEN_WINDOW = { left: "47.887%", top: "19.588%", width: "41.170%", height: "50.258%" };
+const LEFT_PANEL = { left: "4%", right: "55%", top: "6%", bottom: "6%" };
 
 interface BroadcastEvent {
   day: string;
@@ -182,16 +190,56 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   }, []);
 
   return (
-    <div id="twitch_schedule_module" className="bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl border border-purple-500/15 hover:border-purple-500/55 rounded-3xl p-6 relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-0.5 shadow-xl animate-fade-in group">
-      {/* Top accent strip */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-      {/* Dotted pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none opacity-40 group-hover:opacity-100 transition-opacity duration-700" />
+    <div className="flex flex-col gap-4">
+      <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 hover:border-purple-500/55 relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-0.5 shadow-xl animate-fade-in group">
+        {/* Top accent strip */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] z-[4] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none" />
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        
-        {/* Left Column: Description & Weekly Schedule Timeline */}
-        <div className="lg:col-span-5 flex flex-col justify-between gap-6">
+        {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
+        <div
+          className="absolute z-0 overflow-hidden rounded-2xl bg-[#080605]"
+          style={{ left: SCREEN_WINDOW.left, top: SCREEN_WINDOW.top, width: SCREEN_WINDOW.width, height: SCREEN_WINDOW.height }}
+        >
+          <div id="twitch-live-embed" ref={embedContainerRef} className="w-full h-full" />
+        </div>
+
+        {/* Vintage TV cabinet graphic — normal glass when idle, knockout window once live */}
+        <img
+          src={isLiveActive ? twitchCardBgKo : twitchCardBg}
+          alt=""
+          draggable={false}
+          className="relative z-[1] w-full h-auto block select-none pointer-events-none"
+        />
+
+        {/* Screen contents overlay — countdown when idle, LIVE badge once live */}
+        <div
+          className="absolute z-[2] pointer-events-none"
+          style={{ left: SCREEN_WINDOW.left, top: SCREEN_WINDOW.top, width: SCREEN_WINDOW.width, height: SCREEN_WINDOW.height }}
+        >
+          {!isLiveActive && (
+            <div className="w-full h-full flex flex-col items-center justify-center text-center px-3">
+              <p className="text-[10px] sm:text-xs font-mono text-neutral-400 mb-2 uppercase tracking-wider">
+                NEXT LIVE STREAM COUNTDOWN:
+              </p>
+              <div className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight select-all">
+                <span className="font-mono tabular-nums" style={{ color: "#b5945b" }}>{countdownText}</span>
+              </div>
+            </div>
+          )}
+          {isLiveActive && (
+            <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1 bg-red-600/90 hover:bg-red-600 backdrop-blur-sm text-white font-mono text-[10px] font-bold tracking-wider uppercase rounded-full shadow-lg transition-colors cursor-pointer select-none pointer-events-auto">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-white absolute"></span>
+              <span>LIVE NOW</span>
+            </div>
+          )}
+        </div>
+
+        {/* Left panel content — description & weekly schedule timeline */}
+        <div
+          className="absolute z-[2] flex flex-col justify-between gap-4"
+          style={{ left: LEFT_PANEL.left, right: LEFT_PANEL.right, top: LEFT_PANEL.top, bottom: LEFT_PANEL.bottom }}
+        >
           <div>
             <div className="flex items-end gap-3 mb-3">
               <Tv className="w-8 h-8 text-purple-500 animate-pulse shrink-0 mb-0.5" />
@@ -214,10 +262,10 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                 if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
                 if (evt.title.includes("Bridge City")) showColor = "#ff0066"; // bridge pink
                 if (evt.title.includes("Golden Boombox")) showColor = "#e2ac00"; // golden yellow
-                
+
                 return (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="group/item flex items-start gap-3.5 p-3 rounded-xl bg-[#090605]/80 border border-white/5 hover:bg-[#0b0807]/90 hover:border-white/10 transition-all duration-200"
                   >
                     <div className="w-20 shrink-0">
@@ -238,58 +286,25 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             </div>
           </div>
 
-          <div className="border-t border-white/5 pt-3 mt-4 text-xs text-neutral-400 flex items-center gap-2">
+          <div className="border-t border-white/5 pt-3 text-xs text-neutral-400 flex items-center gap-2">
             <Bell className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
             <span>
               LIVE Every Tuesday, Wednesday, and Friday @ 7PM PT on Twitch.tv
             </span>
           </div>
         </div>
+      </div>
 
-        {/* Right Column: Twitch Live Stream Player & Countdown Overlay */}
-        <div className="lg:col-span-7 flex flex-col justify-center gap-4">
-          <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/5 bg-[#080605] shadow-inner group">
-            
-            {/* Live stream player embed (Twitch Embed SDK — reports real ONLINE/OFFLINE status) */}
-            <div
-              id="twitch-live-embed"
-              ref={embedContainerRef}
-              className="absolute top-0 left-0 w-full h-full z-0"
-            />
-
-            {/* Countdown Overlay (Hidden if stream is active) */}
-            {!isLiveActive && (
-              <div className="absolute inset-0 bg-[#080605]/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10 transition-opacity duration-500">
-                <p className="text-xs font-mono text-neutral-400 mb-2 uppercase tracking-wider">
-                  NEXT LIVE STREAM COUNTDOWN:
-                </p>
-                <div className="font-mono text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-2 select-all">
-                  <span className="font-mono tabular-nums" style={{ color: "#b5945b" }}>{countdownText}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Live Indicator overlay if live is active */}
-            {isLiveActive && (
-              <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-2.5 py-1 bg-red-600/90 hover:bg-red-600 backdrop-blur-sm text-white font-mono text-[10px] font-bold tracking-wider uppercase rounded-full shadow-lg transition-colors cursor-pointer select-none">
-                <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
-                <span className="h-1.5 w-1.5 rounded-full bg-white absolute"></span>
-                <span>LIVE NOW</span>
-              </div>
-            )}
-
-          </div>
-
-          <a
-            href="https://www.twitch.tv/jacewonmusic"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
-          >
-            JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
-          </a>
-        </div>
-
+      {/* JOIN THE LIVE CHAT — aligned under the screen column, matching the mockup */}
+      <div className="flex" style={{ paddingLeft: SCREEN_WINDOW.left, paddingRight: `calc(100% - ${SCREEN_WINDOW.left} - ${SCREEN_WINDOW.width})` }}>
+        <a
+          href="https://www.twitch.tv/jacewonmusic"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
+        >
+          JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
+        </a>
       </div>
     </div>
   );
