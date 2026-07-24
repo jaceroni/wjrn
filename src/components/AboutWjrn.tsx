@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Antenna } from "lucide-react";
 import { Station } from "../types";
 import { navigate } from "../navigate";
@@ -7,6 +7,9 @@ import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import photoJace from "../assets/images/about-jace-photo.png";
 import photoCindy from "../assets/images/about-cindy-photo.png";
 import photoPhil from "../assets/images/about-phil-photo.png";
+import bustJace from "../assets/images/bust-jace-default.png";
+import bustCindy from "../assets/images/bust-cindy-default.png";
+import bustPhil from "../assets/images/bust-phil-default.png";
 
 interface AboutWjrnProps {
   STATIONS: Station[];
@@ -17,6 +20,7 @@ interface TeamMember {
   role: string;
   bio: string;
   photo: string;
+  bust: string;
 }
 
 // Nav dropdown hover colors — matches each station's brand accent
@@ -32,23 +36,31 @@ const TEAM: TeamMember[] = [
     role: "Program Director",
     bio: "Jace started DJing in 1993. By the late 90s he was working at one of Los Angeles's biggest FM stations, learning how the machine worked and eventually why it wasn't for him. So he walked away, and when the technology finally caught up to his vision, he built WJRN. No restrictions. Just a steady flow of killer tunes across every genre and era that we've grown to love.",
     photo: photoJace,
+    bust: bustJace,
   },
   {
     name: "Cindy Whopper",
     role: "Music Librarian + Promotions",
     bio: "Cindy's appetite for music rivals the size of her namesake. When Jace was building WJRN from the ground up, he needed someone who could match his hunger, record for record. Cindy showed up with a whopper of a resume and an even bigger list of what she felt deserves airtime. She keeps the library authentic and makes sure the outside world knows we exist.",
     photo: photoCindy,
+    bust: bustCindy,
   },
   {
     name: "Phil Callings",
     role: "Chief Technical Officer",
     bio: "Phil didn't just stumble into a tech gig at a radio station. He heard what Jace and Cindy were trying to build and knew immediately how to get it done. An independent, around the clock broadcast network doesn't run on good taste alone. It runs on infrastructure, and Phil is the reason ours stays up, clean and clear without interruption.",
     photo: photoPhil,
+    bust: bustPhil,
   },
 ];
 
 export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const { isMiniPlayerVisible } = usePlayer();
+
+  // Easter egg: click a teammate's headshot to reveal their sculpted bust
+  const [revealedBusts, setRevealedBusts] = useState<Record<number, boolean>>({});
+  const toggleBust = (idx: number) =>
+    setRevealedBusts((prev) => ({ ...prev, [idx]: !prev[idx] }));
 
   const STATION_SLUGS: { [key: string]: string } = {
     rock_garden: "the-rock-garden",
@@ -151,12 +163,36 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
           {TEAM.map((member, idx) => (
             <div key={idx} className="flex flex-col gap-[30px]">
-              <img
-                src={member.photo}
-                alt={member.name}
-                draggable={false}
-                className="w-full h-auto select-none pointer-events-none shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-              />
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label={`Reveal ${member.name}'s sculpted bust`}
+                onClick={() => toggleBust(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleBust(idx);
+                  }
+                }}
+                className="relative w-full aspect-[383/434] overflow-hidden rounded-sm bg-[#0a0706] cursor-pointer shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+              >
+                <img
+                  src={member.photo}
+                  alt={member.name}
+                  draggable={false}
+                  className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ${
+                    revealedBusts[idx] ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                <img
+                  src={member.bust}
+                  alt={`${member.name} sculpted bust`}
+                  draggable={false}
+                  className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none transition-opacity duration-500 ${
+                    revealedBusts[idx] ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+              </div>
               <div className="pt-8 pb-7 px-7 rounded-3xl border border-[#d7b158]/15 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5">
                 <div className="space-y-1.5">
                   <h4 className="text-lg font-bold tracking-normal text-white uppercase leading-tight font-display">
