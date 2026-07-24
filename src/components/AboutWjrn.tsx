@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Antenna } from "lucide-react";
 import { Station } from "../types";
 import { navigate } from "../navigate";
@@ -65,22 +65,60 @@ const TEAM: TeamMember[] = [
 export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const { isMiniPlayerVisible, totalListeners } = usePlayer();
 
-  // Easter egg: click a teammate's headshot to cycle photo -> default bust -> alt bust -> photo...
+  // Easter egg: click (no drag) a teammate's headshot to cycle photo -> default bust -> alt bust -> photo...
   const [clickStage, setClickStage] = useState<Record<number, number>>({});
   const cycleBust = (idx: number) =>
     setClickStage((prev) => ({ ...prev, [idx]: ((prev[idx] ?? 0) + 1) % 3 }));
 
-  // Bust "looks toward" the cursor — tracked as -0.5..0.5 offset from center
-  const [bustTilt, setBustTilt] = useState<Record<number, { x: number; y: number }>>({});
-  const handleBustMouseMove = (idx: number) => (e: React.MouseEvent<HTMLDivElement>) => {
-    if ((clickStage[idx] ?? 0) === 2) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setBustTilt((prev) => ({ ...prev, [idx]: { x, y } }));
+  // Ambient tilt — all busts track the cursor's left-right position across the
+  // whole page (-0.5..0.5), the whole time you're here, like they're watching you
+  // move around the room. Grabbing one overrides it with manual drag control
+  // until release; every other bust keeps following the ambient cursor position.
+  const [ambientTiltX, setAmbientTiltX] = useState(0);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [draggedTiltX, setDraggedTiltX] = useState(0);
+  const dragStartClientXRef = useRef(0);
+  const dragStartTiltXRef = useRef(0);
+  const hasDraggedRef = useRef<Record<number, boolean>>({});
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      setAmbientTiltX(Math.max(-0.5, Math.min(0.5, e.clientX / window.innerWidth - 0.5)));
+    };
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
+
+  useEffect(() => {
+    if (draggedIdx === null) return;
+    const idx = draggedIdx;
+    const handleMove = (e: MouseEvent) => {
+      const dx = e.clientX - dragStartClientXRef.current;
+      if (Math.abs(dx) > 4) hasDraggedRef.current[idx] = true;
+      setDraggedTiltX(Math.max(-0.5, Math.min(0.5, dragStartTiltXRef.current + dx / 300)));
+    };
+    const handleUp = () => {
+      const dragged = hasDraggedRef.current[idx];
+      setDraggedIdx(null);
+      hasDraggedRef.current[idx] = false;
+      if (!dragged) cycleBust(idx);
+    };
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, [draggedIdx]);
+
+  const handleBustMouseDown = (idx: number) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragStartClientXRef.current = e.clientX;
+    dragStartTiltXRef.current = ambientTiltX;
+    hasDraggedRef.current[idx] = false;
+    setDraggedTiltX(ambientTiltX);
+    setDraggedIdx(idx);
   };
-  const resetBustTilt = (idx: number) =>
-    setBustTilt((prev) => ({ ...prev, [idx]: { x: 0, y: 0 } }));
 
   const STATION_SLUGS: { [key: string]: string } = {
     rock_garden: "the-rock-garden",
@@ -192,25 +230,24 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
           {TEAM.map((member, idx) => {
             const stage = clickStage[idx] ?? 0;
-            const bustTransform = `perspective(600px) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg)`;
+            const tiltX = draggedIdx === idx ? draggedTiltX : ambientTiltX;
+            const bustTransform = `perspective(600px) rotateY(${tiltX * 24}deg)`;
             return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div
                 role="button"
                 tabIndex={0}
-                aria-label={`Cycle ${member.name}'s photo and sculpted bust`}
-                onClick={() => cycleBust(idx)}
+                aria-label={`Cycle ${member.name}'s photo and sculpted bust — click and drag to turn`}
+                onMouseDown={handleBustMouseDown(idx)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     cycleBust(idx);
                   }
                 }}
-                onMouseMove={handleBustMouseMove(idx)}
-                onMouseLeave={() => resetBustTilt(idx)}
-                className={`relative w-full aspect-[383/434] cursor-pointer ${
-                  stage === 2 ? "shadow-[0_20px_40px_rgba(0,0,0,0.45)]" : ""
-                }`}
+                className={`relative w-full aspect-[383/434] select-none ${
+                  draggedIdx === idx ? "cursor-grabbing" : "cursor-grab"
+                } ${stage === 2 ? "shadow-[0_20px_40px_rgba(0,0,0,0.45)]" : ""}`}
               >
                 <img
                   src={member.photo}
