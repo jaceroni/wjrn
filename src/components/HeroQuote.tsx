@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import bustPeteRock from "../assets/images/bust-pete-rock-default.png";
+import bustPeteRockAlt from "../assets/images/bust-pete-rock-alt.png";
 
 interface HeroQuoteEntry {
   quote: string;
   attribution: string;
   bust: string;
+  bustAlt: string;
 }
 
 // Add more entries here as new busts get made — one rotates in at random on
@@ -14,6 +16,7 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
     quote: "So this is what they meant by soul – yeah this is what they meant by funky...",
     attribution: "Pete Rock",
     bust: bustPeteRock,
+    bustAlt: bustPeteRockAlt,
   },
 ];
 
@@ -40,6 +43,14 @@ export default function HeroQuote() {
   }, []);
 
   const entry = HERO_QUOTES[index];
+
+  // Easter egg: click (no drag) the bust to toggle default <-> alt pose — keyed
+  // per quote index so rotating to a different quote doesn't lose whichever
+  // pose was showing for a quote you've already toggled (see AboutWjrn.tsx).
+  const [clickStage, setClickStage] = useState<Record<number, number>>({});
+  const stage = clickStage[index] ?? 0;
+  const cycleBust = () =>
+    setClickStage((prev) => ({ ...prev, [index]: ((prev[index] ?? 0) + 1) % 2 }));
 
   // Ambient tilt toward cursor + click-drag override — same interaction as the
   // About page team busts (see AboutWjrn.tsx), just a single bust instead of a
@@ -86,6 +97,9 @@ export default function HeroQuote() {
     dragStartTiltDegRef.current = ambientTilt;
     setDraggedTiltDeg(ambientTilt);
     setIsDragging(true);
+    // Clicking (whether or not it turns into a drag) always toggles the pose,
+    // so grabbing the bust to manually turn it doubles as revealing the alt one.
+    cycleBust();
   };
 
   const tiltDeg = isDragging ? draggedTiltDeg : ambientTilt;
@@ -122,8 +136,19 @@ export default function HeroQuote() {
           src={entry.bust}
           alt={`${entry.attribution} sculpted bust`}
           draggable={false}
-          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
-          className="absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+          style={{ transition: "opacity 500ms ease, transform 150ms ease-out", transform: bustTransform }}
+          className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+            stage === 0 ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <img
+          src={entry.bustAlt}
+          alt={`${entry.attribution} alternate sculpted bust`}
+          draggable={false}
+          style={{ transition: "opacity 500ms ease, transform 150ms ease-out", transform: bustTransform }}
+          className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+            stage === 1 ? "opacity-100" : "opacity-0"
+          }`}
         />
       </div>
     </section>
