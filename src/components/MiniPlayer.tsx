@@ -91,7 +91,10 @@ export default function MiniPlayer() {
       {/* Main bar */}
       <div className="relative bg-[#080808]/96 backdrop-blur-2xl border-t border-white/[0.07] px-4 md:px-8 h-20 flex items-center gap-4">
         {/* Station Logo — dead center */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 hidden md:block">
+        <div
+          onClick={() => navigate(STATION_SLUGS[displayStationId || "wjrn"] ?? "/")}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10 hidden md:block"
+        >
           <img
             src={STATION_LOGOS[displayStationId || "wjrn"] || logoWjrn}
             alt="Active Station Logo"
