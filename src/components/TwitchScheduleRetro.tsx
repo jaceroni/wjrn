@@ -16,6 +16,9 @@ declare global {
 // its glass "window" — same faceplate-with-knockout technique as the vintage player.
 const SCREEN_WINDOW = { left: "47.887%", top: "19.588%", width: "41.170%", height: "50.258%" };
 const LEFT_PANEL = { left: "4%", right: "59%", top: "13%", bottom: "6%" };
+// The blank cabinet space below the screen (screen bottom is at 19.588+50.258=69.846%),
+// still inside the wood frame — the join button sits here, not below the whole card.
+const JOIN_BUTTON_ZONE = { left: SCREEN_WINDOW.left, width: SCREEN_WINDOW.width, top: "72%", bottom: "6%" };
 
 // Measured against the native twitch-card-bg(-ko)-mobile.png canvas (582x657) — screen on top,
 // schedule content below, used below the "md" breakpoint where the wide layout has no room.
@@ -418,18 +421,21 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             </div>
           </div>
         </div>
-      </div>
 
-      {/* JOIN THE LIVE CHAT — aligned under the screen column, matching the mockup */}
-      <div className="flex" style={{ paddingLeft: SCREEN_WINDOW.left, paddingRight: `calc(100% - ${SCREEN_WINDOW.left} - ${SCREEN_WINDOW.width})` }}>
-        <a
-          href="https://www.twitch.tv/jacewonmusic"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
+        {/* JOIN THE LIVE CHAT — in the blank cabinet space just below the screen, still inside the frame */}
+        <div
+          className="absolute z-[2] flex items-center"
+          style={{ left: JOIN_BUTTON_ZONE.left, width: JOIN_BUTTON_ZONE.width, top: JOIN_BUTTON_ZONE.top, bottom: JOIN_BUTTON_ZONE.bottom }}
         >
-          JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
-        </a>
+          <a
+            href="https://www.twitch.tv/jacewonmusic"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
+          >
+            JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
+          </a>
+        </div>
       </div>
     </div>
   );
