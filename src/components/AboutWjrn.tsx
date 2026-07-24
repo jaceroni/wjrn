@@ -192,7 +192,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
           {TEAM.map((member, idx) => {
             const stage = clickStage[idx] ?? 0;
-            const bustTransform = `perspective(600px) scale(1.035) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg)`;
+            const bustTransform = `perspective(600px) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg)`;
             return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div
@@ -229,7 +229,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                     transition: "opacity 500ms ease, transform 150ms ease-out",
                     transform: bustTransform,
                   }}
-                  className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
+                  className={`absolute inset-0 m-auto w-auto h-auto max-w-[calc(100%-32px)] max-h-[calc(100%-32px)] select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
                     stage === 0 ? "opacity-100" : "opacity-0"
                   }`}
                 />
@@ -241,7 +241,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                     transition: "opacity 500ms ease, transform 150ms ease-out",
                     transform: bustTransform,
                   }}
-                  className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
+                  className={`absolute inset-0 m-auto w-auto h-auto max-w-[calc(100%-32px)] max-h-[calc(100%-32px)] select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
                     stage === 1 ? "opacity-100" : "opacity-0"
                   }`}
                 />
