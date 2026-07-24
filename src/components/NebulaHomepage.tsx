@@ -113,16 +113,20 @@ export default function NebulaHomepage({
     const sendCurrentState = () => {
       const win = playerIframeRef.current?.contentWindow;
       if (!win) return;
-      if (activeStationId && audioState !== "idle" && audioState !== "error") {
-        win.postMessage({ source: "wjrn-app", type: "setStation", station: activeStationId }, "*");
-        if (audioState !== "playing") {
-          win.postMessage({ source: "wjrn-app", type: "pause" }, "*");
-        }
-      } else {
+      if (!activeStationId) {
         // Nothing active in the real (audible) player — e.g. the MiniPlayer bar
         // was dismissed. Tell the iframe to pause its own local (muted) audio
         // graph too, so its ticker/art don't keep looking "live" with nothing
         // actually playing anywhere.
+        win.postMessage({ source: "wjrn-app", type: "pause" }, "*");
+        return;
+      }
+      win.postMessage({ source: "wjrn-app", type: "setStation", station: activeStationId }, "*");
+      // Only mirror a pause when genuinely paused-while-loaded ("idle" with a
+      // station still set). Don't do this for "connecting" — that's just the
+      // real player buffering, and pausing the iframe's own just-started local
+      // playback here races with it and leaves its UI stuck showing paused.
+      if (audioState === "idle") {
         win.postMessage({ source: "wjrn-app", type: "pause" }, "*");
       }
     };
