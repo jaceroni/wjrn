@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import { Play, Pause, Volume2, VolumeX, X, Radio, ArrowRight, RotateCcw, ExternalLink } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { navigate } from "../navigate";
@@ -38,11 +37,9 @@ const STATION_COLORS: Record<string, string> = {
 
 export default function MiniPlayer() {
   const {
-    activeStationId,
     audioState,
     metadata,
     toggleStation,
-    stopPlayback,
     isMuted,
     setIsMuted,
     isOnDemand,
@@ -51,20 +48,11 @@ export default function MiniPlayer() {
     seekBackward,
     seekForward,
     seekToStart,
+    displayStationId,
+    isMiniPlayerVisible: isVisible,
+    dismissMiniPlayer,
   } = usePlayer();
 
-  // Track the last station that was playing so the bar stays populated after pause
-  const lastStationRef = useRef<string | null>(null);
-  const [dismissed, setDismissed] = useState(false);
-
-  // Update last station and un-dismiss whenever a station becomes active
-  if (activeStationId) {
-    lastStationRef.current = activeStationId;
-    if (dismissed) setDismissed(false);
-  }
-
-  const displayStationId = activeStationId ?? lastStationRef.current;
-  const isVisible = displayStationId !== null && !dismissed;
   const isPlaying = audioState === "playing";
   const isConnecting = audioState === "connecting";
 
@@ -73,8 +61,7 @@ export default function MiniPlayer() {
   const accentColor = displayStationId ? (STATION_COLORS[displayStationId] ?? "#ffffff") : "#ffffff";
 
   const handleStop = () => {
-    stopPlayback();
-    setDismissed(true);
+    dismissMiniPlayer();
   };
 
   const handlePlayPause = () => {

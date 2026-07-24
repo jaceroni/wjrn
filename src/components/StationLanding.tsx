@@ -308,6 +308,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
     seekToStart,
     onDemandCurrentTime,
     onDemandDuration,
+    isMiniPlayerVisible,
   } = usePlayer();
 
   // Derive per-page state from context
@@ -386,7 +387,6 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       className="relative min-h-screen w-full text-white flex flex-col overflow-hidden font-mono pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14"
       style={{ background: config.meshGradient }}
     >
-      {/* Extra bottom padding so content isn't hidden behind the global MiniPlayer bar */}
       {/* Shared lava lamp keyframes + logo hover CSS live in index.css */}
 
       {/* ------------------------------------------------------------------ */}
@@ -817,7 +817,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* ------------------------------------------------------------------ */}
       {/* Footer                                                              */}
       {/* ------------------------------------------------------------------ */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 mb-24 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>
@@ -829,6 +829,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
         </div>
       </footer>
+
+      {/* Reserves space below the footer so the fixed mini-player bar never covers it —
+          collapses back to 0 the instant the bar is dismissed/hidden. */}
+      <div
+        aria-hidden="true"
+        className="transition-[height] duration-300 ease-in-out"
+        style={{ height: isMiniPlayerVisible ? "83px" : "0px" }}
+      />
     </div>
   );
 }

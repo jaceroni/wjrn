@@ -170,6 +170,10 @@ interface PlayerContextValue {
   setEqMono: (on: boolean) => void;
   eqBalance: 0 | 1 | 2;
   setEqBalance: (state: 0 | 1 | 2) => void;
+  // Mini-player bar — exposed so page layouts (footers) can reserve space for it
+  displayStationId: string | null;
+  isMiniPlayerVisible: boolean;
+  dismissMiniPlayer: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -194,6 +198,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [onDemandItem, setOnDemandItem] = useState<OnDemandItem | null>(null);
   const [onDemandCurrentTime, setOnDemandCurrentTime] = useState(0);
   const [onDemandDuration, setOnDemandDuration] = useState(0);
+
+  // Mini-player bar visibility — stays populated (paused) after the first play
+  // until explicitly dismissed, so pages can reserve space for it (e.g. the
+  // footer dropping below it) without duplicating this logic themselves.
+  const [isMiniPlayerDismissed, setIsMiniPlayerDismissed] = useState(false);
+  const lastStationRef = useRef<string | null>(null);
+  if (activeStationId) {
+    lastStationRef.current = activeStationId;
+    if (isMiniPlayerDismissed) setIsMiniPlayerDismissed(false);
+  }
+  const displayStationId = activeStationId ?? lastStationRef.current;
+  const isMiniPlayerVisible = displayStationId !== null && !isMiniPlayerDismissed;
+  const dismissMiniPlayer = () => {
+    stopPlayback();
+    setIsMiniPlayerDismissed(true);
+  };
 
   // Single audio element that persists for the lifetime of the app session
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -617,6 +637,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         setEqMono,
         eqBalance,
         setEqBalance,
+        displayStationId,
+        isMiniPlayerVisible,
+        dismissMiniPlayer,
       }}
     >
       {children}

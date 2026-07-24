@@ -98,6 +98,7 @@ export default function NebulaHomepage({
     setEqMono,
     setEqBalance,
     analyserRef,
+    isMiniPlayerVisible,
   } = usePlayer();
 
   // Cross-frame sync with the embedded vintage player (public/player/index.html).
@@ -568,18 +569,28 @@ export default function NebulaHomepage({
       </section>
 
       {/* 7. Beautiful Minimal Footer */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
-        <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
-          <span>For Promotional Use Only</span>
-          <span>All Music Is The Property Of Its Respective Owners</span>
-        </div>
-        <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
-          <span className="flex items-center gap-1.5">
-            Designed with <span className="animate-pulse text-[20px] leading-none mb-1">❤</span> in California
-          </span>
-          <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
-        </div>
-      </footer>
+      <div>
+        <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+          <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
+            <span>For Promotional Use Only</span>
+            <span>All Music Is The Property Of Its Respective Owners</span>
+          </div>
+          <div className="flex flex-col items-center md:items-end gap-1 text-center md:text-right">
+            <span className="flex items-center gap-1.5">
+              Designed with <span className="animate-pulse text-[20px] leading-none mb-1">❤</span> in California
+            </span>
+            <span>Copyright &copy; JWBC 2026 &middot; All Rights Reserved</span>
+          </div>
+        </footer>
+
+        {/* Reserves space below the footer so the fixed mini-player bar never covers it —
+            collapses back to 0 the instant the bar is dismissed/hidden. */}
+        <div
+          aria-hidden="true"
+          className="transition-[height] duration-300 ease-in-out"
+          style={{ height: isMiniPlayerVisible ? "83px" : "0px" }}
+        />
+      </div>
 
     </div>
   );
