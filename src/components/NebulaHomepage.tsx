@@ -11,6 +11,7 @@ import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
 import TwitchSchedule from "./TwitchScheduleRetro";
 import StationCardVisualizer from "./StationCardVisualizer";
+import HeroQuote from "./HeroQuote";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
@@ -351,6 +352,9 @@ export default function NebulaHomepage({
       </header>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
       </div>
+
+      {/* Hero Quote — rotating artist spotlight, sits above the vintage player embed */}
+      <HeroQuote />
 
       {/* 3. Hero — Vintage Receiver Player Embed */}
       <section className="relative z-10 w-full max-w-7xl mx-auto">
