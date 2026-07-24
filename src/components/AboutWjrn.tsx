@@ -150,7 +150,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[27.475px]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TEAM.map((member, idx) => (
-            <div key={idx} className="flex flex-col gap-[6.8px]">
+            <div key={idx} className="flex flex-col gap-[6.6px]">
               <img
                 src={member.photo}
                 alt={member.name}
