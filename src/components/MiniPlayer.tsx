@@ -1,4 +1,4 @@
-import { Play, Pause, Volume2, VolumeX, X, Radio, ArrowRight, RotateCcw, ExternalLink } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, X, Radio, ArrowRight, RotateCcw, ExternalLink, SkipForward } from "lucide-react";
 import { usePlayer } from "../context/PlayerContext";
 import { navigate } from "../navigate";
 import logoWjrn from "../assets/images/miniplayer-logo-wjrn.svg";
@@ -34,6 +34,8 @@ const STATION_COLORS: Record<string, string> = {
   bridge_city: "#ff0066",
   golden_boombox: "#e2ac00",
 };
+
+const CYCLE: readonly string[] = ["wjrn", "rock_garden", "bridge_city", "golden_boombox"];
 
 export default function MiniPlayer() {
   const {
@@ -72,6 +74,12 @@ export default function MiniPlayer() {
     } else {
       toggleStation(displayStationId);
     }
+  };
+
+  const handleNextStation = () => {
+    const idx  = CYCLE.indexOf(displayStationId || "wjrn");
+    const next = CYCLE[(idx + 1) % CYCLE.length];
+    toggleStation(next);
   };
 
   return (
@@ -204,6 +212,16 @@ export default function MiniPlayer() {
               +15
             </button>
           )}
+
+          {/* Next station */}
+          <button
+            onClick={handleNextStation}
+            className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 transition-colors duration-150 rounded-full hover:bg-white/5"
+            aria-label="Next station"
+            title="Next station"
+          >
+            <SkipForward className="w-4 h-4" />
+          </button>
 
           {/* Pop Out */}
           <button

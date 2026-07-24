@@ -10,6 +10,7 @@ import { Station, NowPlaying, RadioConfig } from "../types";
 import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
 import TwitchSchedule from "./TwitchScheduleRetro";
+import StationCardVisualizer from "./StationCardVisualizer";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
@@ -504,17 +505,15 @@ export default function NebulaHomepage({
                     <div className="relative overflow-hidden rounded-2xl bg-[#090605]/85 border border-white/5 p-2.5 flex flex-col gap-2 transition-colors duration-300 group-hover:bg-[#0b0807]/90 group-hover:border-white/10 shadow-inner">
 
                       {/* Compact Now Playing visual header inside the box */}
-                      <div className="flex items-center justify-between border-b border-white/5 pb-1 w-full">
-                        <span className={`text-[8px] font-mono uppercase tracking-[0.2em] font-extrabold ${textColorClass}`}>
+                      <div className="flex items-center gap-3 border-b border-white/5 pb-1 w-full">
+                        <span className={`text-[8px] font-mono uppercase tracking-[0.2em] font-extrabold shrink-0 ${textColorClass}`}>
                           Now Playing
                         </span>
-                        {isActive && audioState === "playing" && (
-                          <div className="flex items-end gap-[1.5px] h-2.5">
-                            <span className={`w-[1px] ${pulseColorBg} animate-bounce h-2`} style={{ animationDelay: "0.1s" }} />
-                            <span className={`w-[1px] ${pulseColorBg} animate-bounce h-2.5`} style={{ animationDelay: "0.3s" }} />
-                            <span className={`w-[1px] ${pulseColorBg} animate-bounce h-1.5`} style={{ animationDelay: "0.5s" }} />
-                          </div>
-                        )}
+                        <StationCardVisualizer
+                          active={isSpinning}
+                          analyserRef={analyserRef}
+                          barColorClass={pulseColorBg}
+                        />
                       </div>
 
                       {/* Track Details & Control button */}
