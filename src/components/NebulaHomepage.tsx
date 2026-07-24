@@ -301,7 +301,7 @@ export default function NebulaHomepage({
 
           {/* Our Stations — hover dropdown */}
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-default">
+            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-pointer">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
