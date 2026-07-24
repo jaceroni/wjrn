@@ -62,6 +62,18 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const toggleBust = (idx: number) =>
     setRevealedBusts((prev) => ({ ...prev, [idx]: !prev[idx] }));
 
+  // Bust "looks toward" the cursor — tracked as -0.5..0.5 offset from center
+  const [bustTilt, setBustTilt] = useState<Record<number, { x: number; y: number }>>({});
+  const handleBustMouseMove = (idx: number) => (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!revealedBusts[idx]) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setBustTilt((prev) => ({ ...prev, [idx]: { x, y } }));
+  };
+  const resetBustTilt = (idx: number) =>
+    setBustTilt((prev) => ({ ...prev, [idx]: { x: 0, y: 0 } }));
+
   const STATION_SLUGS: { [key: string]: string } = {
     rock_garden: "the-rock-garden",
     bridge_city: "bridge-city-hang-suite",
@@ -174,13 +186,18 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                     toggleBust(idx);
                   }
                 }}
-                className="relative w-full aspect-[383/434] overflow-hidden rounded-sm bg-[#0a0706] cursor-pointer shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+                onMouseMove={handleBustMouseMove(idx)}
+                onMouseLeave={() => resetBustTilt(idx)}
+                className={`relative w-full aspect-[383/434] cursor-pointer ${
+                  revealedBusts[idx] ? "" : "shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+                }`}
               >
                 <img
                   src={member.photo}
                   alt={member.name}
                   draggable={false}
-                  className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ${
+                  style={{ transition: "opacity 500ms ease" }}
+                  className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none ${
                     revealedBusts[idx] ? "opacity-0" : "opacity-100"
                   }`}
                 />
@@ -188,7 +205,11 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   src={member.bust}
                   alt={`${member.name} sculpted bust`}
                   draggable={false}
-                  className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none transition-opacity duration-500 ${
+                  style={{
+                    transition: "opacity 500ms ease, transform 150ms ease-out",
+                    transform: `perspective(600px) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg) rotateX(${-(bustTilt[idx]?.y ?? 0) * 24}deg)`,
+                  }}
+                  className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
                     revealedBusts[idx] ? "opacity-100" : "opacity-0"
                   }`}
                 />
