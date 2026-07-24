@@ -554,7 +554,7 @@ export default function NebulaHomepage({
                   </div>
 
                   {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
-                  <div className="absolute inset-0 z-[4] rounded-2xl pointer-events-none shadow-[inset_0_2px_14px_rgba(0,0,0,0.55),inset_0_-1px_4px_rgba(0,0,0,0.3)]" />
+                  <div className="absolute inset-0 z-[4] rounded-2xl pointer-events-none shadow-[inset_0_0_0_2px_rgba(0,0,0,0.7),inset_0_0_40px_rgba(0,0,0,0.5)]" />
                 </div>
               );
             })}
