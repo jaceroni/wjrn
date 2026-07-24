@@ -501,7 +501,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       </div>
 
       {/* 3. Main Centerpiece Grid Layout */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mt-2 md:mt-4">
+      <section className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start mt-15">
         
         {/* Left Column: Eyebrow, Station Name, Description, and Sensory Cards */}
         <div className="lg:col-span-7 flex flex-col gap-6 lg:gap-8">
