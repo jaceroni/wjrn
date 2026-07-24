@@ -207,7 +207,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   draggable={false}
                   style={{
                     transition: "opacity 500ms ease, transform 150ms ease-out",
-                    transform: `perspective(600px) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg) rotateX(${-(bustTilt[idx]?.y ?? 0) * 24}deg)`,
+                    transform: `perspective(600px) scale(1.15) rotateY(${(bustTilt[idx]?.x ?? 0) * 24}deg) rotateX(${-(bustTilt[idx]?.y ?? 0) * 24}deg)`,
                   }}
                   className={`absolute inset-0 w-full h-full object-contain p-4 select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
                     revealedBusts[idx] ? "opacity-100" : "opacity-0"
