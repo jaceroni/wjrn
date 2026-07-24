@@ -118,6 +118,12 @@ export default function NebulaHomepage({
         if (audioState !== "playing") {
           win.postMessage({ source: "wjrn-app", type: "pause" }, "*");
         }
+      } else {
+        // Nothing active in the real (audible) player — e.g. the MiniPlayer bar
+        // was dismissed. Tell the iframe to pause its own local (muted) audio
+        // graph too, so its ticker/art don't keep looking "live" with nothing
+        // actually playing anywhere.
+        win.postMessage({ source: "wjrn-app", type: "pause" }, "*");
       }
     };
 
@@ -138,10 +144,20 @@ export default function NebulaHomepage({
         return;
       }
       if (data.type === "playStateChanged") {
-        if (data.station === activeStationId) {
-          const isPlaying = audioState === "playing";
-          if (data.playing && !isPlaying) togglePlayback();
-          if (!data.playing && isPlaying) togglePlayback();
+        if (!data.station) return;
+        // "Same station active" means the real (audible) player already has
+        // this station loaded — otherwise there's nothing to resume/pause,
+        // and a "playing" request needs a full (re)start instead.
+        const isSameStationActive =
+          data.station === activeStationId && audioState !== "idle" && audioState !== "error";
+        if (data.playing) {
+          if (isSameStationActive) {
+            if (audioState !== "playing") togglePlayback();
+          } else {
+            toggleStation(data.station);
+          }
+        } else if (isSameStationActive && audioState === "playing") {
+          togglePlayback();
         }
         return;
       }
