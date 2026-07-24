@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Play,
   Pause,
@@ -108,6 +108,11 @@ export default function NebulaHomepage({
   // in the vintage player or clicking a station card both drive the same state
   // without the two ever playing the same stream out loud at once.
   const playerIframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Station-card platter "backspin" on hover — once started it plays to completion
+  // even if the cursor leaves early, since it's driven by this state (cleared only
+  // when the animation itself ends), not by CSS :hover directly.
+  const [backspinningStation, setBackspinningStation] = useState<string | null>(null);
 
   useEffect(() => {
     const sendCurrentState = () => {
@@ -392,7 +397,15 @@ export default function NebulaHomepage({
               return (
                 <div
                   key={station.id}
-                  onClick={() => toggleStation(station.id)}
+                  onClick={() => {
+                    setBackspinningStation(null);
+                    toggleStation(station.id);
+                  }}
+                  onMouseEnter={() => {
+                    if (!isSpinning && backspinningStation !== station.id) {
+                      setBackspinningStation(station.id);
+                    }
+                  }}
                   className="rounded-2xl cursor-pointer relative overflow-hidden group shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
                 >
                   {/* VINTAGE TURNTABLE CABINET GRAPHIC — defines the card's shape; everything below overlays on top of it */}
@@ -408,7 +421,16 @@ export default function NebulaHomepage({
                     alt={`${station.name} vinyl on turntable platter`}
                     draggable={false}
                     referrerPolicy="no-referrer"
-                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${isSpinning ? "animate-[spin_8s_linear_infinite]" : "group-hover:animate-[platterBackspin_1200ms_ease-out]"}`}
+                    onAnimationEnd={() => {
+                      if (backspinningStation === station.id) setBackspinningStation(null);
+                    }}
+                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${
+                      isSpinning
+                        ? "animate-[spin_8s_linear_infinite]"
+                        : backspinningStation === station.id
+                          ? "animate-[platterBackspin_1200ms_ease-out]"
+                          : ""
+                    }`}
                     style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
                   />
 
