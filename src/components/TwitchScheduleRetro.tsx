@@ -305,9 +305,6 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
               })}
             </div>
           </div>
-
-          {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
-          <div className="absolute inset-0 z-[3] rounded-2xl pointer-events-none shadow-[inset_0_0_0_3px_rgba(0,0,0,0.85),inset_0_0_90px_rgba(0,0,0,0.7)]" />
         </div>
 
         {/* JOIN THE LIVE CHAT — full width, matching the content zone below */}
@@ -435,9 +432,6 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
           </a>
         </div>
-
-        {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
-        <div className="absolute inset-0 z-[3] rounded-2xl pointer-events-none shadow-[inset_0_0_0_3px_rgba(0,0,0,0.85),inset_0_0_90px_rgba(0,0,0,0.7)]" />
       </div>
     </div>
   );

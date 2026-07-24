@@ -206,7 +206,7 @@ export default function NebulaHomepage({
   }, [audioState, analyserRef]);
 
   return (
-    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}>
+    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ background: "#120e0b" }}>
 
       {/* 1. Nebula Cosmic Fire Background in soft brown and mustard #664d49 spectrum */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -552,9 +552,6 @@ export default function NebulaHomepage({
 
                     </div>
                   </div>
-
-                  {/* Anchor overlay — recessed inset shadow reads as embedded into the page background rather than floating */}
-                  <div className="absolute inset-0 z-[4] rounded-2xl pointer-events-none shadow-[inset_0_0_0_3px_rgba(0,0,0,0.85),inset_0_0_90px_rgba(0,0,0,0.7)]" />
                 </div>
               );
             })}
