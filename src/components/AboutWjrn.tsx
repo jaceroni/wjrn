@@ -63,20 +63,36 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const cycleBust = (idx: number) =>
     setClickStage((prev) => ({ ...prev, [idx]: ((prev[idx] ?? 0) + 1) % 2 }));
 
-  // Ambient tilt — all busts track the cursor's left-right position across the
-  // whole page (-0.5..0.5), the whole time you're here, like they're watching you
-  // move around the room. Grabbing one overrides it with manual drag control
-  // until release; every other bust keeps following the ambient cursor position.
-  const [ambientTiltX, setAmbientTiltX] = useState(0);
+  // Ambient tilt — each bust computes the real angle from its OWN position on
+  // the page to the cursor (basic look-at-cursor trig), rather than sharing one
+  // page-wide value. That alone gives the "closer reacts faster" behavior for
+  // free: atan2's slope is steepest near 0 and flattens out at wide angles, so
+  // a bust the cursor is already far from (large angle) changes much less per
+  // pixel of cursor movement than one the cursor is right next to. Grabbing a
+  // bust overrides it with manual drag control until release; every other bust
+  // keeps following the ambient cursor position.
+  const MAX_TILT_DEG = 14;
+  const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further out
+  const bustRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const [ambientTilt, setAmbientTilt] = useState<Record<number, number>>({});
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
-  const [draggedTiltX, setDraggedTiltX] = useState(0);
+  const [draggedTiltDeg, setDraggedTiltDeg] = useState(0);
   const dragStartClientXRef = useRef(0);
-  const dragStartTiltXRef = useRef(0);
-  const hasDraggedRef = useRef<Record<number, boolean>>({});
+  const dragStartTiltDegRef = useRef(0);
 
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
-      setAmbientTiltX(Math.max(-0.5, Math.min(0.5, e.clientX / window.innerWidth - 0.5)));
+      setAmbientTilt((prev) => {
+        const next = { ...prev };
+        bustRefs.current.forEach((el, idx) => {
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const dx = e.clientX - (rect.left + rect.width / 2);
+          const deg = (Math.atan2(dx, TILT_DEPTH) * 180) / Math.PI;
+          next[idx] = Math.max(-MAX_TILT_DEG, Math.min(MAX_TILT_DEG, deg));
+        });
+        return next;
+      });
     };
     window.addEventListener("mousemove", handleMove);
     return () => window.removeEventListener("mousemove", handleMove);
@@ -87,14 +103,11 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
     const idx = draggedIdx;
     const handleMove = (e: MouseEvent) => {
       const dx = e.clientX - dragStartClientXRef.current;
-      if (Math.abs(dx) > 4) hasDraggedRef.current[idx] = true;
-      setDraggedTiltX(Math.max(-0.5, Math.min(0.5, dragStartTiltXRef.current + dx / 300)));
+      const deg = dragStartTiltDegRef.current + (dx / 150) * MAX_TILT_DEG;
+      setDraggedTiltDeg(Math.max(-MAX_TILT_DEG, Math.min(MAX_TILT_DEG, deg)));
     };
     const handleUp = () => {
-      const dragged = hasDraggedRef.current[idx];
       setDraggedIdx(null);
-      hasDraggedRef.current[idx] = false;
-      if (!dragged) cycleBust(idx);
     };
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleUp);
@@ -107,10 +120,12 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const handleBustMouseDown = (idx: number) => (e: React.MouseEvent) => {
     e.preventDefault();
     dragStartClientXRef.current = e.clientX;
-    dragStartTiltXRef.current = ambientTiltX;
-    hasDraggedRef.current[idx] = false;
-    setDraggedTiltX(ambientTiltX);
+    dragStartTiltDegRef.current = ambientTilt[idx] ?? 0;
+    setDraggedTiltDeg(ambientTilt[idx] ?? 0);
     setDraggedIdx(idx);
+    // Clicking (whether or not it turns into a drag) always toggles the pose,
+    // so grabbing a bust to manually turn it doubles as revealing the alt one.
+    cycleBust(idx);
   };
 
   const STATION_SLUGS: { [key: string]: string } = {
@@ -223,11 +238,12 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
           {TEAM.map((member, idx) => {
             const stage = clickStage[idx] ?? 0;
-            const tiltX = draggedIdx === idx ? draggedTiltX : ambientTiltX;
-            const bustTransform = `perspective(1000px) rotateY(${tiltX * 14}deg)`;
+            const tiltDeg = draggedIdx === idx ? draggedTiltDeg : (ambientTilt[idx] ?? 0);
+            const bustTransform = `perspective(1000px) rotateY(${tiltDeg}deg)`;
             return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div
+                ref={(el) => { bustRefs.current[idx] = el; }}
                 role="button"
                 tabIndex={0}
                 aria-label={`Toggle ${member.name}'s sculpted bust pose — click and drag to turn`}
