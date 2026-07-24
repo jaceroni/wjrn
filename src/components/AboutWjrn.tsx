@@ -59,7 +59,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
     <div
       id="about_wjrn_layout"
       className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none"
-      style={{ background: "radial-gradient(circle at 80% 20% in oklab, #2a2116 0%, #0e0a06 100%)" }}
+      style={{ background: "#120e0b" }}
     >
       {/* Nebula Cosmic Fire Background */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
