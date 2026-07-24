@@ -3,7 +3,11 @@ import bustPeteRock from "../assets/images/bust-pete-rock-default.png";
 import bustPeteRockAlt from "../assets/images/bust-pete-rock-alt.png";
 
 interface HeroQuoteEntry {
-  quote: string;
+  // Each string is one hand-set visual line (mirrors how the mockup itself was
+  // composed with fixed line breaks) — the attribution is appended straight
+  // after the last line so it shares its text baseline rather than relying on
+  // natural wrap to land it there, which isn't reliable at every width.
+  quoteLines: string[];
   attribution: string;
   bust: string;
   bustAlt: string;
@@ -13,7 +17,12 @@ interface HeroQuoteEntry {
 // load, then the set auto-advances (see ROTATE_MS below).
 const HERO_QUOTES: HeroQuoteEntry[] = [
   {
-    quote: "So this is what they meant by soul – yeah this is what they meant by funky...",
+    quoteLines: [
+      "So this is what they",
+      "meant by soul – yeah",
+      "this is what they",
+      "meant by funky...",
+    ],
     attribution: "Pete Rock",
     bust: bustPeteRock,
     bustAlt: bustPeteRockAlt,
@@ -113,11 +122,24 @@ export default function HeroQuote() {
       >
         <p className="text-[32px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
           <span className="text-[#d7b158]">&#8220;</span>
-          <span className="text-[#faf6f0]">{entry.quote}</span>
-          <span className="text-[#d7b158]">&#8221;</span>
-          <span className="float-right ml-4 text-white text-[22px] tracking-wide whitespace-nowrap">
-            &ndash; {entry.attribution.toUpperCase()}
-          </span>
+          {entry.quoteLines.map((line, i) => {
+            const isLast = i === entry.quoteLines.length - 1;
+            return (
+              <React.Fragment key={i}>
+                <span className="text-[#faf6f0]">{line}</span>
+                {isLast ? (
+                  <>
+                    <span className="text-[#d7b158]">&#8221;</span>
+                    <span className="ml-3 text-white text-[22px] tracking-wide whitespace-nowrap">
+                      &ndash; {entry.attribution.toUpperCase()}
+                    </span>
+                  </>
+                ) : (
+                  <br />
+                )}
+              </React.Fragment>
+            );
+          })}
         </p>
       </div>
 
