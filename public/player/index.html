@@ -60,7 +60,7 @@ html, body {
 #art-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 3; opacity: 0; transition: opacity 0.3s ease; }
 #art-icon { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #f1e3c8; font-size: 26px; display: flex; align-items: center; justify-content: center; }
 #vu-canvas { position: absolute; left: 423px; top: 104px; width: 151px; height: 79px; z-index: 3; }
-#ticker-wrap { position: absolute; left: 410px; top: 213px; width: 460px; height: 48px; z-index: 3; overflow: hidden; display: flex; align-items: center; }
+#ticker-wrap { position: absolute; left: 410px; top: 213px; width: 460px; height: 48px; z-index: 3; overflow: hidden; display: flex; align-items: center; mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%); -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%); }
 #ticker-text { white-space: nowrap; font-family: monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: #23bf91; text-shadow: 0 0 8px rgba(35,191,145,0.6); line-height: 1; }
 #tuner-tick { position: absolute; top: 133px; width: 4px; height: 38px; background: #ff3333; z-index: 3; transition: left 0.6s cubic-bezier(0.25,0.1,0.25,1); box-shadow: 1px 2px 4px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.35); }
 #faceplate { position: absolute; left: 0; top: 0; width: 1280px; height: 443px; z-index: 2; pointer-events: none; display: block; }
