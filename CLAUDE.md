@@ -98,6 +98,9 @@ This applies in: `MiniPlayer`, `StationLanding` player card, `NebulaHomepage` ph
 
 `MiniPlayer`'s center station logo and its "Go to this station" link both `navigate()` to that station's landing page (logo click was previously dead — fixed 2026-07-24).
 
+### `wantsPlaybackRef` — the guard that makes pause actually stick
+Every `<audio>` element created in `toggleStation`/`playEpisode` has an `oncanplay` handler that retries `audio.play()` (needed because the very first `.play()` call right after `.load()` often fails while the stream is still buffering). A live stream keeps buffering — and re-firing `canplay` — even while genuinely paused, so without a guard that retry silently un-pauses playback moments after the user pauses: `audioState` flips back to `"playing"` while whatever set `activeStationId` to `null` (the live-station pause path) never gets told to undo that, leaving the two out of sync (fixed 2026-07-24 — this is what caused MiniPlayer's pause button to "flicker" back to playing, and the vintage player embed to stay stuck showing "paused" with a dead ticker while the VU meter kept moving for real, since `analyserRef` reflects actual audio state, not React state). `wantsPlaybackRef` (a plain ref, not state — it must be readable synchronously inside the `oncanplay` closure) tracks *intent*: set `true` on every play/resume path, `false` on every pause/stop/ended path, and `oncanplay` no-ops unless it's `true`. If you add a new way to start or stop playback, set this ref there too or the same desync can reappear.
+
 ### On-demand exports from PlayerContext
 ```ts
 formatTime(seconds)        // exported utility — "1:23:45"
