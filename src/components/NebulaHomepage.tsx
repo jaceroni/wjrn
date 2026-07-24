@@ -377,7 +377,7 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className="rounded-2xl cursor-pointer relative overflow-hidden group"
+                  className="w-[90%] mx-auto rounded-2xl cursor-pointer relative overflow-hidden group"
                 >
                   {/* VINTAGE TURNTABLE CABINET GRAPHIC — defines the card's shape; everything below overlays on top of it */}
                   <img
