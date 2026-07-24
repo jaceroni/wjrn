@@ -71,7 +71,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   // pixel of cursor movement than one the cursor is right next to. Grabbing a
   // bust overrides it with manual drag control until release; every other bust
   // keeps following the ambient cursor position.
-  const MAX_TILT_DEG = 10;
+  const MAX_TILT_DEG = 14;
   const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further out
   const bustRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [ambientTilt, setAmbientTilt] = useState<Record<number, number>>({});
@@ -239,7 +239,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           {TEAM.map((member, idx) => {
             const stage = clickStage[idx] ?? 0;
             const tiltDeg = draggedIdx === idx ? draggedTiltDeg : (ambientTilt[idx] ?? 0);
-            const bustTransform = `perspective(1400px) rotateY(${tiltDeg}deg)`;
+            const bustTransform = `perspective(1000px) rotateY(${tiltDeg}deg)`;
             return (
             <div key={idx} className="flex flex-col gap-[30px]">
               <div
@@ -265,8 +265,6 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   style={{
                     transition: "opacity 500ms ease, transform 150ms ease-out",
                     transform: bustTransform,
-                    willChange: "transform",
-                    backfaceVisibility: "hidden",
                   }}
                   className={`absolute inset-0 m-auto w-auto h-auto max-w-[calc(100%-32px)] max-h-[calc(100%-32px)] select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
                     stage === 0 ? "opacity-100" : "opacity-0"
@@ -279,8 +277,6 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   style={{
                     transition: "opacity 500ms ease, transform 150ms ease-out",
                     transform: bustTransform,
-                    willChange: "transform",
-                    backfaceVisibility: "hidden",
                   }}
                   className={`absolute inset-0 m-auto w-auto h-auto max-w-[calc(100%-32px)] max-h-[calc(100%-32px)] select-none pointer-events-none drop-shadow-[0_18px_26px_rgba(0,0,0,0.45)] ${
                     stage === 1 ? "opacity-100" : "opacity-0"
