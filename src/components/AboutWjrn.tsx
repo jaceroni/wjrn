@@ -1,9 +1,12 @@
 import React from "react";
-import { Antenna, User } from "lucide-react";
+import { Antenna } from "lucide-react";
 import { Station } from "../types";
 import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
+import photoJace from "../assets/images/about-jace-photo.png";
+import photoCindy from "../assets/images/about-cindy-photo.png";
+import photoPhil from "../assets/images/about-phil-photo.png";
 
 interface AboutWjrnProps {
   STATIONS: Station[];
@@ -13,6 +16,7 @@ interface TeamMember {
   name: string;
   role: string;
   bio: string;
+  photo: string;
 }
 
 // Nav dropdown hover colors — matches each station's brand accent
@@ -26,17 +30,20 @@ const TEAM: TeamMember[] = [
   {
     name: "Jace Brown",
     role: "Program Director",
-    bio: "Over 30 years in the crates and he's still diggin! Jace missed old school radio, so he built one. The vision, the vinyl, the voice, that's all him. If it's on WJRN, it passed through his ears first.",
+    bio: "Jace started DJing in 1993. By the late 90s he was working at one of Los Angeles's biggest FM stations, learning how the machine worked and eventually why it wasn't for him. So he walked away, and when the technology finally caught up to his vision, he built WJRN. No restrictions. Just a steady flow of killer tunes across every genre and era that we've grown to love.",
+    photo: photoJace,
   },
   {
     name: "Cindy Whopper",
     role: "Music Librarian + Promotions",
-    bio: "Cindy knew that you needed more than just good music. You need a deep catalog. Cindy keeps the library stacked, the rotation honest, and makes sure the world knows WJRN isn't playin. Her appetite for records is bottomless.",
+    bio: "Cindy's appetite for music rivals the size of her namesake. When Jace was building WJRN from the ground up, he needed someone who could match his hunger, record for record. Cindy showed up with a whopper of a resume and an even bigger list of what she felt deserves airtime. She keeps the library authentic and makes sure the outside world knows we exist.",
+    photo: photoCindy,
   },
   {
     name: "Phil Callings",
     role: "Chief Technical Officer",
-    bio: "When the signal drops or the server crashes at 3am, Phil jumps on it. He is the reason WJRN is on the air around the clock and if you listen closely, you can hear him tinkering in the air tonight...you hear it?",
+    bio: "Phil didn't just stumble into a tech gig at a radio station. He heard what Jace and Cindy were trying to build and knew immediately how to get it done. An independent, around the clock broadcast network doesn't run on good taste alone. It runs on infrastructure, and Phil is the reason ours stays up, clean and clear without interuption.",
+    photo: photoPhil,
   },
 ];
 
@@ -143,24 +150,26 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       <section className="relative z-10 w-full max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TEAM.map((member, idx) => (
-            <div
-              key={idx}
-              className="pt-8 pb-7 px-7 rounded-3xl border border-[#d7b158]/15 hover:border-[#d7b158]/60 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5 group"
-            >
-              <div className="w-28 h-28 rounded-full overflow-hidden shrink-0 shadow-[0_15px_35px_rgba(0,0,0,0.8)] flex items-center justify-center bg-white/[0.03] border border-white/10 transition-transform duration-500 group-hover:scale-105">
-                <User className="w-10 h-10 text-white/20" />
+            <div key={idx} className="flex flex-col gap-6">
+              <img
+                src={member.photo}
+                alt={member.name}
+                draggable={false}
+                className="w-full h-auto select-none pointer-events-none"
+              />
+              <div className="pt-8 pb-7 px-7 rounded-3xl border border-[#d7b158]/15 hover:border-[#d7b158]/60 bg-gradient-to-b from-[#0a0706] to-[#040303] backdrop-blur-xl transition-all duration-500 flex flex-col items-center text-center gap-5">
+                <div className="space-y-1.5">
+                  <h4 className="text-lg font-bold tracking-normal text-white uppercase leading-tight font-display">
+                    {member.name}
+                  </h4>
+                  <span className="text-[9.5px] font-mono uppercase tracking-[0.22em] block leading-snug font-bold text-[#d7b158]">
+                    {member.role}
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-400 leading-relaxed font-mono">
+                  {member.bio}
+                </p>
               </div>
-              <div className="space-y-1.5">
-                <h4 className="text-lg font-bold tracking-normal text-white uppercase leading-tight font-display">
-                  {member.name}
-                </h4>
-                <span className="text-[9.5px] font-mono uppercase tracking-[0.22em] block leading-snug font-bold text-[#d7b158]">
-                  {member.role}
-                </span>
-              </div>
-              <p className="text-xs text-neutral-400 leading-relaxed font-mono">
-                {member.bio}
-              </p>
             </div>
           ))}
         </div>
