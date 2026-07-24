@@ -230,6 +230,17 @@ If episode artwork shows as missing/placeholder in the on-demand section — thi
 
 ---
 
+## Hero quote — rotating artist spotlight (`HeroQuote.tsx`)
+Sits between the header and the vintage receiver embed on the homepage. Big chunky `font-display` quote (gold `“`/`”` bookend glyphs via `#d7b158`, cream body via `#faf6f0`, matching the site's established off-white — see `TwitchScheduleRetro.tsx`'s `#faf6f0` headings) with a small white `text-[22px]` attribution glued to the end of the last line, and a sculpted bust image to the right using the **exact same ambient-tilt + click-drag interaction as the About page team busts** (`AboutWjrn.tsx`) — look-at-cursor `atan2` trig, drag overrides ambient until release — just a single bust instead of a per-index map since only one is ever shown at a time.
+
+Deliberately sized down from the station landing pages' `lg:text-[90px]` headline to `lg:text-[72px]` — same responsive ladder otherwise (`text-[32px] sm:text-5xl md:text-6xl`) — per explicit request 2026-07-24, this hero shouldn't compete with a station page's own headline size.
+
+`HERO_QUOTES` is a plain array (`{ quote, attribution, bust }`) — add entries as more busts get made. On mount a random entry is picked (`Math.floor(Math.random() * HERO_QUOTES.length)`); a `setInterval` (`ROTATE_MS`, 16s) then advances through the set with a `FADE_MS` (400ms) opacity crossfade. With only one entry today the rotation effect is a no-op by design (`HERO_QUOTES.length < 2` early-returns) rather than dead code — it's already wired for whenever a second quote/bust is added, no rewiring needed.
+
+No alt pose / click-to-toggle for this bust (unlike the About page team) — `bust-pete-rock-default.png` has no alt counterpart yet. If one gets made, mirror `AboutWjrn.tsx`'s `clickStage` toggle-on-mousedown pattern rather than inventing a new one.
+
+---
+
 ## Parallax
 `NebulaHomepage` has scroll-based parallax on the WJRN watermark, left/right side panels, and phone. **Disabled on mobile** via `if (window.innerWidth < 1024) return;` guard in the scroll handler. Preserve this guard when editing.
 
