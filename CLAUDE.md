@@ -237,7 +237,7 @@ Deliberately sized down from the station landing pages' `lg:text-[90px]` headlin
 
 `HERO_QUOTES` is a plain array (`{ quote, attribution, bust }`) — add entries as more busts get made. On mount a random entry is picked (`Math.floor(Math.random() * HERO_QUOTES.length)`); a `setInterval` (`ROTATE_MS`, 16s) then advances through the set with a `FADE_MS` (400ms) opacity crossfade. With only one entry today the rotation effect is a no-op by design (`HERO_QUOTES.length < 2` early-returns) rather than dead code — it's already wired for whenever a second quote/bust is added, no rewiring needed.
 
-No alt pose / click-to-toggle for this bust (unlike the About page team) — `bust-pete-rock-default.png` has no alt counterpart yet. If one gets made, mirror `AboutWjrn.tsx`'s `clickStage` toggle-on-mousedown pattern rather than inventing a new one.
+Click (or the mousedown that starts a drag) toggles default &lt;-&gt; alt pose, same as the About page team busts — `clickStage` here is keyed per quote index (`Record<number, number>`) rather than per-team-member, so rotating to a different quote doesn't lose whichever pose was last showing for a quote you'd already toggled.
 
 ---
 
