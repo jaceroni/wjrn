@@ -91,7 +91,6 @@ export default function NebulaHomepage({
 
   const {
     togglePlayback,
-    stopPlayback,
     setIsMuted,
     setEqBassCut,
     setEqMidCut,
@@ -272,10 +271,6 @@ export default function NebulaHomepage({
           onClick={(e) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
-            // Already on the homepage — navigate("/") alone is a no-op since the URL
-            // doesn't change, so explicitly reset playback back to its default idle
-            // state (station cards, vintage player, and MiniPlayer all follow suit).
-            stopPlayback();
             navigate("/");
           }}
           className="flex items-center gap-3 cursor-pointer select-none shrink-0"
@@ -296,7 +291,6 @@ export default function NebulaHomepage({
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
               e.preventDefault();
-              stopPlayback();
               navigate("/");
             }}
             className="text-white/80 hover:text-[#d7b158] transition-colors"
