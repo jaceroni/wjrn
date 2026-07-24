@@ -115,7 +115,7 @@ export default function HeroQuote() {
   const bustTransform = `perspective(1000px) rotateY(${tiltDeg}deg)`;
 
   return (
-    <section className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
+    <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[14px] flex flex-col lg:flex-row items-center gap-5">
       <div
         className="flex-1 min-w-0 text-center lg:text-left transition-opacity ease-out"
         style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
