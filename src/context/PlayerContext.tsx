@@ -250,6 +250,14 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // Debounce timer for seek operations
   const seekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks whether playback is *intended* to be active — distinct from audio.paused,
+  // which is also true in the brief window before the very first play() resolves.
+  // A live stream keeps buffering (and re-firing 'canplay') even while genuinely
+  // paused; without this guard oncanplay's retry-play below would silently resume
+  // playback right after the user pauses, leaving audioState stuck out of sync with
+  // activeStationId (station cards/vintage player show paused while audio is actually
+  // playing again — fixed 2026-07-24).
+  const wantsPlaybackRef = useRef(false);
 
   // EQ state — remote-controlled by the vintage player's knobs
   const [eqBassCut, setEqBassCutState] = useState(false);
@@ -524,6 +532,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
     // Toggle off if this station is already active (and not on-demand)
     if (activeStationId === stationId && !onDemandItem) {
+      wantsPlaybackRef.current = false;
       audioRef.current?.pause();
       setActiveStationId(null);
       setAudioState("idle");
@@ -536,6 +545,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audioRef.current.src = "";
     }
 
+    wantsPlaybackRef.current = true;
     setAudioState("connecting");
     setActiveStationId(stationId);
 
@@ -550,6 +560,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.onplaying = () => setAudioState("playing");
     audio.onwaiting = () => setAudioState("connecting");
     audio.oncanplay = () => {
+      if (!wantsPlaybackRef.current) return;
       audio.play().catch(() => setAudioState("error"));
     };
     audio.onerror = () => setAudioState("error");
@@ -559,6 +570,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   };
 
   const stopPlayback = () => {
+    wantsPlaybackRef.current = false;
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = "";
@@ -574,9 +586,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const togglePlayback = () => {
     if (!audioRef.current) return;
     if (audioState === "playing") {
+      wantsPlaybackRef.current = false;
       audioRef.current.pause();
       setAudioState("idle");
     } else {
+      wantsPlaybackRef.current = true;
       setAudioState("connecting");
       audioRef.current.play()
         .then(() => setAudioState("playing"))
@@ -590,6 +604,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audioRef.current.pause();
       audioRef.current.src = "";
     }
+    wantsPlaybackRef.current = true;
     setAudioState("connecting");
     setActiveStationId(ep.stationId);
     setOnDemandItem(ep);
@@ -604,9 +619,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.onplay    = () => setAudioState("playing");
     audio.onplaying = () => setAudioState("playing");
     audio.onwaiting = () => {};
-    audio.oncanplay = () => { audio.play().catch(() => setAudioState("error")); };
+    audio.oncanplay = () => {
+      if (!wantsPlaybackRef.current) return;
+      audio.play().catch(() => setAudioState("error"));
+    };
     audio.onerror   = () => setAudioState("error");
-    audio.onended   = () => { setAudioState("idle"); setOnDemandItem(null); setOnDemandCurrentTime(0); setOnDemandDuration(0); };
+    audio.onended   = () => { wantsPlaybackRef.current = false; setAudioState("idle"); setOnDemandItem(null); setOnDemandCurrentTime(0); setOnDemandDuration(0); };
     audio.ontimeupdate = () => {
       setOnDemandCurrentTime(audio.currentTime);
       if (isFinite(audio.duration)) setOnDemandDuration(audio.duration);
