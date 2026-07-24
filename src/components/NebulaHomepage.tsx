@@ -342,35 +342,31 @@ export default function NebulaHomepage({
                 isPlayingLive: false,
                 nextTrack: null
               };
-              let stationColorClass = "border-[#b5945b]/15 hover:border-[#b5945b]/60";
+              let stationColorClass = "border-[#b5945b]/15";
               let activeBorderColor = "border-[#b5945b]/60";
               let textColorClass = "text-[#b5945b]";
               let pulseColorBg = "bg-[#b5945b]";
-              let shadowActiveClass = "shadow-[0_20px_50px_-10px_rgba(181,148,91,0.22)]";
               let glowColorBg = "rgba(181,148,91,0.22)";
 
               if (station.id === "rock_garden") {
-                stationColorClass = "border-emerald-500/15 hover:border-emerald-500/60";
+                stationColorClass = "border-emerald-500/15";
                 activeBorderColor = "border-emerald-500/60";
                 textColorClass = "text-emerald-400";
                 pulseColorBg = "bg-emerald-500";
-                shadowActiveClass = "shadow-[0_20px_50px_-10px_rgba(116,179,56,0.22)]";
                 glowColorBg = "rgba(116,179,56,0.35)";
               }
               if (station.id === "bridge_city") {
-                stationColorClass = "border-pink-500/15 hover:border-pink-500/60";
+                stationColorClass = "border-pink-500/15";
                 activeBorderColor = "border-pink-500/60";
                 textColorClass = "text-pink-400";
                 pulseColorBg = "bg-pink-500";
-                shadowActiveClass = "shadow-[0_20px_50px_-10px_rgba(255,0,102,0.22)]";
                 glowColorBg = "rgba(255,0,102,0.22)";
               }
               if (station.id === "golden_boombox") {
-                stationColorClass = "border-yellow-500/15 hover:border-yellow-500/60";
+                stationColorClass = "border-yellow-500/15";
                 activeBorderColor = "border-yellow-500/60";
                 textColorClass = "text-yellow-400";
                 pulseColorBg = "bg-yellow-500";
-                shadowActiveClass = "shadow-[0_20px_50px_-10px_rgba(226,172,0,0.22)]";
                 glowColorBg = "rgba(226,172,0,0.22)";
               }
 
@@ -388,10 +384,7 @@ export default function NebulaHomepage({
                 <div
                   key={station.id}
                   onClick={() => toggleStation(station.id)}
-                  className={`rounded-3xl border transition-all duration-500 cursor-pointer relative overflow-hidden group ${isActive
-                      ? `${activeBorderColor} shadow-2xl -translate-y-1.5 ${shadowActiveClass}`
-                      : `${stationColorClass} hover:shadow-2xl hover:-translate-y-1.5`
-                    }`}
+                  className={`rounded-3xl border transition-colors duration-500 cursor-pointer relative overflow-hidden group ${isActive ? activeBorderColor : stationColorClass}`}
                 >
                   {/* VINTAGE TURNTABLE CABINET GRAPHIC — defines the card's shape; everything below overlays on top of it */}
                   <img
@@ -409,7 +402,7 @@ export default function NebulaHomepage({
                   )}
                   {station.id === "rock_garden" && (
                     <div
-                      className="absolute rounded-full bg-emerald-500/5 blur-2xl group-hover:bg-emerald-500/10 pointer-events-none transition-all duration-500"
+                      className="absolute rounded-full bg-emerald-500/5 blur-2xl pointer-events-none"
                       style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width, aspectRatio: "1 / 1" }}
                     />
                   )}
@@ -419,7 +412,7 @@ export default function NebulaHomepage({
                     alt={`${station.name} vinyl on turntable platter`}
                     draggable={false}
                     referrerPolicy="no-referrer"
-                    className={`absolute z-[1] rounded-full select-none pointer-events-none ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
+                    className={`absolute z-[1] rounded-full select-none pointer-events-none group-hover:animate-[spin_8s_linear_infinite] ${isSpinning ? "animate-[spin_8s_linear_infinite]" : ""}`}
                     style={{ left: PLATTER_POSITION.left, top: PLATTER_POSITION.top, width: PLATTER_POSITION.width }}
                   />
 
@@ -442,7 +435,7 @@ export default function NebulaHomepage({
                     className="absolute z-[3] flex flex-col items-center justify-center text-center"
                     style={{ top: TITLE_ZONE.top, bottom: TITLE_ZONE.bottom, left: TITLE_ZONE.left, right: TITLE_ZONE.right }}
                   >
-                    <h4 className="text-lg sm:text-xl font-bold tracking-normal text-white uppercase leading-tight font-display transition-colors group-hover:text-white">
+                    <h4 className="text-lg sm:text-xl font-bold tracking-normal text-white uppercase leading-tight font-display">
                       {station.name}
                     </h4>
                     <span className={`mt-1.5 text-[9.5px] font-mono uppercase tracking-[0.18em] block leading-snug font-bold ${textColorClass}`}>

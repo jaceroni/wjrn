@@ -217,9 +217,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   if (!isDesktopLayout) {
     return (
       <div className="flex flex-col gap-4">
-        <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 hover:border-purple-500/55 relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-0.5 shadow-xl animate-fade-in group">
-          {/* Top accent strip */}
-          <div className="absolute top-0 left-0 right-0 h-[3px] z-[4] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none" />
+        <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 relative overflow-hidden shadow-xl animate-fade-in group">
 
           {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
           <div
@@ -326,9 +324,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
   return (
     <div className="flex flex-col gap-4">
-      <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 hover:border-purple-500/55 relative overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-0.5 shadow-xl animate-fade-in group">
-        {/* Top accent strip */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] z-[4] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0 group-hover:opacity-60 transition-opacity duration-500 pointer-events-none" />
+      <div id="twitch_schedule_module" className="rounded-3xl border border-purple-500/15 relative overflow-hidden shadow-xl animate-fade-in group">
 
         {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
         <div
