@@ -18,7 +18,7 @@ const SCREEN_WINDOW = { left: "47.887%", top: "19.588%", width: "41.170%", heigh
 const LEFT_PANEL = { left: "4%", right: "59%", top: "13%", bottom: "6%" };
 // The blank cabinet space below the screen (screen bottom is at 19.588+50.258=69.846%),
 // still inside the wood frame — the join button sits here, not below the whole card.
-const JOIN_BUTTON_ZONE = { left: SCREEN_WINDOW.left, width: SCREEN_WINDOW.width, top: "72%", bottom: "6%" };
+const JOIN_BUTTON_ZONE = { left: SCREEN_WINDOW.left, width: SCREEN_WINDOW.width, top: "75%", bottom: "0%" };
 
 // Measured against the native twitch-card-bg(-ko)-mobile.png canvas (582x657) — screen on top,
 // schedule content below, used below the "md" breakpoint where the wide layout has no room.
