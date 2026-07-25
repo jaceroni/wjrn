@@ -167,12 +167,12 @@ export default function HeroQuote() {
         }`}
         style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
       >
-        <p className="text-[16px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
+        <p className="text-[24px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
           <span className="text-[#d7b158]">&#8220;</span>
           <span className="text-[#faf6f0]">{entry.quote}</span>
           <span className="text-[#d7b158]">&#8221;</span>
           <br />
-          <span className="block mt-3 text-center sm:text-right text-white text-[9px] sm:text-[22px] tracking-wide">
+          <span className="block mt-3 text-center sm:text-right text-white text-[11px] sm:text-[22px] tracking-wide">
             &ndash; {entry.attribution.toUpperCase()}
           </span>
         </p>
