@@ -129,11 +129,11 @@ export default function MiniPlayer() {
           <span className="text-[8px] font-mono uppercase tracking-[0.22em] leading-none mb-1 transition-colors duration-500" style={{ color: accentColor }}>
             {stationName}
           </span>
-          <span className="text-[11px] font-mono font-black text-white/90 uppercase tracking-wide truncate leading-tight">
+          <span className="text-[11px] font-mono font-black text-[#f3ede2]/90 uppercase tracking-wide truncate leading-tight">
             {isOnDemand ? (onDemandItem?.title || "—") : (activeMeta?.trackTitle || "—")}
           </span>
           {!isOnDemand && (
-            <span className="text-[8px] font-mono text-white/35 uppercase tracking-widest truncate leading-none mt-0.5">
+            <span className="text-[8px] font-mono text-[#f3ede2]/35 uppercase tracking-widest truncate leading-none mt-0.5">
               {activeMeta?.trackArtist || ""}
             </span>
           )}
@@ -146,7 +146,7 @@ export default function MiniPlayer() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: accentColor }} />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ backgroundColor: accentColor }} />
             </span>
-            <span className="text-[8px] font-mono font-extrabold uppercase tracking-[0.2em] text-white/60">LIVE</span>
+            <span className="text-[8px] font-mono font-extrabold uppercase tracking-[0.2em] text-[#f3ede2]/60">LIVE</span>
           </div>
         )}
 
@@ -161,7 +161,7 @@ export default function MiniPlayer() {
                 e.preventDefault();
                 navigate(STATION_SLUGS[displayStationId!]);
               }}
-              className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.18em] transition-colors duration-150 text-white/60 hover:text-white mr-5 shrink-0"
+              className="hidden sm:flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.18em] transition-colors duration-150 text-[#f3ede2]/60 hover:text-[#f3ede2] mr-5 shrink-0"
             >
               Go to this station <ArrowRight className="w-3 h-3" />
             </a>
@@ -169,7 +169,7 @@ export default function MiniPlayer() {
 
           {/* Mute toggle */}
           <button id="mini-player-mute" onClick={() => setIsMuted(!isMuted)}
-            className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 transition-colors duration-150 rounded-full hover:bg-white/5"
+            className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/40 hover:text-[#f3ede2]/80 transition-colors duration-150 rounded-full hover:bg-white/5"
             aria-label={isMuted ? "Unmute" : "Mute"}>
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </button>
@@ -178,11 +178,11 @@ export default function MiniPlayer() {
           {isOnDemand && (
             <>
               <button onClick={seekToStart} title="Start from beginning"
-                className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 transition-colors rounded-full hover:bg-white/5">
+                className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/40 hover:text-[#f3ede2]/80 transition-colors rounded-full hover:bg-white/5">
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
               <button onClick={seekBackward} title="Back 15 seconds"
-                className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 text-[10px] font-mono font-black transition-colors rounded-full hover:bg-white/5">
+                className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/40 hover:text-[#f3ede2]/80 text-[10px] font-mono font-black transition-colors rounded-full hover:bg-white/5">
                 -15
               </button>
             </>
@@ -208,7 +208,7 @@ export default function MiniPlayer() {
           {/* +15 — on-demand only */}
           {isOnDemand && (
             <button onClick={seekForward} title="Forward 15 seconds"
-              className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 text-[10px] font-mono font-black transition-colors rounded-full hover:bg-white/5">
+              className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/40 hover:text-[#f3ede2]/80 text-[10px] font-mono font-black transition-colors rounded-full hover:bg-white/5">
               +15
             </button>
           )}
@@ -216,7 +216,7 @@ export default function MiniPlayer() {
           {/* Next station */}
           <button
             onClick={handleNextStation}
-            className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/80 transition-colors duration-150 rounded-full hover:bg-white/5"
+            className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/40 hover:text-[#f3ede2]/80 transition-colors duration-150 rounded-full hover:bg-white/5"
             aria-label="Next station"
             title="Next station"
           >
@@ -226,7 +226,7 @@ export default function MiniPlayer() {
           {/* Pop Out */}
           <button
             onClick={() => window.dispatchEvent(new CustomEvent("wjrn:open-pip"))}
-            className="w-8 h-8 flex items-center justify-center text-white/25 hover:text-white/60 transition-colors duration-150 rounded-full hover:bg-white/5"
+            className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/25 hover:text-[#f3ede2]/60 transition-colors duration-150 rounded-full hover:bg-white/5"
             aria-label="Pop out player"
             title="Pop out player"
           >
@@ -237,7 +237,7 @@ export default function MiniPlayer() {
           <button
             id="mini-player-stop"
             onClick={handleStop}
-            className="w-8 h-8 flex items-center justify-center text-white/25 hover:text-white/60 transition-colors duration-150 rounded-full hover:bg-white/5"
+            className="w-8 h-8 flex items-center justify-center text-[#f3ede2]/25 hover:text-[#f3ede2]/60 transition-colors duration-150 rounded-full hover:bg-white/5"
             aria-label="Stop playback"
           >
             <X className="w-4 h-4" />

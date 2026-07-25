@@ -238,7 +238,7 @@ export default function NebulaHomepage({
   }, [audioState, analyserRef]);
 
   return (
-    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-white flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ backgroundColor: "#120e0b" }}>
+    <div id="nebula_homepage_layout" className="relative min-h-screen w-full text-[#f3ede2] flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none" style={{ backgroundColor: "#120e0b" }}>
 
       {/* 1. Nebula Cosmic Fire Background in soft brown and mustard #664d49 spectrum */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
@@ -304,7 +304,7 @@ export default function NebulaHomepage({
               e.preventDefault();
               navigate("/");
             }}
-            className="text-white/80 hover:text-[#d7b158] transition-colors"
+            className="text-[#f3ede2]/80 hover:text-[#d7b158] transition-colors"
           >
             Home
           </a>
@@ -312,7 +312,7 @@ export default function NebulaHomepage({
 
           {/* Our Stations — hover dropdown */}
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[#d7b158] transition-colors cursor-pointer">
+            <span className="text-[#f3ede2]/80 group-hover:text-[#d7b158] transition-colors cursor-pointer">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
@@ -326,7 +326,7 @@ export default function NebulaHomepage({
                       e.preventDefault();
                       navigate(`/${STATION_SLUGS[station.id]}`);
                     }}
-                    className={`px-6 py-2.5 text-[10px] tracking-[0.15em] text-white/70 hover:bg-white/5 transition-colors whitespace-nowrap text-center ${NAV_HOVER_COLOR[station.id] ?? "hover:text-white"}`}
+                    className={`px-6 py-2.5 text-[10px] tracking-[0.15em] text-[#f3ede2]/70 hover:bg-white/5 transition-colors whitespace-nowrap text-center ${NAV_HOVER_COLOR[station.id] ?? "hover:text-[#f3ede2]"}`}
                   >
                     {station.name}
                   </a>
@@ -343,7 +343,7 @@ export default function NebulaHomepage({
               e.preventDefault();
               navigate("/about-wjrn");
             }}
-            className="text-white/80 hover:text-[#d7b158] transition-colors"
+            className="text-[#f3ede2]/80 hover:text-[#d7b158] transition-colors"
           >
             About WJRN
           </a>
@@ -351,7 +351,7 @@ export default function NebulaHomepage({
 
         {/* Live Indicator (Far Upper Right) */}
         <div className="hidden md:flex items-center shrink-0">
-          <span className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
+          <span className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#f3ede2]/80">
             Broadcasting
             <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0 ml-[3px] mr-[3px]" />
             {`${totalListeners.toLocaleString()} Listeners`}
@@ -493,7 +493,7 @@ export default function NebulaHomepage({
                     className="absolute z-[3] flex flex-col items-center justify-center text-center"
                     style={{ top: TITLE_ZONE.top, bottom: TITLE_ZONE.bottom, left: TITLE_ZONE.left, right: TITLE_ZONE.right }}
                   >
-                    <h4 className="text-lg sm:text-xl font-bold tracking-normal text-white uppercase leading-tight font-display">
+                    <h4 className="text-lg sm:text-xl font-bold tracking-normal text-[#f3ede2] uppercase leading-tight font-display">
                       {station.name}
                     </h4>
                     <span className={`mt-1.5 text-[9.5px] font-mono uppercase tracking-[0.18em] block leading-snug font-bold ${textColorClass}`}>
@@ -547,10 +547,10 @@ export default function NebulaHomepage({
                             </div>
                           )}
                           <div className="min-w-0 flex-1 flex flex-col justify-center">
-                            <span className="text-[11px] font-mono text-white/95 truncate block uppercase tracking-wide leading-tight font-black">
+                            <span className="text-[11px] font-mono text-[#f3ede2]/95 truncate block uppercase tracking-wide leading-tight font-black">
                               {meta.trackTitle}
                             </span>
-                            <span className="text-[8px] font-mono text-white/40 truncate block uppercase tracking-widest mt-0.5">
+                            <span className="text-[8px] font-mono text-[#f3ede2]/40 truncate block uppercase tracking-widest mt-0.5">
                               {meta.trackArtist}
                             </span>
                           </div>
@@ -583,7 +583,7 @@ export default function NebulaHomepage({
                               <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pulseColorBg} opacity-75`}></span>
                               <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${pulseColorBg}`}></span>
                             </span>
-                            <span className="text-white/80">ON THE AIR</span>
+                            <span className="text-[#f3ede2]/80">ON THE AIR</span>
                           </>
                         ) : (
                           <>
@@ -596,7 +596,7 @@ export default function NebulaHomepage({
                       {/* Bottom Right: Listener statistics */}
                       <span className="flex items-center gap-1.5">
                         <span className={`inline-block w-1 rounded-full ${isActive ? pulseColorBg + " animate-pulse" : "bg-neutral-600"}`} />
-                        <span className="text-white/70 font-bold">{meta.listeners.toLocaleString()}</span> LISTENERS
+                        <span className="text-[#f3ede2]/70 font-bold">{meta.listeners.toLocaleString()}</span> LISTENERS
                       </span>
                     </div>
 
@@ -633,7 +633,7 @@ export default function NebulaHomepage({
 
       {/* 7. Beautiful Minimal Footer */}
       <div>
-        <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+        <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-[#f3ede2]/60 uppercase tracking-widest gap-4">
           <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
             <span>For Promotional Use Only</span>
             <span>All Music Is The Property Of Its Respective Owners</span>

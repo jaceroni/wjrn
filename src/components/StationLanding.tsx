@@ -393,7 +393,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
 
   return (
     <div
-      className="relative min-h-screen w-full text-white flex flex-col overflow-hidden font-mono pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14"
+      className="relative min-h-screen w-full text-[#f3ede2] flex flex-col overflow-hidden font-mono pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14"
       style={{ background: config.meshGradient }}
     >
       {/* Shared lava lamp keyframes + logo hover CSS live in index.css */}
@@ -467,14 +467,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               e.preventDefault();
               navigate("/");
             }}
-            className="text-white/80 hover:text-[var(--nav-accent)] transition-colors"
+            className="text-[#f3ede2]/80 hover:text-[var(--nav-accent)] transition-colors"
           >
             Home
           </a>
           <span className="text-[var(--nav-accent)] text-[30px] leading-none">&middot;</span>
 
           <div className="relative group py-2">
-            <span className="text-white/80 group-hover:text-[var(--nav-accent)] transition-colors cursor-pointer">
+            <span className="text-[#f3ede2]/80 group-hover:text-[var(--nav-accent)] transition-colors cursor-pointer">
               Our Stations
             </span>
             <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pt-2">
@@ -491,7 +491,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                     className={`px-6 py-2.5 text-[10px] tracking-[0.15em] transition-colors whitespace-nowrap text-center hover:bg-white/5 ${
                       station.id === stationId
                         ? config.textColorClass
-                        : `text-white/70 ${NAV_HOVER_COLOR[station.id] ?? "hover:text-white"}`
+                        : `text-[#f3ede2]/70 ${NAV_HOVER_COLOR[station.id] ?? "hover:text-[#f3ede2]"}`
                     }`}
                   >
                     {station.name}
@@ -509,14 +509,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               e.preventDefault();
               navigate("/about-wjrn");
             }}
-            className="text-white/80 hover:text-[var(--nav-accent)] transition-colors"
+            className="text-[#f3ede2]/80 hover:text-[var(--nav-accent)] transition-colors"
           >
             About WJRN
           </a>
         </nav>
 
         <div className="hidden md:flex items-center shrink-0">
-          <span className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-white/80">
+          <span className="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[#f3ede2]/80">
             Broadcasting
             <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0 ml-[3px] mr-[3px]" />
             {`${totalListeners.toLocaleString()} Listeners`}
@@ -540,7 +540,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               </span>
             </div>
             <h2
-              className="text-[44px] sm:text-5xl md:text-6xl lg:text-[90px] font-extrabold leading-[0.95] tracking-normal text-white uppercase select-none font-display text-center lg:text-left">
+              className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal text-[#f3ede2] uppercase select-none font-display text-center lg:text-left">
               {config.name}
             </h2>
           </div>
@@ -569,7 +569,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                 >
                   {label}
                 </span>
-                <span className="text-xs text-white/80 font-mono leading-tight">
+                <span className="text-xs text-[#f3ede2]/80 font-mono leading-tight">
                   {value}
                 </span>
               </div>
@@ -593,7 +593,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               {/* Card top row: ON THE AIR badge + listener count */}
               <div className="flex items-center justify-between">
                 {isLive ? (
-                  <span className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] font-bold text-white/80">
+                  <span className="flex items-center gap-2 text-[9px] font-mono uppercase tracking-[0.2em] font-bold text-[#f3ede2]/80">
                     <span className="relative flex h-2 w-2 shrink-0">
                       <span
                         className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.pulseClass} opacity-75`}
@@ -610,8 +610,8 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                     OFFLINE
                   </span>
                 )}
-                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/40">
-                  <span className="text-white/70 font-bold">
+                <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-[#f3ede2]/40">
+                  <span className="text-[#f3ede2]/70 font-bold">
                     {contextMeta.listeners.toLocaleString()}
                   </span>{" "}
                   LISTENERS
@@ -646,7 +646,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                       </p>
                     </div>
                   ) : (
-                    <p className="text-white font-bold text-base sm:text-lg leading-tight uppercase tracking-wide">
+                    <p className="text-[#f3ede2] font-bold text-base sm:text-lg leading-tight uppercase tracking-wide">
                       {title}
                     </p>
                   );
@@ -665,7 +665,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                   <button onClick={seekToStart} title="Start from beginning" className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all ${config.textColorClass}`}>
                     <RotateCcw className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={seekBackward} title="Back 15 seconds" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-white/70 hover:text-white text-[10px] font-mono font-black">
+                  <button onClick={seekBackward} title="Back 15 seconds" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-[#f3ede2]/70 hover:text-[#f3ede2] text-[10px] font-mono font-black">
                     -15
                   </button>
                   <button
@@ -680,16 +680,16 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                       <Play className="w-4 h-4 fill-current translate-x-0.5" />
                     )}
                   </button>
-                  <button onClick={seekForward} title="Forward 15 seconds" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-white/70 hover:text-white text-[10px] font-mono font-black">
+                  <button onClick={seekForward} title="Forward 15 seconds" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-[#f3ede2]/70 hover:text-[#f3ede2] text-[10px] font-mono font-black">
                     +15
                   </button>
-                  <button onClick={() => toggleStation(stationId)} title="Stop on-demand" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-white/40 hover:text-white">
+                  <button onClick={() => toggleStation(stationId)} title="Stop on-demand" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-[#f3ede2]/40 hover:text-[#f3ede2]">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Playback position readout */}
-                <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-white/40 tracking-widest">
+                <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-[#f3ede2]/40 tracking-widest">
                   <span>{formatTime(onDemandCurrentTime)}</span>
                   <span>/</span>
                   <span>{formatTime(onDemandDuration)}</span>
@@ -699,7 +699,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
 
               {/* Volume slider */}
               <div className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-full px-4 py-2.5">
-                <button onClick={() => setIsMuted(!isMuted)} className="text-white/60 hover:text-white transition-colors cursor-pointer shrink-0" aria-label={isMuted ? "Unmute" : "Mute"}>
+                <button onClick={() => setIsMuted(!isMuted)} className="text-[#f3ede2]/60 hover:text-[#f3ede2] transition-colors cursor-pointer shrink-0" aria-label={isMuted ? "Unmute" : "Mute"}>
                   {isMuted ? <VolumeX className={`w-4 h-4 ${config.textColorClass}`} /> : <Volume2 className={`w-4 h-4 ${config.textColorClass}`} />}
                 </button>
                 <input type="range" min="0" max="1" step="0.01" value={isMuted ? 0 : volume}
@@ -743,12 +743,12 @@ export default function StationLanding({ stationId }: StationLandingProps) {
             <span className={`text-[9px] font-mono uppercase tracking-[0.28em] font-bold ${config.textColorClass}`}>
               ON DEMAND
             </span>
-            <h2 className="text-[26px] leading-tight sm:text-2xl sm:leading-snug font-extrabold uppercase text-white tracking-tight font-display">
+            <h2 className="text-[26px] leading-tight sm:text-2xl sm:leading-snug font-extrabold uppercase text-[#f3ede2] tracking-tight font-display">
               {config.demandLabel}
             </h2>
           </div>
           {!episodesLoading && !episodesError && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-white/30">
+            <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#f3ede2]/30">
               {episodes.length} {episodes.length === 1 ? "EPISODE" : "EPISODES"} AVAILABLE
             </span>
           )}
@@ -765,14 +765,14 @@ export default function StationLanding({ stationId }: StationLandingProps) {
 
         {/* Error state */}
         {episodesError && !episodesLoading && (
-          <p className="text-white/30 text-[11px] font-mono uppercase tracking-widest py-8 text-center">
+          <p className="text-[#f3ede2]/30 text-[11px] font-mono uppercase tracking-widest py-8 text-center">
             Could not load episodes — check back soon.
           </p>
         )}
 
         {/* Empty state */}
         {!episodesLoading && !episodesError && episodes.length === 0 && (
-          <p className="text-white/30 text-[11px] font-mono uppercase tracking-widest py-8 text-center">
+          <p className="text-[#f3ede2]/30 text-[11px] font-mono uppercase tracking-widest py-8 text-center">
             No episodes available yet.
           </p>
         )}
@@ -799,7 +799,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                       />
                     </div>
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-                      <p className="text-white text-sm font-bold uppercase tracking-wide leading-tight line-clamp-2 font-display">
+                      <p className="text-[#f3ede2] text-sm font-bold uppercase tracking-wide leading-tight line-clamp-2 font-display">
                         {ep.title}
                       </p>
                       {ep.description && (
@@ -814,7 +814,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                           </span>
                         )}
                         {ep.created_at > 0 && (
-                          <span className="text-[8px] font-mono uppercase tracking-[0.18em] text-white/25">
+                          <span className="text-[8px] font-mono uppercase tracking-[0.18em] text-[#f3ede2]/25">
                             {formatDate(ep.created_at)}
                           </span>
                         )}
@@ -843,7 +843,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* ------------------------------------------------------------------ */}
       {/* Footer                                                              */}
       {/* ------------------------------------------------------------------ */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-white/60 uppercase tracking-widest gap-4">
+      <footer className="relative z-10 w-full max-w-7xl mx-auto border-t border-white/5 pt-5 mt-8 flex flex-col md:flex-row items-center justify-between text-[10px] font-mono text-[#f3ede2]/60 uppercase tracking-widest gap-4">
         <div className="flex flex-col items-center md:items-start gap-1 text-center md:text-left">
           <span>For Promotional Use Only</span>
           <span>All Music Is The Property Of Its Respective Owners</span>

@@ -251,7 +251,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
               </div>
             )}
             {isLiveActive && (
-              <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-2 py-0.5 bg-red-600/90 backdrop-blur-sm text-white font-mono text-[8px] font-bold tracking-wider uppercase rounded-full shadow-lg select-none pointer-events-auto">
+              <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-2 py-0.5 bg-red-600/90 backdrop-blur-sm text-[#f3ede2] font-mono text-[8px] font-bold tracking-wider uppercase rounded-full shadow-lg select-none pointer-events-auto">
                 <span className="h-1 w-1 rounded-full bg-white animate-ping"></span>
                 <span className="h-1 w-1 rounded-full bg-white absolute"></span>
                 <span>LIVE NOW</span>
@@ -353,7 +353,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             </div>
           )}
           {isLiveActive && (
-            <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1 bg-red-600/90 hover:bg-red-600 backdrop-blur-sm text-white font-mono text-[10px] font-bold tracking-wider uppercase rounded-full shadow-lg transition-colors cursor-pointer select-none pointer-events-auto">
+            <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1 bg-red-600/90 hover:bg-red-600 backdrop-blur-sm text-[#f3ede2] font-mono text-[10px] font-bold tracking-wider uppercase rounded-full shadow-lg transition-colors cursor-pointer select-none pointer-events-auto">
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping"></span>
               <span className="h-1.5 w-1.5 rounded-full bg-white absolute"></span>
               <span>LIVE NOW</span>
@@ -379,7 +379,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
             <div className="flex items-center gap-2 mb-1 xl:mb-3.5">
               <Calendar className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-purple-500" />
-              <span className="text-[10px] xl:text-xs font-mono uppercase text-white tracking-widest font-semibold">WEEKLY LIVE BROADCAST SCHEDULE</span>
+              <span className="text-[10px] xl:text-xs font-mono uppercase text-[#f3ede2] tracking-widest font-semibold">WEEKLY LIVE BROADCAST SCHEDULE</span>
             </div>
 
             <div className="space-y-1 xl:space-y-3">

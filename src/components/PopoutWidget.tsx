@@ -58,11 +58,11 @@ export default function PopoutWidget({ onClose }: Props) {
         className="flex items-center justify-between px-4 py-2.5 shrink-0"
         style={{ borderBottom: `1px solid ${accent}28` }}
       >
-        <span className="text-[8px] uppercase tracking-[0.3em] text-white/35">WJRN POCKET RADIO</span>
+        <span className="text-[8px] uppercase tracking-[0.3em] text-[#f3ede2]/35">WJRN POCKET RADIO</span>
         {onClose && (
           <button
             onClick={onClose}
-            className="text-white/30 hover:text-white/80 transition-colors cursor-pointer"
+            className="text-[#f3ede2]/30 hover:text-[#f3ede2]/80 transition-colors cursor-pointer"
           >
             <X className="w-3 h-3" />
           </button>
@@ -87,12 +87,12 @@ export default function PopoutWidget({ onClose }: Props) {
             NOW PLAYING
           </span>
           <div className={`overflow-hidden mask-marquee h-[18px] flex items-center ${isLongTitle ? "" : "justify-center"}`}>
-            <p className={`text-[13px] font-black text-white uppercase tracking-wide whitespace-nowrap ${isLongTitle ? "animate-marquee" : ""}`}
+            <p className={`text-[13px] font-black text-[#f3ede2] uppercase tracking-wide whitespace-nowrap ${isLongTitle ? "animate-marquee" : ""}`}
               style={isLongTitle ? { animationDuration: "14s" } : undefined}>
               {isLongTitle ? `${trackTitle}     ${trackTitle}` : trackTitle}
             </p>
           </div>
-          <p className="text-[9px] text-white/35 uppercase tracking-widest truncate">
+          <p className="text-[9px] text-[#f3ede2]/35 uppercase tracking-widest truncate">
             {trackArtist}
           </p>
         </div>
@@ -138,8 +138,8 @@ export default function PopoutWidget({ onClose }: Props) {
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/10 active:scale-95 transition-all border border-white/10"
         >
           {isMuted
-            ? <VolumeX className="w-4 h-4 text-white/50" />
-            : <Volume2 className="w-4 h-4 text-white/50" />}
+            ? <VolumeX className="w-4 h-4 text-[#f3ede2]/50" />
+            : <Volume2 className="w-4 h-4 text-[#f3ede2]/50" />}
         </button>
 
         {/* Play / Pause */}
@@ -162,7 +162,7 @@ export default function PopoutWidget({ onClose }: Props) {
           onClick={cycleStation}
           className="w-10 h-10 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/10 active:scale-95 transition-all border border-white/10"
         >
-          <SkipForward className="w-4 h-4 text-white/50" />
+          <SkipForward className="w-4 h-4 text-[#f3ede2]/50" />
         </button>
       </div>
     </div>

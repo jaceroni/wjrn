@@ -172,7 +172,7 @@ export default function HeroQuote() {
           <span className="text-[#faf6f0]">{entry.quote}</span>
           <span className="text-[#d7b158]">&#8221;</span>
           <br />
-          <span className="block mt-3 text-center sm:text-right text-white text-[17px] sm:text-[22px] tracking-wide">
+          <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
             &ndash; {entry.attribution.toUpperCase()}
           </span>
         </p>

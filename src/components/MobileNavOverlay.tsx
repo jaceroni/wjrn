@@ -54,7 +54,7 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
         <button
           onClick={() => setIsOpen(false)}
           aria-label="Close menu"
-          className="absolute right-6 top-4 text-white/60 hover:text-white transition-colors p-2 -mr-2"
+          className="absolute right-6 top-4 text-[#f3ede2]/60 hover:text-[#f3ede2] transition-colors p-2 -mr-2"
         >
           <X className="w-6 h-6" />
         </button>
@@ -70,7 +70,7 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
             e.preventDefault();
             go("/");
           }}
-          className="text-2xl text-white/85 hover:text-[#d7b158] transition-colors"
+          className="text-2xl text-[#f3ede2]/85 hover:text-[#d7b158] transition-colors"
         >
           Home
         </a>
@@ -84,7 +84,7 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
                 e.preventDefault();
                 go(`/${STATION_SLUGS[station.id]}`);
               }}
-              className={`text-2xl text-white/85 transition-colors ${NAV_HOVER_COLOR[station.id] ?? "hover:text-[#d7b158]"}`}
+              className={`text-2xl text-[#f3ede2]/85 transition-colors ${NAV_HOVER_COLOR[station.id] ?? "hover:text-[#d7b158]"}`}
             >
               {station.name}
             </a>
@@ -96,14 +96,14 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
             e.preventDefault();
             go("/about-wjrn");
           }}
-          className="text-2xl text-white/85 hover:text-[#d7b158] transition-colors"
+          className="text-2xl text-[#f3ede2]/85 hover:text-[#d7b158] transition-colors"
         >
           About WJRN
         </a>
       </nav>
 
       <div className="pb-8 flex items-center justify-center">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-[#f3ede2]/60">
           Broadcasting
           <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0 ml-[3px] mr-[3px]" />
           {`${totalListeners.toLocaleString()} Listeners`}
