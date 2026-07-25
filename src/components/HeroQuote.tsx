@@ -164,7 +164,7 @@ export default function HeroQuote() {
       >
         <p className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
           <span className="text-[#d7b158]">&#8220;</span>
-          <span className="text-[#faf6f0]">{entry.quote}</span>
+          <span className="text-[#f3ede2]">{entry.quote}</span>
           <span className="text-[#d7b158]">&#8221;</span>
           <br />
           <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">

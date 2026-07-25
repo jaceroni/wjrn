@@ -60,7 +60,7 @@ export default function MiniPlayer() {
 
   const activeMeta = displayStationId ? metadata[displayStationId] : null;
   const stationName = displayStationId ? (STATION_NAMES[displayStationId] ?? "") : "";
-  const accentColor = displayStationId ? (STATION_COLORS[displayStationId] ?? "#ffffff") : "#ffffff";
+  const accentColor = displayStationId ? (STATION_COLORS[displayStationId] ?? "#f3ede2") : "#f3ede2";
 
   const handleStop = () => {
     dismissMiniPlayer();

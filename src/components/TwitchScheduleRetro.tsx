@@ -266,7 +266,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
           >
             <div className="flex items-end gap-2 mb-1.5">
               <Tv className="w-5 h-5 text-purple-500 animate-pulse shrink-0 mb-0.5" />
-              <h3 className="font-display font-bold text-sm text-[#faf6f0] uppercase tracking-normal leading-tight">
+              <h3 className="font-display font-bold text-sm text-[#f3ede2] uppercase tracking-normal leading-tight">
                 WATCH, LISTEN, & CHAT LIVE!
               </h3>
             </div>
@@ -291,7 +291,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                       <div className="text-[8px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[10px] font-semibold text-[#faf6f0] truncate">
+                      <h4 className="text-[10px] font-semibold text-[#f3ede2] truncate">
                         {evt.title}
                       </h4>
                     </div>
@@ -369,7 +369,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
           <div>
             <div className="flex items-end gap-2 xl:gap-3 mb-1.5 xl:mb-3">
               <Tv className="w-5 h-5 xl:w-8 xl:h-8 text-purple-500 animate-pulse shrink-0 mb-0.5" />
-              <h3 className="font-display font-bold text-sm xl:text-2xl text-[#faf6f0] uppercase tracking-normal leading-tight xl:leading-none">
+              <h3 className="font-display font-bold text-sm xl:text-2xl text-[#f3ede2] uppercase tracking-normal leading-tight xl:leading-none">
                 WATCH, LISTEN, & CHAT LIVE!
               </h3>
             </div>
@@ -399,7 +399,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                       <div className="text-[9px] xl:text-[10px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[11px] xl:text-xs font-semibold text-[#faf6f0] group-hover/item:brightness-125 transition-all">
+                      <h4 className="text-[11px] xl:text-xs font-semibold text-[#f3ede2] group-hover/item:brightness-125 transition-all">
                         {evt.title}
                       </h4>
                       <p className="hidden xl:block text-[11px] text-neutral-400 leading-normal line-clamp-1 mt-0.5">
