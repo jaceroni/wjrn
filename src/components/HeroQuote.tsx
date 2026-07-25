@@ -48,7 +48,13 @@ const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further 
 export default function HeroQuote() {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * HERO_QUOTES.length));
   const [visible, setVisible] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Paused for as long as the cursor is anywhere in the section — quote text
+  // or bust — so someone reading slowly (or busy fiddling with the bust)
+  // never has it change out from under them. Resumes with a fresh ROTATE_MS
+  // countdown the moment the cursor leaves, rather than trying to resume a
+  // partially-elapsed one.
+  const [isHovering, setIsHovering] = useState(false);
 
   const goToNextQuote = () => {
     setVisible(false);
@@ -58,21 +64,21 @@ export default function HeroQuote() {
     }, FADE_MS);
   };
 
-  // Auto-rotate through the set — no-ops gracefully while there's only one entry.
+  // Auto-rotate through the set — no-ops gracefully while there's only one
+  // entry, and pauses entirely while hovered (see isHovering above).
   useEffect(() => {
-    if (HERO_QUOTES.length < 2) return;
-    intervalRef.current = setInterval(goToNextQuote, ROTATE_MS);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
+    if (HERO_QUOTES.length < 2 || isHovering) return;
+    const id = setInterval(goToNextQuote, ROTATE_MS);
+    return () => clearInterval(id);
+  }, [isHovering]);
 
-  // Clicking the headline (not the bust — that's for the tilt) manually advances
-  // to the next quote and restarts the auto-rotate timer from that point, so a
-  // manual click isn't immediately followed by another auto-advance a moment later.
+  // Clicking the headline (not the bust — that's for the tilt) manually
+  // advances to the next quote. No need to also manage the auto-rotate timer
+  // here — the cursor is necessarily still hovering right after a click, so
+  // the effect above already keeps it paused until the cursor actually leaves.
   const handleHeadlineClick = () => {
     if (HERO_QUOTES.length < 2) return;
     goToNextQuote();
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(goToNextQuote, ROTATE_MS);
   };
 
   const entry = HERO_QUOTES[index];
@@ -139,7 +145,11 @@ export default function HeroQuote() {
   const bustTransform = `perspective(1000px) rotateY(${tiltDeg}deg)`;
 
   return (
-    <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[14px] flex flex-col lg:flex-row items-center gap-5">
+    <section
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      className="relative z-10 w-full max-w-7xl mx-auto -mt-[14px] flex flex-col lg:flex-row items-center gap-5"
+    >
       <div
         onClick={handleHeadlineClick}
         role={HERO_QUOTES.length > 1 ? "button" : undefined}
