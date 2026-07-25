@@ -192,7 +192,7 @@ export default function HeroQuote() {
           src={entry.bust}
           alt={`${entry.attribution} sculpted bust`}
           draggable={false}
-          style={{ transition: "opacity 120ms ease-out, transform 150ms ease-out", transform: bustTransform }}
+          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
           className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
             stage === 0 ? "opacity-100" : "opacity-0"
           }`}
@@ -201,7 +201,7 @@ export default function HeroQuote() {
           src={entry.bustAlt}
           alt={`${entry.attribution} alternate sculpted bust`}
           draggable={false}
-          style={{ transition: "opacity 120ms ease-out, transform 150ms ease-out", transform: bustTransform }}
+          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
           className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
             stage === 1 ? "opacity-100" : "opacity-0"
           }`}
