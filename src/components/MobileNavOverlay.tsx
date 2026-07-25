@@ -75,7 +75,7 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
           Home
         </a>
         <span className="flex flex-col items-center gap-5">
-          <span className="text-[11px] text-white/30">Our Stations</span>
+          <span className="text-[11px] text-[#d7b158]">Our Stations</span>
           {STATIONS.filter((s) => s.id !== "wjrn").map((station) => (
             <a
               key={station.id}

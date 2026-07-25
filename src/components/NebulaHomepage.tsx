@@ -381,8 +381,6 @@ export default function NebulaHomepage({
       {/* 5. Glassy Selectable Stream Channels Slider/Deck modules */}
       <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[3.5px] -mb-[3.5px]">
         <div className="flex flex-col gap-5">
-          <span className="md:hidden text-[10px] font-mono uppercase tracking-[0.25em] text-white/40 text-center w-full block">SELECT THE STATION TO PLAY NOW:</span>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-13">
             {STATIONS.filter((s) => s.id !== "wjrn").map((station) => {
               const isActive = activeStationId === station.id;

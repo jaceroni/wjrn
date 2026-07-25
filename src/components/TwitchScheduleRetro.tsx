@@ -273,37 +273,6 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             <p className="text-[10px] text-neutral-400 leading-snug mb-2 font-light line-clamp-2">
               Tune in LIVE for our on-camera shows three times a week on Twitch.tv! Experience interactive chats, unique visuals, redemptions, and live camera views of the WJRN broadcast studio.
             </p>
-
-            <div className="flex items-center gap-1.5 mb-1">
-              <Calendar className="w-3 h-3 text-purple-500" />
-              <span className="text-[9px] font-mono uppercase text-white tracking-widest font-semibold">WEEKLY LIVE BROADCAST SCHEDULE</span>
-            </div>
-
-            <div className="space-y-1">
-              {BROADCAST_EVENTS.map((evt, idx) => {
-                let showColor = "#d7b158"; // Default theme gold
-                if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
-                if (evt.title.includes("Bridge City")) showColor = "#ff0066"; // bridge pink
-                if (evt.title.includes("Golden Boombox")) showColor = "#e2ac00"; // golden yellow
-
-                return (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-2 p-1 rounded-lg bg-[#090605]/80 border border-white/5"
-                  >
-                    <div className="w-14 shrink-0">
-                      <div className="text-[9px] font-mono font-bold uppercase" style={{ color: showColor }}>{evt.day}</div>
-                      <div className="text-[8px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-[10px] font-semibold text-[#faf6f0] truncate">
-                        {evt.title}
-                      </h4>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
 

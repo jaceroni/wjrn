@@ -33,7 +33,7 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
     bustAlt: bustBobDylanAlt,
   },
   {
-    quote: "If you don't have a story to tell, then you should start listening...",
+    quote: "If you don't have a story to tell, you should probably start listening...",
     attribution: "Linda Ronstadt",
     bust: bustLindaRonstadt,
     bustAlt: bustLindaRonstadtAlt,
@@ -148,7 +148,7 @@ export default function HeroQuote() {
     <section
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      className="relative z-10 w-full max-w-7xl mx-auto -mt-[14px] flex flex-col lg:flex-row items-center gap-5"
+      className="relative z-10 w-full max-w-7xl mx-auto -mt-[18px] md:-mt-[14px] flex flex-col lg:flex-row items-center gap-5"
     >
       <div
         onClick={handleHeadlineClick}
@@ -172,7 +172,7 @@ export default function HeroQuote() {
           <span className="text-[#faf6f0]">{entry.quote}</span>
           <span className="text-[#d7b158]">&#8221;</span>
           <br />
-          <span className="block mt-3 text-right text-white text-[22px] tracking-wide">
+          <span className="block mt-3 text-right text-white text-[17px] sm:text-[22px] tracking-wide">
             &ndash; {entry.attribution.toUpperCase()}
           </span>
         </p>
