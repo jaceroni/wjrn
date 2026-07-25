@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Antenna, RotateCcw, X } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Antenna, RotateCcw, X, Menu } from "lucide-react";
 import { navigate } from "../navigate";
 import { formatTime } from "../context/PlayerContext";
 import { NowPlaying } from "../types";
 import { usePlayer } from "../context/PlayerContext";
-import { MOBILE_NAV_BREAKPOINT_QUERY } from "./MobileNavOverlay";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 import logoRockGarden from "../assets/images/miniplayer-logo-trg.svg";
@@ -393,7 +392,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
 
   return (
     <div
-      className="relative min-h-screen w-full text-[#f3ede2] flex flex-col overflow-hidden font-mono pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14"
+      className="relative min-h-screen w-full text-[#f3ede2] flex flex-col overflow-hidden font-mono pt-[19px] md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14"
       style={{ background: config.meshGradient }}
     >
       {/* Shared lava lamp keyframes + logo hover CSS live in index.css */}
@@ -434,19 +433,20 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* ------------------------------------------------------------------ */}
       <div className="relative z-30">
       <header
-        className="w-full flex items-center justify-center md:justify-between pb-6 max-w-7xl mx-auto gap-4"
+        className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4"
         style={{ "--nav-accent": config.primaryColor } as React.CSSProperties}
       >
+        {/* Antenna — mobile-only live indicator, no text/listener count */}
+        <div className="md:hidden flex items-center shrink-0">
+          <Antenna className="w-5 h-5 text-red-500 animate-pulse" />
+        </div>
+
         <a
           href="/"
           onClick={(e: React.MouseEvent) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
-            if (window.matchMedia(MOBILE_NAV_BREAKPOINT_QUERY).matches) {
-              navigate("/");
-            } else {
-              window.dispatchEvent(new CustomEvent("wjrn:open-mobile-nav"));
-            }
+            navigate("/");
           }}
           className="flex items-center gap-3 cursor-pointer select-none shrink-0"
         >
@@ -522,6 +522,15 @@ export default function StationLanding({ stationId }: StationLandingProps) {
             {`${totalListeners.toLocaleString()} Listeners`}
           </span>
         </div>
+
+        {/* Hamburger — mobile-only menu trigger, same height as the mobile logo */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("wjrn:open-mobile-nav"))}
+          aria-label="Open menu"
+          className="md:hidden flex items-center shrink-0 text-[#f3ede2]"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
       </header>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
       </div>

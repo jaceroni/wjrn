@@ -7,9 +7,8 @@ import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 
 // Shared across the homepage, station landing pages, and About page — mounted
 // once in App.tsx (alongside MiniPlayer) rather than duplicated per-header, so
-// all three headers trigger the exact same overlay via one custom event
-// instead of drifting out of sync with their own copies.
-export const MOBILE_NAV_BREAKPOINT_QUERY = "(min-width: 768px)";
+// all three headers' hamburger buttons trigger the exact same overlay via one
+// custom event instead of drifting out of sync with their own copies.
 
 const NAV_HOVER_COLOR: { [key: string]: string } = {
   rock_garden: "hover:text-emerald-400",

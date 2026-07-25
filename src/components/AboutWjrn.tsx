@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Antenna } from "lucide-react";
+import { Antenna, Menu } from "lucide-react";
 import { Station } from "../types";
 import { navigate } from "../navigate";
 import { usePlayer } from "../context/PlayerContext";
-import { MOBILE_NAV_BREAKPOINT_QUERY } from "./MobileNavOverlay";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
 import bustJace from "../assets/images/bust-jace-default.png";
@@ -138,22 +137,10 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
     navigate(path);
   };
 
-  // Logo link only — below md the nav is hidden, so tapping it opens the
-  // full-screen mobile menu instead of navigating home.
-  const goOrOpenMobileNav = (e: React.MouseEvent) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
-    e.preventDefault();
-    if (window.matchMedia(MOBILE_NAV_BREAKPOINT_QUERY).matches) {
-      navigate("/");
-    } else {
-      window.dispatchEvent(new CustomEvent("wjrn:open-mobile-nav"));
-    }
-  };
-
   return (
     <div
       id="about_wjrn_layout"
-      className="relative min-h-screen w-full text-[#f3ede2] flex flex-col gap-[70px] overflow-hidden font-sans pt-4 md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none"
+      className="relative min-h-screen w-full text-[#f3ede2] flex flex-col gap-[70px] overflow-hidden font-sans pt-[19px] md:pt-6 lg:pt-8 pb-6 md:pb-10 lg:pb-14 px-6 md:px-10 lg:px-14 select-none"
       style={{ background: "#120e0b" }}
     >
       {/* Nebula Cosmic Fire Background */}
@@ -179,8 +166,13 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
 
       {/* Header — Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-center md:justify-between pb-6 max-w-7xl mx-auto gap-4">
-        <a href="/" onClick={goOrOpenMobileNav} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
+      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+        {/* Antenna — mobile-only live indicator, no text/listener count */}
+        <div className="md:hidden flex items-center shrink-0">
+          <Antenna className="w-5 h-5 text-red-500 animate-pulse" />
+        </div>
+
+        <a href="/" onClick={go("/")} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
@@ -227,6 +219,15 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
             {`${totalListeners.toLocaleString()} Listeners`}
           </span>
         </div>
+
+        {/* Hamburger — mobile-only menu trigger, same height as the mobile logo */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("wjrn:open-mobile-nav"))}
+          aria-label="Open menu"
+          className="md:hidden flex items-center shrink-0 text-[#f3ede2]"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
       </header>
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
       </div>
