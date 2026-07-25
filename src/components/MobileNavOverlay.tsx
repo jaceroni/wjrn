@@ -48,7 +48,7 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
       className="fixed inset-0 z-[200] bg-[#0c0908]/98 backdrop-blur-md flex flex-col md:hidden"
       onClick={() => setIsOpen(false)}
     >
-      <div className="relative flex items-center justify-center px-6 pt-4">
+      <div className="relative flex items-center justify-center px-6 pt-[19px]">
         <img src={wjrnLogoLight} alt="WJRN" className="h-5 w-auto object-contain" />
         <button
           onClick={() => setIsOpen(false)}

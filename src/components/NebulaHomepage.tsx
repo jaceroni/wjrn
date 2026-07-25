@@ -268,7 +268,7 @@ export default function NebulaHomepage({
 
       {/* 2. Top Header - Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+      <header className="w-full flex items-center justify-between pb-[22px] max-w-7xl mx-auto gap-4">
         {/* Antenna — mobile-only live indicator, no text/listener count, just the
             blinking icon so there's still a "we're on the air" signal even though
             the full Broadcasting/Listeners block is desktop-only. */}

@@ -166,7 +166,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
 
       {/* Header — Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+      <header className="w-full flex items-center justify-between pb-[22px] max-w-7xl mx-auto gap-4">
         {/* Antenna — mobile-only live indicator, no text/listener count */}
         <div className="md:hidden flex items-center shrink-0">
           <Antenna className="w-5 h-5 text-red-500 animate-pulse" />

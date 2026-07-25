@@ -433,7 +433,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
       {/* ------------------------------------------------------------------ */}
       <div className="relative z-30">
       <header
-        className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4"
+        className="w-full flex items-center justify-between pb-[22px] max-w-7xl mx-auto gap-4"
         style={{ "--nav-accent": config.primaryColor } as React.CSSProperties}
       >
         {/* Antenna — mobile-only live indicator, no text/listener count */}
