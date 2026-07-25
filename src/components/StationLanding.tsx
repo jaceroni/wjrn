@@ -4,6 +4,7 @@ import { navigate } from "../navigate";
 import { formatTime } from "../context/PlayerContext";
 import { NowPlaying } from "../types";
 import { usePlayer } from "../context/PlayerContext";
+import { MOBILE_NAV_BREAKPOINT_QUERY } from "./MobileNavOverlay";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
 import logoRockGarden from "../assets/images/miniplayer-logo-trg.svg";
@@ -441,7 +442,11 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           onClick={(e: React.MouseEvent) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
-            navigate("/");
+            if (window.matchMedia(MOBILE_NAV_BREAKPOINT_QUERY).matches) {
+              navigate("/");
+            } else {
+              window.dispatchEvent(new CustomEvent("wjrn:open-mobile-nav"));
+            }
           }}
           className="flex items-center gap-3 cursor-pointer select-none shrink-0"
         >

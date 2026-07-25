@@ -6,6 +6,7 @@ import AboutWjrn from "./components/AboutWjrn";
 import { PlayerProvider } from "./context/PlayerContext";
 import MiniPlayer from "./components/MiniPlayer";
 import PopoutWidget from "./components/PopoutWidget";
+import MobileNavOverlay from "./components/MobileNavOverlay";
 
 const SLUG_TO_STATION: { [key: string]: string } = {
   "/the-rock-garden":        "rock_garden",
@@ -120,6 +121,9 @@ export default function App() {
 
       {/* Mini player — hidden while PiP widget is active */}
       {!pipWindow && <MiniPlayer />}
+
+      {/* Full-screen mobile nav — shared by every page's header logo tap below md */}
+      <MobileNavOverlay STATIONS={STATIONS} />
 
       {/* Document PiP portal */}
       {pipWindow &&
