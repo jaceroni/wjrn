@@ -236,7 +236,7 @@ If episode artwork shows as missing/placeholder in the on-demand section — thi
 ---
 
 ## Hero quote — rotating artist spotlight (`HeroQuote.tsx`)
-Sits between the header and the vintage receiver embed on the homepage. Big chunky `font-display` quote (gold `“`/`”` bookend glyphs via `#d7b158`, cream body via `#faf6f0`, matching the site's established off-white — see `TwitchScheduleRetro.tsx`'s `#faf6f0` headings) with a small white attribution below it, and a sculpted bust image to the right using the **exact same ambient-tilt + click-drag interaction as the About page team busts** (`AboutWjrn.tsx`) — look-at-cursor `atan2` trig, drag overrides ambient until release — just a single bust instead of a per-index map since only one is ever shown at a time.
+Sits between the header and the vintage receiver embed on the homepage. Big chunky `font-display` quote (gold `“`/`”` bookend glyphs via `#d7b158`, cream body via `#f3ede2`, the sitewide body-text color — see Design System above) with a small `#f3ede2` attribution below it, and a sculpted bust image to the right using the **exact same ambient-tilt + click-drag interaction as the About page team busts** (`AboutWjrn.tsx`) — look-at-cursor `atan2` trig, drag overrides ambient until release — just a single bust instead of a per-index map since only one is ever shown at a time.
 
 **Mobile sizing has been tuned several rounds, all deliberate, not oversights** — as of 2026-07-24: quote text is `text-[48px] sm:text-5xl md:text-6xl lg:text-[72px]`, attribution is `text-[17px] sm:text-[22px]` (`sm:` and up untouched throughout). History, in order: attribution 22→17 (25% off); quote 32→16 and attribution 17→9 (an over-correction — a request to shrink *only* the attribution by 50% accidentally also cut the quote, which hadn't been asked for); quote 16→24, attribution 9→11 (a correction, +50%/+25%); quote 24→48, attribution 11→17 (still too small on mobile, +100%/+50%). If asked to resize again, resize only the specific element named — don't assume "the hero text" means both the quote and the attribution together. The attribution is also `text-center sm:text-right` — centered on mobile to match the quote block's own `text-center lg:text-left`, right-aligned again from `sm` up to match the original mockup.
 
@@ -300,15 +300,8 @@ A self-contained single-file HTML player at `radio.jacewonmusic.com/player/`. It
 - `public/player/wjrn-receiver-front-ko.png` — faceplate PNG overlay (1280×443px). Automatically copied from `src/assets/images/wjrn-receiver-front-ko.png` by `deploy.sh` during the build process.
 - `public/player/wjrn-player-thumbnail.jpg` — visual receiver thumbnail for social share/meta previews.
 
-### Homepage Activation
-Opened from the `NebulaHomepage` right-hand column using the "Activate Vintage Experience" button component (`wjrn-vintage-exp-button.png`). Clicking it spawns the player at `/player/?popout=true` in a dedicated `1280x443` popup window using:
-```javascript
-window.open(
-  'https://radio.jacewonmusic.com/player/?popout=true',
-  'WJRN',
-  'width=1280,height=443,resizable=no,scrollbars=no'
-)
-```
+### Homepage embed
+There is **no** "Activate Vintage Experience" button anymore — `wjrn-vintage-exp-button.png` in `src/assets/images/` is a leftover unused asset, not referenced anywhere in the code (verified 2026-07-25; if you find this asset, don't assume the button still exists). The player is embedded directly and always-visible: `NebulaHomepage.tsx`'s "Hero — Vintage Receiver Player Embed" section renders it as a plain `<iframe src="https://radio.jacewonmusic.com/player/?popout=true&sync=1">` inside a `w-full aspect-[1280/443]` box, `hidden md:block` (hidden on mobile — see "Mobile header behavior" section for why). The `?popout=true&sync=1` query params put it in the same popout-layout + cross-frame-sync mode described below, just permanently embedded rather than opened on demand.
 
 - **Popout vs. Backdrop Modes**:
   - **Popout Mode** (`?popout=true` in URL): Disables the credenza backdrop, resets player coordinates to `left: 0; top: 0;`, and scales based on standard `1280x443` dimensions to fill the dedicated popup window.
