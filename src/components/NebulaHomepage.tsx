@@ -5,6 +5,7 @@ import {
   Radio,
   Antenna,
   ArrowRight,
+  X,
 } from "lucide-react";
 import { Station, NowPlaying, RadioConfig } from "../types";
 import { navigate } from "../navigate";
@@ -64,6 +65,10 @@ const NAV_HOVER_COLOR: { [key: string]: string } = {
   golden_boombox: "hover:text-yellow-400",
 };
 
+// Matches the header nav's own `md:` cutoff — below this, the nav/listener count
+// hide and the logo becomes the full-screen mobile menu trigger.
+const MOBILE_NAV_BREAKPOINT_QUERY = "(min-width: 768px)";
+
 interface NebulaHomepageProps {
   STATIONS: Station[];
   activeStationId: string | null;
@@ -118,6 +123,22 @@ export default function NebulaHomepage({
   // when the animation itself ends), not by CSS :hover directly. Keyed per-station
   // so backspinning one card can't cancel another card's still-running animation.
   const [backspinningStations, setBackspinningStations] = useState<Record<string, boolean>>({});
+
+  // Below this breakpoint the header nav/listener count are hidden and the logo
+  // becomes the full-screen mobile menu trigger instead of a plain home link
+  // (see MOBILE_NAV_BREAKPOINT_QUERY below) — same matchMedia pattern as
+  // TwitchScheduleRetro's isDesktopLayout, kept at the same 768px cutoff.
+  const [isDesktopLayout, setIsDesktopLayout] = useState(true);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(MOBILE_NAV_BREAKPOINT_QUERY);
+    setIsDesktopLayout(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktopLayout(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   useEffect(() => {
     const sendCurrentState = () => {
@@ -267,14 +288,21 @@ export default function NebulaHomepage({
 
       {/* 2. Top Header - Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
-        {/* Logo lockup (Far Upper Left) */}
+      <header className="w-full flex items-center justify-center md:justify-between pb-6 max-w-7xl mx-auto gap-4">
+        {/* Logo lockup — centered on mobile (nav/listener count are hidden there,
+            so it's the only header content); below md it opens the full-screen
+            mobile menu instead of navigating home, since there's no visible nav
+            to reach Our Stations/About otherwise. */}
         <a
           href="/"
           onClick={(e) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
             e.preventDefault();
-            navigate("/");
+            if (isDesktopLayout) {
+              navigate("/");
+            } else {
+              setIsMobileNavOpen(true);
+            }
           }}
           className="flex items-center gap-3 cursor-pointer select-none shrink-0"
         >
@@ -353,11 +381,85 @@ export default function NebulaHomepage({
       <div className="w-full h-px bg-gradient-to-r from-transparent via-white to-transparent opacity-20 max-w-7xl mx-auto" />
       </div>
 
+      {/* Full-screen mobile nav — logo tap trigger below md, since the header's
+          own Home/Our Stations/About links are hidden at that width. */}
+      {isMobileNavOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-[#0c0908]/98 backdrop-blur-md flex flex-col md:hidden"
+          onClick={() => setIsMobileNavOpen(false)}
+        >
+          <div className="flex items-center justify-between px-6 pt-4">
+            <img src={wjrnLogoLight} alt="WJRN" className="h-5 w-auto object-contain" />
+            <button
+              onClick={() => setIsMobileNavOpen(false)}
+              aria-label="Close menu"
+              className="text-white/60 hover:text-white transition-colors p-2 -mr-2"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <nav
+            className="flex-1 flex flex-col items-center justify-center gap-8 text-center font-mono uppercase tracking-[0.2em]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <a
+              href="/"
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                setIsMobileNavOpen(false);
+                navigate("/");
+              }}
+              className="text-2xl text-white/85 hover:text-[#d7b158] transition-colors"
+            >
+              Home
+            </a>
+            <span className="flex flex-col items-center gap-5">
+              <span className="text-[11px] text-white/30">Our Stations</span>
+              {STATIONS.filter((s) => s.id !== "wjrn").map((station) => (
+                <a
+                  key={station.id}
+                  href={`/${STATION_SLUGS[station.id]}`}
+                  onClick={(e: React.MouseEvent) => {
+                    e.preventDefault();
+                    setIsMobileNavOpen(false);
+                    navigate(`/${STATION_SLUGS[station.id]}`);
+                  }}
+                  className={`text-2xl text-white/85 transition-colors ${NAV_HOVER_COLOR[station.id] ?? "hover:text-[#d7b158]"}`}
+                >
+                  {station.name}
+                </a>
+              ))}
+            </span>
+            <a
+              href="/about-wjrn"
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                setIsMobileNavOpen(false);
+                navigate("/about-wjrn");
+              }}
+              className="text-2xl text-white/85 hover:text-[#d7b158] transition-colors"
+            >
+              About WJRN
+            </a>
+          </nav>
+
+          <div className="pb-8 flex items-center justify-center">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.2em] text-white/60">
+              Broadcasting
+              <Antenna className="w-3 h-3 text-red-500 animate-pulse shrink-0 ml-[3px] mr-[3px]" />
+              {`${totalListeners.toLocaleString()} Listeners`}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Hero Quote — rotating artist spotlight, sits above the vintage player embed */}
       <HeroQuote />
 
-      {/* 3. Hero — Vintage Receiver Player Embed */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto">
+      {/* 3. Hero — Vintage Receiver Player Embed — hidden on mobile, the controls
+          are too small to interact with reliably at that size; fine from md/tablet up. */}
+      <section className="relative z-10 w-full max-w-7xl mx-auto hidden md:block">
         <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_20px_40px_rgba(0,0,0,0.45)]">
           <iframe
             ref={playerIframeRef}

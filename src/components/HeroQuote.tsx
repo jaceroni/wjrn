@@ -49,19 +49,32 @@ const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further 
 export default function HeroQuote() {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * HERO_QUOTES.length));
   const [visible, setVisible] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const goToNextQuote = () => {
+    setVisible(false);
+    setTimeout(() => {
+      setIndex((i) => (i + 1) % HERO_QUOTES.length);
+      setVisible(true);
+    }, FADE_MS);
+  };
 
   // Auto-rotate through the set — no-ops gracefully while there's only one entry.
   useEffect(() => {
     if (HERO_QUOTES.length < 2) return;
-    const id = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setIndex((i) => (i + 1) % HERO_QUOTES.length);
-        setVisible(true);
-      }, FADE_MS);
-    }, ROTATE_MS);
-    return () => clearInterval(id);
+    intervalRef.current = setInterval(goToNextQuote, ROTATE_MS);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
+
+  // Clicking the headline (not the bust — that's for the tilt) manually advances
+  // to the next quote and restarts the auto-rotate timer from that point, so a
+  // manual click isn't immediately followed by another auto-advance a moment later.
+  const handleHeadlineClick = () => {
+    if (HERO_QUOTES.length < 2) return;
+    goToNextQuote();
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(goToNextQuote, ROTATE_MS);
+  };
 
   const entry = HERO_QUOTES[index];
 
@@ -129,7 +142,20 @@ export default function HeroQuote() {
   return (
     <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[14px] flex flex-col lg:flex-row items-center gap-5">
       <div
-        className="flex-1 min-w-0 text-center lg:text-left transition-opacity ease-out"
+        onClick={handleHeadlineClick}
+        role={HERO_QUOTES.length > 1 ? "button" : undefined}
+        tabIndex={HERO_QUOTES.length > 1 ? 0 : undefined}
+        aria-label={HERO_QUOTES.length > 1 ? "Show another quote" : undefined}
+        onKeyDown={(e) => {
+          if (HERO_QUOTES.length < 2) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleHeadlineClick();
+          }
+        }}
+        className={`flex-1 min-w-0 text-center lg:text-left transition-opacity ease-out select-none ${
+          HERO_QUOTES.length > 1 ? "cursor-pointer" : ""
+        }`}
         style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
       >
         <p className="text-[32px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
