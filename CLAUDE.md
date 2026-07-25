@@ -278,7 +278,9 @@ Below `md`, the gap between the header divider and each page's first content sec
 
 If this ever needs to change again, update the mobile-side value on all three — they're independent classes, not a shared constant, since each page composes its gap differently.
 
-**Separately**, the page-top clear space *above* the header itself (each page's root `pt-4 md:pt-6 lg:pt-8`) is `pt-[19px] md:pt-6 lg:pt-8` on mobile as of 2026-07-25 — a 20% increase from the original `pt-4` (16px → 19.2px, rounded to 19px), again mobile-only, again the same value on all three pages.
+**Separately**, the page-top clear space *above* the header itself (each page's root `pt-4 md:pt-6 lg:pt-8`) is `pt-[19px] md:pt-6 lg:pt-8` on mobile as of 2026-07-25 — a 20% increase from the original `pt-4` (16px → 19.2px, rounded to 19px), again mobile-only, again the same value on all three pages. `MobileNavOverlay.tsx`'s own logo row must be kept in sync with this value (`pt-[19px]`, not the original `pt-4`) — when the overlay's internal logo sits at a different vertical offset than the real header logo underneath, opening the menu reads as the logo visibly jumping a few pixels (caught and fixed 2026-07-25). If this page-top padding changes again, update both places.
+
+The header's own `pb-6` (space between its content row and the divider line below it) is `pb-[22px]` on all three pages as of 2026-07-25 — a 10% cut from the original 24px, applied at every breakpoint (not mobile-only, unlike the spacing rules above).
 
 ---
 
