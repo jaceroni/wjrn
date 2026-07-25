@@ -3,6 +3,8 @@ import bustPeteRock from "../assets/images/bust-pete-rock-default.png";
 import bustPeteRockAlt from "../assets/images/bust-pete-rock-alt.png";
 import bustBobDylan from "../assets/images/bust-bob-dylan-default.png";
 import bustBobDylanAlt from "../assets/images/bust-bob-dylan-alt.png";
+import bustLindaRonstadt from "../assets/images/bust-linda-ronstadt-default.png";
+import bustLindaRonstadtAlt from "../assets/images/bust-linda-ronstadt-alt.png";
 
 interface HeroQuoteEntry {
   // Each string is one hand-set visual line (mirrors how the mockup itself was
@@ -30,14 +32,31 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
     bustAlt: bustPeteRockAlt,
   },
   {
+    // Each line kept to ~20 chars or less (same budget as the Pete Rock lines
+    // above, which are proven to fit without an internal soft-wrap) — the
+    // original 3-line split had "from Cézanne as I have" at 23 chars, just
+    // over that budget, which wrapped "have" onto an orphaned line of its own
+    // (fixed 2026-07-24, reported via screenshot).
     quoteLines: [
-      "I've learned as much",
-      "from Cézanne as I have",
-      "from Woody Guthrie...",
+      "I've learned",
+      "as much from Cézanne",
+      "as I have from",
+      "Woody Guthrie...",
     ],
     attribution: "Bob Dylan",
     bust: bustBobDylan,
     bustAlt: bustBobDylanAlt,
+  },
+  {
+    quoteLines: [
+      "If you don't have a",
+      "story to tell, then",
+      "you should probably",
+      "start listening...",
+    ],
+    attribution: "Linda Ronstadt",
+    bust: bustLindaRonstadt,
+    bustAlt: bustLindaRonstadtAlt,
   },
 ];
 
