@@ -7,11 +7,11 @@ import bustLindaRonstadt from "../assets/images/bust-linda-ronstadt-default.png"
 import bustLindaRonstadtAlt from "../assets/images/bust-linda-ronstadt-alt.png";
 
 interface HeroQuoteEntry {
-  // Each string is one hand-set visual line (mirrors how the mockup itself was
-  // composed with fixed line breaks) — the attribution is appended straight
-  // after the last line so it shares its text baseline rather than relying on
-  // natural wrap to land it there, which isn't reliable at every width.
-  quoteLines: string[];
+  // Plain, un-broken text — no manual line breaks. Left entirely to natural
+  // CSS wrap (fixed 2026-07-24: hand-set line breaks kept producing awkward
+  // wraps of their own — an orphaned word alone on a line — no matter how the
+  // budget was tuned, so the manual-break approach was dropped altogether).
+  quote: string;
   attribution: string;
   bust: string;
   bustAlt: string;
@@ -21,39 +21,19 @@ interface HeroQuoteEntry {
 // load, then the set auto-advances (see ROTATE_MS below).
 const HERO_QUOTES: HeroQuoteEntry[] = [
   {
-    quoteLines: [
-      "So this is what they",
-      "meant by soul – yeah",
-      "this is what they",
-      "meant by funky...",
-    ],
+    quote: "So this is what they meant by soul – yeah this is what they meant by funky...",
     attribution: "Pete Rock",
     bust: bustPeteRock,
     bustAlt: bustPeteRockAlt,
   },
   {
-    // Each line kept to ~20 chars or less (same budget as the Pete Rock lines
-    // above, which are proven to fit without an internal soft-wrap) — the
-    // original 3-line split had "from Cézanne as I have" at 23 chars, just
-    // over that budget, which wrapped "have" onto an orphaned line of its own
-    // (fixed 2026-07-24, reported via screenshot).
-    quoteLines: [
-      "I've learned",
-      "as much from Cézanne",
-      "as I have from",
-      "Woody Guthrie...",
-    ],
+    quote: "I've learned as much from Cézanne as I have from Woody Guthrie...",
     attribution: "Bob Dylan",
     bust: bustBobDylan,
     bustAlt: bustBobDylanAlt,
   },
   {
-    quoteLines: [
-      "If you don't have a",
-      "story to tell, then",
-      "you should probably",
-      "start listening...",
-    ],
+    quote: "If you don't have a story to tell, then you should start listening...",
     attribution: "Linda Ronstadt",
     bust: bustLindaRonstadt,
     bustAlt: bustLindaRonstadtAlt,
@@ -179,24 +159,12 @@ export default function HeroQuote() {
       >
         <p className="text-[32px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
           <span className="text-[#d7b158]">&#8220;</span>
-          {entry.quoteLines.map((line, i) => {
-            const isLast = i === entry.quoteLines.length - 1;
-            return (
-              <React.Fragment key={i}>
-                <span className="text-[#faf6f0]">{line}</span>
-                {isLast ? (
-                  <>
-                    <span className="text-[#d7b158]">&#8221;</span>
-                    <span className="ml-3 text-white text-[22px] tracking-wide whitespace-nowrap">
-                      &ndash; {entry.attribution.toUpperCase()}
-                    </span>
-                  </>
-                ) : (
-                  <br />
-                )}
-              </React.Fragment>
-            );
-          })}
+          <span className="text-[#faf6f0]">{entry.quote}</span>
+          <span className="text-[#d7b158]">&#8221;</span>
+          <br />
+          <span className="block mt-3 text-right text-white text-[22px] tracking-wide">
+            &ndash; {entry.attribution.toUpperCase()}
+          </span>
         </p>
       </div>
 
