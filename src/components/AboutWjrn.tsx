@@ -277,7 +277,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   alt={`${member.name} sculpted bust`}
                   draggable={false}
                   style={{
-                    transition: "opacity 500ms ease, transform 150ms ease-out",
+                    transition: "opacity 120ms ease-out, transform 150ms ease-out",
                     transform: bustTransform,
                   }}
                   className={`absolute inset-0 m-auto w-auto h-auto max-w-[calc(100%-32px)] max-h-[calc(100%-32px)] select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
@@ -289,7 +289,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                   alt={`${member.name} alternate sculpted bust`}
                   draggable={false}
                   style={{
-                    transition: "opacity 500ms ease, transform 150ms ease-out",
+                    transition: "opacity 120ms ease-out, transform 150ms ease-out",
                     transform: bustTransform,
                   }}
                   className={`absolute inset-0 m-auto w-auto h-auto max-w-[calc(100%-32px)] max-h-[calc(100%-32px)] select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${

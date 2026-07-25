@@ -23,7 +23,7 @@ const JOIN_BUTTON_ZONE = { left: SCREEN_WINDOW.left, width: SCREEN_WINDOW.width,
 // Measured against the native twitch-card-bg(-ko)-mobile.png canvas (582x657) — screen on top,
 // schedule content below, used below the "md" breakpoint where the wide layout has no room.
 const MOBILE_SCREEN_WINDOW = { left: "17.354%", top: "11.568%", width: "65.292%", height: "29.680%" };
-const MOBILE_CONTENT_ZONE = { left: "7%", right: "7%", top: "44%", bottom: "5%" };
+const MOBILE_CONTENT_ZONE = { left: "7%", right: "7%", top: "48%", bottom: "5%" };
 const DESKTOP_BREAKPOINT_QUERY = "(min-width: 768px)";
 
 interface BroadcastEvent {
@@ -273,6 +273,32 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             <p className="text-[10px] text-neutral-400 leading-snug mb-2 font-light line-clamp-2">
               Tune in LIVE for our on-camera shows three times a week on Twitch.tv! Experience interactive chats, unique visuals, redemptions, and live camera views of the WJRN broadcast studio.
             </p>
+
+            <div className="space-y-1">
+              {BROADCAST_EVENTS.map((evt, idx) => {
+                let showColor = "#d7b158"; // Default theme gold
+                if (evt.title.includes("Rock Garden")) showColor = "#74b338"; // rock green
+                if (evt.title.includes("Bridge City")) showColor = "#ff0066"; // bridge pink
+                if (evt.title.includes("Golden Boombox")) showColor = "#e2ac00"; // golden yellow
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2 p-1 rounded-lg bg-[#090605]/80 border border-white/5"
+                  >
+                    <div className="w-14 shrink-0">
+                      <div className="text-[9px] font-mono font-bold uppercase" style={{ color: showColor }}>{evt.day}</div>
+                      <div className="text-[8px] font-mono text-neutral-500 tracking-tighter truncate">{evt.time.split(" ")[0]} {evt.time.split(" ")[1]}</div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[10px] font-semibold text-[#faf6f0] truncate">
+                        {evt.title}
+                      </h4>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

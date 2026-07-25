@@ -167,12 +167,12 @@ export default function HeroQuote() {
         }`}
         style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
       >
-        <p className="text-[32px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
+        <p className="text-[16px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
           <span className="text-[#d7b158]">&#8220;</span>
           <span className="text-[#faf6f0]">{entry.quote}</span>
           <span className="text-[#d7b158]">&#8221;</span>
           <br />
-          <span className="block mt-3 text-right text-white text-[17px] sm:text-[22px] tracking-wide">
+          <span className="block mt-3 text-center sm:text-right text-white text-[9px] sm:text-[22px] tracking-wide">
             &ndash; {entry.attribution.toUpperCase()}
           </span>
         </p>
@@ -193,7 +193,7 @@ export default function HeroQuote() {
           src={entry.bust}
           alt={`${entry.attribution} sculpted bust`}
           draggable={false}
-          style={{ transition: "opacity 500ms ease, transform 150ms ease-out", transform: bustTransform }}
+          style={{ transition: "opacity 120ms ease-out, transform 150ms ease-out", transform: bustTransform }}
           className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
             stage === 0 ? "opacity-100" : "opacity-0"
           }`}
@@ -202,7 +202,7 @@ export default function HeroQuote() {
           src={entry.bustAlt}
           alt={`${entry.attribution} alternate sculpted bust`}
           draggable={false}
-          style={{ transition: "opacity 500ms ease, transform 150ms ease-out", transform: bustTransform }}
+          style={{ transition: "opacity 120ms ease-out, transform 150ms ease-out", transform: bustTransform }}
           className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
             stage === 1 ? "opacity-100" : "opacity-0"
           }`}
