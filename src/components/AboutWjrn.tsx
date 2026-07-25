@@ -235,7 +235,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       </div>
 
       {/* Hero */}
-      <section className="relative z-10 w-full max-w-5xl mx-auto text-center flex flex-col items-center -mt-[18px] md:mt-0">
+      <section className="relative z-10 w-full max-w-5xl mx-auto text-center flex flex-col items-center -mt-[31px] md:mt-0">
         <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#d7b158] mb-3">WJRN California USA</span>
         <h1 className="max-w-[12.2em] text-[36px] sm:text-5xl md:text-6xl font-extrabold leading-[0.95] tracking-normal text-[#f3ede2] uppercase select-none font-display">
           The People Behind The Signal

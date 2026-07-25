@@ -148,7 +148,7 @@ export default function HeroQuote() {
     <section
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
-      className="relative z-10 w-full max-w-7xl mx-auto -mt-[18px] md:-mt-[14px] flex flex-col lg:flex-row items-center gap-5"
+      className="relative z-10 w-full max-w-7xl mx-auto -mt-[31px] md:-mt-[14px] flex flex-col lg:flex-row items-center gap-5"
     >
       <div
         onClick={handleHeadlineClick}
