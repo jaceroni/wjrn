@@ -105,9 +105,25 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
       });
       embedRef.current = embed;
       embed.addEventListener(window.Twitch.Embed.VIDEO_READY, () => {
-        const player = embed.getPlayer();
-        player.addEventListener(window.Twitch.Player.ONLINE, () => setIsLiveActive(true));
-        player.addEventListener(window.Twitch.Player.OFFLINE, () => setIsLiveActive(false));
+        // embed.getPlayer() can momentarily return an object that isn't fully
+        // initialized yet right as VIDEO_READY fires — calling .addEventListener
+        // on it then throws (seen as "x.addEventListener is not a function" in
+        // the console), which was silently killing ONLINE/OFFLINE registration
+        // entirely, so isLiveActive never updated and the card stayed stuck on
+        // the countdown even while the channel was actually live (fixed 2026-07-25).
+        // Retry briefly instead of letting that throw.
+        let attempts = 0;
+        const attachPlayerListeners = () => {
+          if (cancelled) return;
+          const player = embed.getPlayer();
+          if (!player || typeof player.addEventListener !== "function") {
+            if (attempts++ < 25) setTimeout(attachPlayerListeners, 200);
+            return;
+          }
+          player.addEventListener(window.Twitch.Player.ONLINE, () => setIsLiveActive(true));
+          player.addEventListener(window.Twitch.Player.OFFLINE, () => setIsLiveActive(false));
+        };
+        attachPlayerListeners();
       });
     }
 
@@ -217,7 +233,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   if (!isDesktopLayout) {
     return (
       <div className="flex flex-col gap-4">
-        <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden animate-fade-in group shadow-[0_20px_40px_rgba(0,0,0,0.45)]">
+        <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden animate-fade-in group shadow-[0_20px_40px_rgba(0,0,0,0.45)]" style={{ aspectRatio: "582 / 657" }}>
 
           {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
           <div
@@ -319,7 +335,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
   return (
     <div className="flex flex-col gap-4">
-      <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden animate-fade-in group shadow-[0_20px_40px_rgba(0,0,0,0.45)]">
+      <div id="twitch_schedule_module" className="rounded-2xl relative overflow-hidden animate-fade-in group shadow-[0_20px_40px_rgba(0,0,0,0.45)]" style={{ aspectRatio: "923 / 388" }}>
 
         {/* Live stream video — sits under the cabinet graphic; only visible through the KO cutout */}
         <div
