@@ -388,12 +388,12 @@ export default function NebulaHomepage({
           className="fixed inset-0 z-[200] bg-[#0c0908]/98 backdrop-blur-md flex flex-col md:hidden"
           onClick={() => setIsMobileNavOpen(false)}
         >
-          <div className="flex items-center justify-between px-6 pt-4">
+          <div className="relative flex items-center justify-center px-6 pt-4">
             <img src={wjrnLogoLight} alt="WJRN" className="h-5 w-auto object-contain" />
             <button
               onClick={() => setIsMobileNavOpen(false)}
               aria-label="Close menu"
-              className="text-white/60 hover:text-white transition-colors p-2 -mr-2"
+              className="absolute right-6 top-4 text-white/60 hover:text-white transition-colors p-2 -mr-2"
             >
               <X className="w-6 h-6" />
             </button>

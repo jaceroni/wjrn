@@ -169,7 +169,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
 
       {/* Header — Logo / Nav / Live Indicator */}
       <div className="relative z-30">
-      <header className="w-full flex items-center justify-between pb-6 max-w-7xl mx-auto gap-4">
+      <header className="w-full flex items-center justify-center md:justify-between pb-6 max-w-7xl mx-auto gap-4">
         <a href="/" onClick={go("/")} className="flex items-center gap-3 cursor-pointer select-none shrink-0">
           <img src={wjrnLogoLight} alt="WJRN" className="h-5 md:h-6 w-auto object-contain" />
           <span className="hidden sm:flex items-center gap-3">
