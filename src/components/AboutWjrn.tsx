@@ -59,10 +59,10 @@ const TEAM: TeamMember[] = [
 export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
   const { isMiniPlayerVisible, totalListeners } = usePlayer();
 
-  // Easter egg: click (no drag) a teammate's bust to toggle default <-> alt pose
-  const [clickStage, setClickStage] = useState<Record<number, number>>({});
-  const cycleBust = (idx: number) =>
-    setClickStage((prev) => ({ ...prev, [idx]: ((prev[idx] ?? 0) + 1) % 2 }));
+  // Hover reveals each bust's alt pose — no more click-to-toggle. Stays on the
+  // alt pose through a click-and-drag tilt too (hover, not the click, drives
+  // it); only reverts to default once the cursor actually leaves that bust.
+  const [hoveredBusts, setHoveredBusts] = useState<Record<number, boolean>>({});
 
   // Ambient tilt — each bust computes the real angle from its OWN position on
   // the page to the cursor (basic look-at-cursor trig), rather than sharing one
@@ -124,9 +124,6 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
     dragStartTiltDegRef.current = ambientTilt[idx] ?? 0;
     setDraggedTiltDeg(ambientTilt[idx] ?? 0);
     setDraggedIdx(idx);
-    // Clicking (whether or not it turns into a drag) always toggles the pose,
-    // so grabbing a bust to manually turn it doubles as revealing the alt one.
-    cycleBust(idx);
   };
 
   const STATION_SLUGS: { [key: string]: string } = {
@@ -251,7 +248,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
       <section className="relative z-10 w-full max-w-7xl mx-auto -mt-[16.84px]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-[26.4px]">
           {TEAM.map((member, idx) => {
-            const stage = clickStage[idx] ?? 0;
+            const stage = hoveredBusts[idx] ? 1 : 0;
             const tiltDeg = draggedIdx === idx ? draggedTiltDeg : (ambientTilt[idx] ?? 0);
             const bustTransform = `perspective(1000px) rotateY(${tiltDeg}deg)`;
             return (
@@ -260,14 +257,12 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
                 ref={(el) => { bustRefs.current[idx] = el; }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Toggle ${member.name}'s sculpted bust pose — click and drag to turn`}
+                aria-label={`${member.name} sculpted bust — hover to reveal the alternate pose, click and drag to tilt`}
                 onMouseDown={handleBustMouseDown(idx)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    cycleBust(idx);
-                  }
-                }}
+                onMouseEnter={() => setHoveredBusts((prev) => ({ ...prev, [idx]: true }))}
+                onMouseLeave={() => setHoveredBusts((prev) => ({ ...prev, [idx]: false }))}
+                onFocus={() => setHoveredBusts((prev) => ({ ...prev, [idx]: true }))}
+                onBlur={() => setHoveredBusts((prev) => ({ ...prev, [idx]: false }))}
                 className={`relative w-full aspect-[383/434] select-none ${
                   draggedIdx === idx ? "cursor-grabbing" : "cursor-grab"
                 }`}

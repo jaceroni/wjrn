@@ -83,13 +83,11 @@ export default function HeroQuote() {
 
   const entry = HERO_QUOTES[index];
 
-  // Easter egg: click (no drag) the bust to toggle default <-> alt pose — keyed
-  // per quote index so rotating to a different quote doesn't lose whichever
-  // pose was showing for a quote you've already toggled (see AboutWjrn.tsx).
-  const [clickStage, setClickStage] = useState<Record<number, number>>({});
-  const stage = clickStage[index] ?? 0;
-  const cycleBust = () =>
-    setClickStage((prev) => ({ ...prev, [index]: ((prev[index] ?? 0) + 1) % 2 }));
+  // Hover reveals the alt pose — no more click-to-toggle (see AboutWjrn.tsx,
+  // same interaction). Stays on the alt pose through a click-and-drag tilt
+  // too; only reverts to default once the cursor actually leaves the bust.
+  const [isBustHovering, setIsBustHovering] = useState(false);
+  const stage = isBustHovering ? 1 : 0;
 
   // Ambient tilt toward cursor + click-drag override — same interaction as the
   // About page team busts (see AboutWjrn.tsx), just a single bust instead of a
@@ -136,9 +134,6 @@ export default function HeroQuote() {
     dragStartTiltDegRef.current = ambientTilt;
     setDraggedTiltDeg(ambientTilt);
     setIsDragging(true);
-    // Clicking (whether or not it turns into a drag) always toggles the pose,
-    // so grabbing the bust to manually turn it doubles as revealing the alt one.
-    cycleBust();
   };
 
   const tiltDeg = isDragging ? draggedTiltDeg : ambientTilt;
@@ -181,9 +176,13 @@ export default function HeroQuote() {
       <div
         ref={bustRef}
         onMouseDown={handleBustMouseDown}
+        onMouseEnter={() => setIsBustHovering(true)}
+        onMouseLeave={() => setIsBustHovering(false)}
+        onFocus={() => setIsBustHovering(true)}
+        onBlur={() => setIsBustHovering(false)}
         role="button"
         tabIndex={0}
-        aria-label={`${entry.attribution} sculpted bust — click and drag to turn`}
+        aria-label={`${entry.attribution} sculpted bust — hover to reveal the alternate pose, click and drag to tilt`}
         className={`relative w-[220px] sm:w-[260px] lg:w-[300px] aspect-[308/376] shrink-0 select-none transition-opacity ease-out ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
