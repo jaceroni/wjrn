@@ -49,7 +49,9 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
       onClick={() => setIsOpen(false)}
     >
       <div className="relative flex items-center justify-center px-6 pt-[19px]">
-        <img src={wjrnLogoLight} alt="WJRN" className="h-5 w-auto object-contain" />
+        <button onClick={() => go("/")} aria-label="Go to homepage" className="cursor-pointer">
+          <img src={wjrnLogoLight} alt="WJRN" className="h-5 w-auto object-contain" />
+        </button>
         <button
           onClick={() => setIsOpen(false)}
           aria-label="Close menu"

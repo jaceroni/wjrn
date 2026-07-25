@@ -429,6 +429,10 @@ export default function NebulaHomepage({
               const isOnline = !!station.streamUrl;
               const platterArt = PLATTER_ARTWORKS[station.id] || station.logoUrl;
               const isSpinning = isActive && audioState === "playing";
+              // Same marquee treatment as the vintage hero player's ticker — only
+              // scrolls a track title that's actually long, and only while this
+              // specific card's station is the one genuinely playing.
+              const shouldMarqueeTitle = isSpinning && meta.trackTitle.length > 22;
 
               return (
                 <div
@@ -557,9 +561,16 @@ export default function NebulaHomepage({
                             </div>
                           )}
                           <div className="min-w-0 flex-1 flex flex-col justify-center">
-                            <span className="text-[11px] font-mono text-[#f3ede2]/95 truncate block uppercase tracking-wide leading-tight font-black">
-                              {meta.trackTitle}
-                            </span>
+                            <div className={`overflow-hidden ${shouldMarqueeTitle ? "mask-marquee" : ""}`}>
+                              <span
+                                className={`text-[11px] font-mono text-[#f3ede2]/95 uppercase tracking-wide leading-tight font-black block ${
+                                  shouldMarqueeTitle ? "animate-marquee" : "truncate"
+                                }`}
+                                style={shouldMarqueeTitle ? { animationDuration: "14s" } : undefined}
+                              >
+                                {shouldMarqueeTitle ? `${meta.trackTitle}     ${meta.trackTitle}` : meta.trackTitle}
+                              </span>
+                            </div>
                             <span className="text-[8px] font-mono text-[#f3ede2]/40 truncate block uppercase tracking-widest mt-0.5">
                               {meta.trackArtist}
                             </span>
