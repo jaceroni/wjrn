@@ -127,9 +127,11 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
       });
     }
 
-    if (window.Twitch) {
-      createEmbed();
-    } else {
+    function loadSdkAndCreate() {
+      if (window.Twitch) {
+        createEmbed();
+        return;
+      }
       const existingScript = document.getElementById("twitch-embed-sdk");
       if (existingScript) {
         existingScript.addEventListener("load", createEmbed);
@@ -143,8 +145,26 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
       }
     }
 
+    // Twitch's autoplay requires the player to actually be visible in the
+    // viewport at the moment it's created, not just correctly sized (the
+    // aspectRatio fix above only covers size) — this card sits near the
+    // bottom of the homepage, well below the fold on load, so creating the
+    // embed immediately on mount reliably failed Twitch's "style visibility"
+    // autoplay check even though the channel was genuinely live (fixed
+    // 2026-07-25). Defer creation until the container actually scrolls into
+    // view; IntersectionObserver fires immediately with the current state on
+    // `observe()`, so this is a no-op delay if it's already on-screen.
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        observer.disconnect();
+        loadSdkAndCreate();
+      }
+    }, { threshold: 0.1 });
+    observer.observe(embedContainerRef.current);
+
     return () => {
       cancelled = true;
+      observer.disconnect();
     };
     // isDesktopLayout is included so the embed remounts into whichever container
     // (desktop or mobile) is actually in the DOM after a breakpoint switch.
