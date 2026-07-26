@@ -89,10 +89,22 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
   useEffect(() => {
     if (typeof window === "undefined" || !embedContainerRef.current) return;
 
+    console.log("[Twitch debug] effect running", { twitchChannel, parentDomain, isDesktopLayout, hostname: window.location.hostname });
+
     let cancelled = false;
 
+    // TEMPORARY diagnostic logging (2026-07-26) — the live-detection bug has
+    // survived two blind fixes (getPlayer retry, viewport-visibility defer),
+    // so instrumenting every step instead of guessing again. Remove once the
+    // real point of failure is identified from real console output.
+    const log = (...args: any[]) => console.log("[Twitch debug]", ...args);
+
     function createEmbed() {
-      if (cancelled || !embedContainerRef.current || !window.Twitch) return;
+      log("createEmbed() called");
+      if (cancelled || !embedContainerRef.current || !window.Twitch) {
+        log("createEmbed() bailed early", { cancelled, hasContainer: !!embedContainerRef.current, hasTwitchGlobal: !!window.Twitch });
+        return;
+      }
       embedContainerRef.current.innerHTML = "";
       const embed = new window.Twitch.Embed(embedContainerRef.current, {
         width: "100%",
@@ -103,8 +115,10 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
         autoplay: true,
         muted: true,
       });
+      log("Twitch.Embed instance created", { channel: twitchChannel, parent: parentDomain });
       embedRef.current = embed;
       embed.addEventListener(window.Twitch.Embed.VIDEO_READY, () => {
+        log("VIDEO_READY fired");
         // embed.getPlayer() can momentarily return an object that isn't fully
         // initialized yet right as VIDEO_READY fires — calling .addEventListener
         // on it then throws (seen as "x.addEventListener is not a function" in
@@ -117,17 +131,26 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
           if (cancelled) return;
           const player = embed.getPlayer();
           if (!player || typeof player.addEventListener !== "function") {
+            log("getPlayer() not ready yet", { attempt: attempts, hasPlayer: !!player });
             if (attempts++ < 25) setTimeout(attachPlayerListeners, 200);
+            else log("getPlayer() gave up after 25 attempts");
             return;
           }
-          player.addEventListener(window.Twitch.Player.ONLINE, () => setIsLiveActive(true));
-          player.addEventListener(window.Twitch.Player.OFFLINE, () => setIsLiveActive(false));
+          log("player listeners attached successfully", { attempt: attempts });
+          try {
+            log("player.isPaused() right now:", player.isPaused?.());
+          } catch (err) {
+            log("player.isPaused() threw", err);
+          }
+          player.addEventListener(window.Twitch.Player.ONLINE, () => { log("ONLINE event fired"); setIsLiveActive(true); });
+          player.addEventListener(window.Twitch.Player.OFFLINE, () => { log("OFFLINE event fired"); setIsLiveActive(false); });
         };
         attachPlayerListeners();
       });
     }
 
     function loadSdkAndCreate() {
+      log("loadSdkAndCreate() called", { alreadyHasTwitchGlobal: !!window.Twitch });
       if (window.Twitch) {
         createEmbed();
         return;
@@ -141,6 +164,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
         script.src = "https://embed.twitch.tv/embed/v1.js";
         script.async = true;
         script.onload = createEmbed;
+        script.onerror = () => log("Twitch SDK script FAILED to load");
         document.body.appendChild(script);
       }
     }
@@ -155,6 +179,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
     // view; IntersectionObserver fires immediately with the current state on
     // `observe()`, so this is a no-op delay if it's already on-screen.
     const observer = new IntersectionObserver((entries) => {
+      log("IntersectionObserver fired", { isIntersecting: entries[0]?.isIntersecting, ratio: entries[0]?.intersectionRatio });
       if (entries[0]?.isIntersecting) {
         observer.disconnect();
         loadSdkAndCreate();
