@@ -141,10 +141,10 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
                 hasPlayer: !!player,
                 typeofAddEventListener: typeof player?.addEventListener,
                 typeofOn: typeof player?.on,
-                ownKeys,
-                protoKeys,
                 constructorName: player?.constructor?.name,
               });
+              log("getPlayer() ownKeys (flat):", ownKeys.join(" | "));
+              log("getPlayer() protoKeys (flat):", protoKeys.join(" | "));
             }
             if (attempts++ < 25) setTimeout(attachPlayerListeners, 200);
             else log("getPlayer() gave up after 25 attempts — addEventListener never appeared, this is not a timing issue");
