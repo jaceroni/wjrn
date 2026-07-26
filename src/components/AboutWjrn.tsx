@@ -11,6 +11,12 @@ import bustPhil from "../assets/images/bust-phil-default.png";
 import bustJaceAlt from "../assets/images/bust-jace-alt.png";
 import bustCindyAlt from "../assets/images/bust-cindy-alt.png";
 import bustPhilAlt from "../assets/images/bust-phil-alt.png";
+import galleryPhoto1 from "../assets/images/wjrn-about-team-pics-1.jpg";
+import galleryPhoto2 from "../assets/images/wjrn-about-team-pics-2.jpg";
+import galleryPhoto3 from "../assets/images/wjrn-about-team-pics-3.jpg";
+import galleryPhoto4 from "../assets/images/wjrn-about-team-pics-4.jpg";
+import galleryPhoto5 from "../assets/images/wjrn-about-team-pics-5.jpg";
+import galleryPhoto6 from "../assets/images/wjrn-about-team-pics-6.jpg";
 
 interface AboutWjrnProps {
   STATIONS: Station[];
@@ -53,6 +59,15 @@ const TEAM: TeamMember[] = [
     bust: bustPhil,
     bustAlt: bustPhilAlt,
   },
+];
+
+const GALLERY_PHOTOS: { src: string; alt: string }[] = [
+  { src: galleryPhoto1, alt: "Jace, Cindy, and Phil sharing a laugh at the mixing board" },
+  { src: galleryPhoto2, alt: "Phil, Jace, and Cindy digging through the vinyl library" },
+  { src: galleryPhoto3, alt: "Cindy reading a note into the mic, reflected booth behind her" },
+  { src: galleryPhoto4, alt: "Cindy taking a pledge call while Jace runs the board and Phil works the rack" },
+  { src: galleryPhoto5, alt: "Jace on air, Cindy updating the playlist board, Phil cueing a reel-to-reel" },
+  { src: galleryPhoto6, alt: "Cindy passing a record through the booth window to Jace while Phil wires the rack" },
 ];
 
 export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
@@ -309,6 +324,30 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
             </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Gallery — behind-the-scenes studio photos */}
+      <section className="relative z-10 w-full max-w-7xl mx-auto flex flex-col items-center text-center">
+        <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-[#d7b158] mb-3">In The Studio</span>
+        <h2 className="text-2xl md:text-3xl font-extrabold uppercase text-[#f3ede2] leading-tight font-display">
+          Behind The Scenes
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mt-10 w-full">
+          {GALLERY_PHOTOS.map((photo, idx) => (
+            <div
+              key={idx}
+              className="group aspect-[3/2] rounded-2xl overflow-hidden border border-[#d7b158]/15 shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+            >
+              <img
+                src={photo.src}
+                alt={photo.alt}
+                loading="lazy"
+                draggable={false}
+                className="w-full h-full object-cover select-none transition-transform duration-700 ease-out group-hover:scale-[1.05]"
+              />
+            </div>
+          ))}
         </div>
       </section>
 
