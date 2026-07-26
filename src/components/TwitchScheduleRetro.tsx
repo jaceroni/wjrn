@@ -93,18 +93,13 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
 
     let cancelled = false;
 
-    // TEMPORARY diagnostic logging (2026-07-26) — the live-detection bug has
-    // survived two blind fixes (getPlayer retry, viewport-visibility defer),
-    // so instrumenting every step instead of guessing again. Remove once the
-    // real point of failure is identified from real console output.
+    // TEMPORARY diagnostic logging (2026-07-26) — keeping a few log lines
+    // through one more live check to confirm the fix below actually works;
+    // strip all `log(...)` calls out once confirmed.
     const log = (...args: any[]) => console.log("[Twitch debug]", ...args);
 
     function createEmbed() {
-      log("createEmbed() called");
-      if (cancelled || !embedContainerRef.current || !window.Twitch) {
-        log("createEmbed() bailed early", { cancelled, hasContainer: !!embedContainerRef.current, hasTwitchGlobal: !!window.Twitch });
-        return;
-      }
+      if (cancelled || !embedContainerRef.current || !window.Twitch) return;
       embedContainerRef.current.innerHTML = "";
       const embed = new window.Twitch.Embed(embedContainerRef.current, {
         width: "100%",
@@ -115,52 +110,16 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
         autoplay: true,
         muted: true,
       });
-      log("Twitch.Embed instance created", { channel: twitchChannel, parent: parentDomain });
       embedRef.current = embed;
-      embed.addEventListener(window.Twitch.Embed.VIDEO_READY, () => {
-        log("VIDEO_READY fired");
-        // embed.getPlayer() can momentarily return an object that isn't fully
-        // initialized yet right as VIDEO_READY fires — calling .addEventListener
-        // on it then throws (seen as "x.addEventListener is not a function" in
-        // the console), which was silently killing ONLINE/OFFLINE registration
-        // entirely, so isLiveActive never updated and the card stayed stuck on
-        // the countdown even while the channel was actually live (fixed 2026-07-25).
-        // Retry briefly instead of letting that throw.
-        let attempts = 0;
-        const attachPlayerListeners = () => {
-          if (cancelled) return;
-          const player = embed.getPlayer();
-          if (!player || typeof player.addEventListener !== "function") {
-            if (attempts === 0) {
-              // Log the real shape once — if this never becomes a function no
-              // matter how many times we retry, it's not a timing issue, and
-              // retrying is pointless; we need to see what the object actually is.
-              const ownKeys = player ? Object.keys(player) : [];
-              const protoKeys = player ? Object.getOwnPropertyNames(Object.getPrototypeOf(player) || {}) : [];
-              log("getPlayer() shape on first attempt", {
-                hasPlayer: !!player,
-                typeofAddEventListener: typeof player?.addEventListener,
-                typeofOn: typeof player?.on,
-                constructorName: player?.constructor?.name,
-              });
-              log("getPlayer() ownKeys (flat):", ownKeys.join(" | "));
-              log("getPlayer() protoKeys (flat):", protoKeys.join(" | "));
-            }
-            if (attempts++ < 25) setTimeout(attachPlayerListeners, 200);
-            else log("getPlayer() gave up after 25 attempts — addEventListener never appeared, this is not a timing issue");
-            return;
-          }
-          log("player listeners attached successfully", { attempt: attempts });
-          try {
-            log("player.isPaused() right now:", player.isPaused?.());
-          } catch (err) {
-            log("player.isPaused() threw", err);
-          }
-          player.addEventListener(window.Twitch.Player.ONLINE, () => { log("ONLINE event fired"); setIsLiveActive(true); });
-          player.addEventListener(window.Twitch.Player.OFFLINE, () => { log("OFFLINE event fired"); setIsLiveActive(false); });
-        };
-        attachPlayerListeners();
-      });
+      // ONLINE/OFFLINE must be registered on the embed itself, not on
+      // embed.getPlayer() — the object getPlayer() returns is a playback-control
+      // proxy (play/pause/seek/setMuted/etc.) with no addEventListener at all
+      // (confirmed 2026-07-26 by logging its actual prototype method list —
+      // this was the real bug behind isLiveActive never updating, not a
+      // getPlayer() timing/readiness issue as first assumed).
+      embed.addEventListener(window.Twitch.Player.ONLINE, () => { log("ONLINE event fired"); setIsLiveActive(true); });
+      embed.addEventListener(window.Twitch.Player.OFFLINE, () => { log("OFFLINE event fired"); setIsLiveActive(false); });
+      embed.addEventListener(window.Twitch.Embed.VIDEO_READY, () => log("VIDEO_READY fired"));
     }
 
     function loadSdkAndCreate() {
