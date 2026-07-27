@@ -13,6 +13,15 @@ import djBoothBg from "../assets/images/wjrn-thumbnail.jpg";
 import tileBgRockGarden from "../assets/images/wjrn-tile-bg-trg-1a.png";
 import tileBgBridgeCity from "../assets/images/wjrn-tile-bg-bchs-1a.png";
 import tileBgGoldenBoombox from "../assets/images/wjrn-tile-bg-gbs-1a.png";
+import stationPagePlayerBg from "../assets/images/station-page-player-bg.png";
+
+// Wood-frame / brushed-aluminum player panel — content sits inset from the plate edge
+// by this percentage on all sides, clearing the gold corner bolts (measured via pixel
+// sampling on the source PNG: bolts sit ~5.5-6.5% in from each edge). Percentage padding
+// resolves against the container's width on every side (a CSS quirk), which is fine here
+// since the panel is stretched via object-fill to match content height and is never far
+// off-square, so the same clearance works on both axes.
+const PLAYER_PANEL_PADDING = "10%";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -586,18 +595,20 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           </div>
         </div>
 
-        {/* Right Column: Player Visualizer Card */}
+        {/* Right Column: Player Panel — wood-framed brushed-aluminum hardware panel.
+            The frame PNG is the card's visual shape (rounded corners, wood rails, gold
+            bolts); it's stretched via object-fill to match whatever height the content
+            below establishes, since that content varies (on-demand adds seek controls). */}
         <div className="lg:col-span-5 flex flex-col">
-          <div
-            className={`relative overflow-hidden group bg-gradient-to-b from-[#0a0706] to-[#040303] border ${config.borderClass} rounded-2xl transition-all duration-500`}
-            style={{ boxShadow: `0 20px 50px -10px ${config.glowColorA}` }}
-          >
-            {/* Top accent strip */}
-            <div className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-current to-transparent ${config.textColorClass} opacity-30 group-hover:opacity-60 transition-opacity duration-500`} />
-            {/* Dotted pattern */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.012)_1.5px,transparent_1.5px)] bg-[size:24px_24px] pointer-events-none opacity-40 group-hover:opacity-80 transition-opacity duration-700" />
-            {/* Content */}
-            <div className="relative z-10 p-6 flex flex-col gap-6">
+          <div className="relative rounded-2xl overflow-hidden shadow-[0_20px_40px_rgba(0,0,0,0.45)]">
+            <img
+              src={stationPagePlayerBg}
+              alt=""
+              draggable={false}
+              className="absolute inset-0 w-full h-full object-fill select-none pointer-events-none"
+            />
+            {/* Content — sits directly on the brushed-aluminum plate, inset clear of the corner bolts */}
+            <div className="relative z-10 flex flex-col gap-6" style={{ padding: PLAYER_PANEL_PADDING }}>
 
               {/* Card top row: ON THE AIR badge + listener count */}
               <div className="flex items-center justify-between">
@@ -627,9 +638,9 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                 </span>
               </div>
 
-              {/* Album art */}
+              {/* Album art — bezeled like a physical window set into the panel */}
               <div className="flex justify-center">
-                <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+                <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-xl overflow-hidden border-2 border-black/60 ring-1 ring-white/10 shadow-[0_8px_20px_rgba(0,0,0,0.6)]">
                   <img
                     src={isThisStationOnDemand ? (onDemandItem?.art || defaultArt) : (contextMeta.artUrl || defaultArt)}
                     alt="Now playing art"
@@ -706,8 +717,8 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                 </>
               )}
 
-              {/* Volume slider */}
-              <div className="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-full px-4 py-2.5">
+              {/* Volume slider — recessed slot cut into the panel */}
+              <div className="flex items-center gap-3 bg-black/30 border border-black/50 shadow-inner rounded-full px-4 py-2.5">
                 <button onClick={() => setIsMuted(!isMuted)} className="text-[#f3ede2]/60 hover:text-[#f3ede2] transition-colors cursor-pointer shrink-0" aria-label={isMuted ? "Unmute" : "Mute"}>
                   {isMuted ? <VolumeX className={`w-4 h-4 ${config.textColorClass}`} /> : <Volume2 className={`w-4 h-4 ${config.textColorClass}`} />}
                 </button>
