@@ -463,7 +463,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
           <span className="hidden sm:flex items-center gap-3">
             <span className="w-px h-3.5 bg-white/20" />
             <span className="text-[10px] md:text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--nav-accent)]">
-              Jacewon Radio Network
+              Online Radio Network
             </span>
           </span>
         </a>

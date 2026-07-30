@@ -1,4 +1,4 @@
-# WJRN Jacewon Radio Network — Claude Code Context
+# WJRN Online Radio Network — Claude Code Context
 
 ## What this project is
 A self-hosted independent internet radio SPA for **radio.jacewonmusic.com**. Three 24/7 streaming stations plus on-demand tribute podcast episodes. Built by Jace (Jacewon) — Creative Director background, deep DJ/radio roots.
