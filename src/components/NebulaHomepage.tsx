@@ -375,8 +375,10 @@ export default function NebulaHomepage({
       <HeroQuote />
 
       {/* 3. Hero — Vintage Receiver Player Embed — hidden on mobile, the controls
-          are too small to interact with reliably at that size; fine from md/tablet up. */}
-      <section className="relative z-10 w-full max-w-7xl mx-auto hidden md:block">
+          are too small to interact with reliably at that size; fine from md/tablet up.
+          md:-mt-[10px] trims 10px off the shared gap-[70px] between this and HeroQuote
+          above it (60px net) — only meaningful at md+ since this section is hidden below it. */}
+      <section className="relative z-10 w-full max-w-7xl mx-auto hidden md:block md:-mt-[10px]">
         <div className="w-full aspect-[1280/443] overflow-hidden rounded-lg shadow-[0_20px_40px_rgba(0,0,0,0.45)]">
           <iframe
             ref={playerIframeRef}
