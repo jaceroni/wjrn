@@ -16,6 +16,7 @@ import HeroQuote from "./HeroQuote";
 import wjrnLogoLight from "../assets/images/wjrn-logo-light.svg";
 import wjrnTileBg from "../assets/images/wjrn-tile-bg-1a.png";
 import defaultArt from "../assets/images/jacewon-thumbnail.jpg";
+import homeCrate from "../assets/images/wjrn-home-crate-1a.png";
 
 import dialLogoTrg from "../assets/images/dial-logos-trg.png";
 import dialLogoBchs from "../assets/images/dial-logos-bchs.png";
@@ -387,6 +388,37 @@ export default function NebulaHomepage({
             className="w-full h-full border-0 block"
             allow="autoplay"
           />
+        </div>
+      </section>
+
+      {/* Brand Manifesto — crate graphic + copy, sits between the vintage player and the
+          station cards. Image sits below the text column on mobile (order-2), to the left
+          of it on desktop (order-1) — plain grid-order swap, no separate mobile JSX tree
+          needed since the layout itself is simple enough not to warrant one. */}
+      <section className="relative z-10 w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 items-center">
+          <div className="order-2 md:order-1 md:col-span-5 flex justify-center md:justify-start">
+            <img
+              src={homeCrate}
+              alt="A wooden crate of vinyl records"
+              draggable={false}
+              className="w-auto h-auto max-w-full max-h-[380px] sm:max-h-[420px] select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+            />
+          </div>
+          <div className="order-1 md:order-2 md:col-span-7 flex flex-col gap-5 text-center md:text-left items-center md:items-start">
+            <h2 className="uppercase text-[32px] sm:text-4xl md:text-5xl lg:text-[56px] font-extrabold leading-[1.05] font-display">
+              <span className="text-[#f3ede2] block">Built for the Music.</span>
+              <span className="text-[#d7b158] block">Not the Market.</span>
+            </h2>
+            <div className="flex flex-col gap-4 max-w-2xl">
+              <p className="text-[#f3ede2]/80 text-sm md:text-base font-mono leading-relaxed">
+                There was a time when a radio station had a point of view. When the program director's taste was the filter. And if you tuned in any night of the week, you felt it. That era didn't end because the music was wack. It ended because labels got greedy. WJRN is kind of here to fix that.
+              </p>
+              <p className="text-[#f3ede2]/80 text-sm md:text-base font-mono leading-relaxed">
+                Three shows running through one network, curated by one program director. — Classic Rock, Grownfolk R&B, and Hip-Hop — each one mixed live, full of personality, and rooted in the tradition that connects them all. Commercial free. Label influence free. And broadcasting 24/7 365.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
