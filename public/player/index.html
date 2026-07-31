@@ -777,6 +777,42 @@ fetch(STATIONS[0].api)
     });
 
     try { window.parent.postMessage({ source: 'wjrn-player', type: 'ready' }, '*'); } catch (e) {}
+
+    // Forward this frame's cursor position to the parent page. Browsers never
+    // deliver mousemove to the parent document while the pointer is over an
+    // embedded iframe (even same-origin), so the parent's ambient look-at-cursor
+    // effects (hero bust tilt, crate tilt) would otherwise visibly freeze the
+    // instant the cursor crosses onto this player. window.frameElement is
+    // available here since this embed is always same-origin, so this frame's
+    // local coordinates can be translated into the parent's viewport space.
+    var mouseForwardPending = false;
+    document.addEventListener('mousemove', function(e) {
+      if (mouseForwardPending) return;
+      mouseForwardPending = true;
+      requestAnimationFrame(function() {
+        mouseForwardPending = false;
+        var frame = window.frameElement;
+        if (!frame) return;
+        var rect = frame.getBoundingClientRect();
+        window.parent.postMessage({
+          source: 'wjrn-player',
+          type: 'mouseMove',
+          clientX: rect.left + e.clientX,
+          clientY: rect.top + e.clientY
+        }, '*');
+      });
+    });
+    document.addEventListener('mouseup', function(e) {
+      var frame = window.frameElement;
+      if (!frame) return;
+      var rect = frame.getBoundingClientRect();
+      window.parent.postMessage({
+        source: 'wjrn-player',
+        type: 'mouseUp',
+        clientX: rect.left + e.clientX,
+        clientY: rect.top + e.clientY
+      }, '*');
+    });
   }
 
 })();

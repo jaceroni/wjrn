@@ -53,6 +53,11 @@ const TONEARM_PLAYING_DEG = 27;
 const TITLE_ZONE = { top: "52.2%", bottom: "35.2%", left: "9%", right: "9%" };
 const PLAYER_ZONE = { top: "64.8%", bottom: "6%", left: "9%", right: "9%" };
 
+// Manifesto crate ambient tilt — same values as HeroQuote.tsx's busts, for a
+// consistent feel across every look-at-cursor element on the page.
+const CRATE_MAX_TILT_DEG = 14;
+const CRATE_TILT_DEPTH = 4000;
+
 const DIAL_LOGOS: { [key: string]: string } = {
   rock_garden: dialLogoTrg,
   bridge_city: dialLogoBchs,
@@ -121,6 +126,58 @@ export default function NebulaHomepage({
   // so backspinning one card can't cancel another card's still-running animation.
   const [backspinningStations, setBackspinningStations] = useState<Record<string, boolean>>({});
 
+  // Manifesto crate — ambient look-at-cursor tilt + click-drag override, same
+  // interaction/constants as the HeroQuote and About page busts (see those
+  // files). Only one image here (no alt pose), so the ref/handlers sit
+  // directly on the <img> itself rather than needing a separate hit-box
+  // wrapper div to unify two overlapping images.
+  const crateRef = useRef<HTMLImageElement | null>(null);
+  const [crateAmbientTilt, setCrateAmbientTilt] = useState(0);
+  const [isCrateDragging, setIsCrateDragging] = useState(false);
+  const [crateDraggedTiltDeg, setCrateDraggedTiltDeg] = useState(0);
+  const crateDragStartClientXRef = useRef(0);
+  const crateDragStartTiltDegRef = useRef(0);
+
+  useEffect(() => {
+    const handleMove = (e: MouseEvent) => {
+      const el = crateRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const dx = e.clientX - (rect.left + rect.width / 2);
+      const deg = (Math.atan2(dx, CRATE_TILT_DEPTH) * 180) / Math.PI;
+      setCrateAmbientTilt(Math.max(-CRATE_MAX_TILT_DEG, Math.min(CRATE_MAX_TILT_DEG, deg)));
+    };
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
+
+  useEffect(() => {
+    if (!isCrateDragging) return;
+    const handleMove = (e: MouseEvent) => {
+      const dx = e.clientX - crateDragStartClientXRef.current;
+      const deg = crateDragStartTiltDegRef.current + (dx / 150) * CRATE_MAX_TILT_DEG;
+      setCrateDraggedTiltDeg(Math.max(-CRATE_MAX_TILT_DEG, Math.min(CRATE_MAX_TILT_DEG, deg)));
+    };
+    const handleUp = () => setIsCrateDragging(false);
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleUp);
+    };
+  }, [isCrateDragging]);
+
+  const handleCrateMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    crateDragStartClientXRef.current = e.clientX;
+    crateDragStartTiltDegRef.current = crateAmbientTilt;
+    setCrateDraggedTiltDeg(crateAmbientTilt);
+    setIsCrateDragging(true);
+  };
+
+  const crateTiltDeg = isCrateDragging ? crateDraggedTiltDeg : crateAmbientTilt;
+  const crateTransform = `perspective(1000px) rotateY(${crateTiltDeg}deg)`;
+
   useEffect(() => {
     const sendCurrentState = () => {
       const win = playerIframeRef.current?.contentWindow;
@@ -187,6 +244,28 @@ export default function NebulaHomepage({
           case "mono": setEqMono(!!data.value); break;
           case "balance": setEqBalance(data.value as 0 | 1 | 2); break;
         }
+        return;
+      }
+      // Re-dispatched as real window mousemove/mouseup events (not consumed
+      // directly) so every ambient look-at-cursor tilt effect on the page —
+      // HeroQuote's bust, the manifesto crate — keeps tracking the cursor
+      // via the same `window.addEventListener("mousemove"/"mouseup", ...)`
+      // listeners they already have, with zero changes needed in those
+      // components. Without this, the browser never delivers mousemove to
+      // this document while the cursor is over the vintage player iframe
+      // (a cross-frame boundary, even same-origin), so those effects would
+      // otherwise visibly freeze the moment the cursor crosses onto it.
+      if (data.type === "mouseMove" || data.type === "mouseUp") {
+        if (typeof data.clientX === "number" && typeof data.clientY === "number") {
+          window.dispatchEvent(
+            new MouseEvent(data.type === "mouseMove" ? "mousemove" : "mouseup", {
+              clientX: data.clientX,
+              clientY: data.clientY,
+              bubbles: true,
+            })
+          );
+        }
+        return;
       }
     };
 
@@ -399,10 +478,17 @@ export default function NebulaHomepage({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 items-center">
           <div className="order-2 md:order-1 md:col-span-5 flex justify-center md:justify-start">
             <img
+              ref={crateRef}
               src={homeCrate}
-              alt="A wooden crate of vinyl records"
+              alt="A wooden crate of vinyl records — click and drag to tilt"
               draggable={false}
-              className="w-auto h-auto max-w-full max-h-[380px] sm:max-h-[420px] select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+              onMouseDown={handleCrateMouseDown}
+              role="button"
+              tabIndex={0}
+              style={{ transition: "transform 150ms ease-out", transform: crateTransform }}
+              className={`w-auto h-auto max-w-full max-h-[380px] sm:max-h-[420px] select-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+                isCrateDragging ? "cursor-grabbing" : "cursor-grab"
+              }`}
             />
           </div>
           <div className="order-1 md:order-2 md:col-span-7 flex flex-col gap-5 text-center md:text-left items-center md:items-start">
