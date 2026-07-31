@@ -412,10 +412,10 @@ export default function NebulaHomepage({
             </h2>
             <div className="flex flex-col gap-4 max-w-2xl">
               <p className="text-[#f3ede2]/80 text-sm md:text-base font-mono leading-relaxed">
-                There was a time when a radio station had a point of view. When the program director's taste was the filter. And if you tuned in any night of the week, you felt it. That era didn't end because the music was wack. It ended because labels got greedy. WJRN is kind of here to fix that.
+                There was a time in radio when the program director's taste was the filter. And if you tuned in any night of the week, you felt it. That era didn't end because the music was wack. It ended because labels got greedy. WJRN was built to fix that.
               </p>
               <p className="text-[#f3ede2]/80 text-sm md:text-base font-mono leading-relaxed">
-                Three shows running through one network, curated by one program director. — Classic Rock, Grownfolk R&B, and Hip-Hop — each one mixed live, full of personality, and rooted in the tradition that connects them all. Commercial free. Label influence free. And broadcasting 24/7 365.
+                Three shows every week, curated by one program director: Classic Rock, Grownfolk R&B, and Hip-Hop. Each mixed live, full of personality, and rooted in the tradition that connects them all. Commercial free. Label influence free. And broadcasting 24/7.
               </p>
             </div>
           </div>
