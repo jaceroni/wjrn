@@ -41,11 +41,11 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
 ];
 
 const ROTATE_MS = 16000;
-// Slide+fade with a touch of elastic overshoot (see heroQuoteSlideIn/Out in
-// index.css) rather than a plain fade-to-nothing — the old quote exits to the
-// right while the new one enters from the left, overlapping, so there's
-// always something on screen. The bust does a soft blur-crossfade "morph"
-// underneath at the same duration (see heroBustMorphOut).
+// Crossfade with vertical drift, applied to both the quote and the bust: the
+// outgoing one fades out while drifting down, the incoming one fades in while
+// drifting up into place, overlapping in time (see heroFadeSlideOutDown /
+// heroFadeSlideInUp in index.css) — replaced an earlier horizontal
+// slide+elastic-overshoot+blur-morph version that read as too busy/chaotic.
 const TRANSITION_MS = 650;
 const MAX_TILT_DEG = 14;
 const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further out
@@ -172,7 +172,7 @@ export default function HeroQuote() {
         {outgoing && (
           <p
             aria-hidden="true"
-            className="absolute inset-0 text-center lg:text-left select-none pointer-events-none text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase font-display animate-[heroQuoteSlideOut_650ms_ease-in_forwards]"
+            className="absolute inset-0 text-center lg:text-left select-none pointer-events-none text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase font-display animate-[heroFadeSlideOutDown_650ms_ease-in_forwards]"
             onAnimationEnd={() => setOutgoing(null)}
           >
             <span className="text-[#d7b158]">&#8220;</span>
@@ -197,7 +197,7 @@ export default function HeroQuote() {
             }
           }}
           className={`text-center lg:text-left select-none ${HERO_QUOTES.length > 1 ? "cursor-pointer" : ""} ${
-            outgoing ? "animate-[heroQuoteSlideIn_650ms_cubic-bezier(0.34,1.56,0.64,1)]" : ""
+            outgoing ? "animate-[heroFadeSlideInUp_650ms_ease-out]" : ""
           }`}
         >
           <p className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
@@ -226,38 +226,45 @@ export default function HeroQuote() {
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
       >
-        <img
-          src={entry.bust}
-          alt={`${entry.attribution} sculpted bust`}
-          draggable={false}
-          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
-          className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
-            stage === 0 ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        <img
-          src={entry.bustAlt}
-          alt={`${entry.attribution} alternate sculpted bust`}
-          draggable={false}
-          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
-          className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
-            stage === 1 ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        {/* Outgoing bust — soft blur-dissolve "morph" over the new bust already
-            settled underneath. Only opacity/filter are animated here (not
-            transform), so the live cursor-tilt below keeps applying to it
-            undisturbed right up until it's gone. */}
-        {outgoing && (
+        {/* Wrapping the current pose pair (not the images themselves) lets the
+            whole thing drift up + fade in as one unit on rotation, without
+            touching the images' own tilt transform. Plain (non-positioned)
+            div — the images' `absolute inset-0` still resolves against the
+            outer bustRef container, same as before. */}
+        <div className={outgoing ? "animate-[heroFadeSlideInUp_650ms_ease-out]" : ""}>
           <img
-            key={outgoing.bustSrc}
-            src={outgoing.bustSrc}
-            alt=""
-            aria-hidden="true"
+            src={entry.bust}
+            alt={`${entry.attribution} sculpted bust`}
             draggable={false}
-            style={{ transform: bustTransform }}
-            className="absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] animate-[heroBustMorphOut_650ms_ease-in_forwards]"
+            style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
+            className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+              stage === 0 ? "opacity-100" : "opacity-0"
+            }`}
           />
+          <img
+            src={entry.bustAlt}
+            alt={`${entry.attribution} alternate sculpted bust`}
+            draggable={false}
+            style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
+            className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+              stage === 1 ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        </div>
+        {/* Outgoing bust — fades out while drifting down, same language as the
+            outgoing quote. Wrapped so the drift/fade animates on this div
+            while the image itself keeps its own live tilt transform. */}
+        {outgoing && (
+          <div className="absolute inset-0 animate-[heroFadeSlideOutDown_650ms_ease-in_forwards]">
+            <img
+              src={outgoing.bustSrc}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              style={{ transform: bustTransform }}
+              className="absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+            />
+          </div>
         )}
       </div>
     </section>
