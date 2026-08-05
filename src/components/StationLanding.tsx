@@ -740,7 +740,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               {!isThisStationOnDemand && (
                 <button
                   onClick={() => toggleStation(stationId)}
-                  className="w-full pt-[21px] pb-[21px] text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_6px_rgba(243,237,226,0.75)]"
+                  className="group w-full pt-[21px] pb-[21px] text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
                   style={{
                     backgroundImage: `url(${config.listenButtonBg})`,
                     backgroundSize: "100% 100%",
@@ -748,13 +748,13 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                   }}
                 >
                   {pageAudioState === "connecting" ? (
-                    <><span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin" />CONNECTING...</>
+                    <><span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin transition-transform duration-300 group-hover:scale-125" />CONNECTING...</>
                   ) : pageAudioState === "playing" ? (
-                    <><Pause className="w-4 h-4 fill-current" />PAUSE STREAM</>
+                    <><Pause className="w-4 h-4 fill-current transition-transform duration-300 group-hover:scale-125" />PAUSE STREAM</>
                   ) : pageAudioState === "error" ? (
                     "CONNECTION ERROR — RETRY"
                   ) : (
-                    <><Play className="w-4 h-4 fill-current translate-x-0.5" />LISTEN TO THIS STATION NOW</>
+                    <><Play className="w-4 h-4 fill-current translate-x-0.5 transition-transform duration-300 group-hover:scale-125" />LISTEN TO THIS STATION NOW</>
                   )}
                 </button>
               )}
