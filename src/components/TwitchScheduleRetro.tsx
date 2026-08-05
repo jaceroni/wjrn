@@ -343,7 +343,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_5px_color-mix(in_srgb,currentColor_55%,transparent)]"
+            className="w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_6px_rgba(0,0,0,0.7)]"
             style={{
               backgroundImage: `url(${twitchJoinButtonBg})`,
               backgroundSize: "100% 100%",
@@ -462,7 +462,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_5px_color-mix(in_srgb,currentColor_55%,transparent)]"
+            className="w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_6px_rgba(0,0,0,0.7)]"
             style={{
               backgroundImage: `url(${twitchJoinButtonBg})`,
               backgroundSize: "100% 100%",
