@@ -41,13 +41,23 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
 ];
 
 const ROTATE_MS = 16000;
-const FADE_MS = 400;
+// Slide+fade with a touch of elastic overshoot (see heroQuoteSlideIn/Out in
+// index.css) rather than a plain fade-to-nothing — the old quote exits to the
+// right while the new one enters from the left, overlapping, so there's
+// always something on screen. The bust does a soft blur-crossfade "morph"
+// underneath at the same duration (see heroBustMorphOut).
+const TRANSITION_MS = 650;
 const MAX_TILT_DEG = 14;
 const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further out
 
 export default function HeroQuote() {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * HERO_QUOTES.length));
-  const [visible, setVisible] = useState(true);
+
+  // The quote/bust that's currently animating out — null once settled. Holding
+  // the whole outgoing entry (not just a flag) lets the exiting ghost keep
+  // rendering its own text/bust after `index` has already moved on to the
+  // next one.
+  const [outgoing, setOutgoing] = useState<{ entry: HeroQuoteEntry; bustSrc: string } | null>(null);
 
   // Paused for as long as the cursor is anywhere in the section — quote text
   // or bust — so someone reading slowly (or busy fiddling with the bust)
@@ -57,11 +67,10 @@ export default function HeroQuote() {
   const [isHovering, setIsHovering] = useState(false);
 
   const goToNextQuote = () => {
-    setVisible(false);
-    setTimeout(() => {
-      setIndex((i) => (i + 1) % HERO_QUOTES.length);
-      setVisible(true);
-    }, FADE_MS);
+    if (outgoing) return; // a transition is already mid-flight — let it finish
+    const currentEntry = HERO_QUOTES[index];
+    setOutgoing({ entry: currentEntry, bustSrc: isBustHovering ? currentEntry.bustAlt : currentEntry.bust });
+    setIndex((i) => (i + 1) % HERO_QUOTES.length);
   };
 
   // Auto-rotate through the set — no-ops gracefully while there's only one
@@ -159,32 +168,48 @@ export default function HeroQuote() {
       onMouseLeave={() => setIsHovering(false)}
       className="relative z-10 w-full max-w-7xl mx-auto -mt-[31px] md:-mt-[14px] flex flex-col lg:flex-row items-center gap-5"
     >
-      <div
-        onClick={handleHeadlineClick}
-        role={HERO_QUOTES.length > 1 ? "button" : undefined}
-        tabIndex={HERO_QUOTES.length > 1 ? 0 : undefined}
-        aria-label={HERO_QUOTES.length > 1 ? "Show another quote" : undefined}
-        onKeyDown={(e) => {
-          if (HERO_QUOTES.length < 2) return;
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            handleHeadlineClick();
-          }
-        }}
-        className={`flex-1 min-w-0 text-center lg:text-left transition-opacity ease-out select-none ${
-          HERO_QUOTES.length > 1 ? "cursor-pointer" : ""
-        }`}
-        style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
-      >
-        <p className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
-          <span className="text-[#d7b158]">&#8220;</span>
-          <span className="text-[#f3ede2]">{entry.quote}</span>
-          <span className="text-[#d7b158]">&#8221;</span>
-          <br />
-          <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
-            &ndash; {entry.attribution.toUpperCase()}
-          </span>
-        </p>
+      <div className="relative flex-1 min-w-0">
+        {outgoing && (
+          <p
+            aria-hidden="true"
+            className="absolute inset-0 text-center lg:text-left select-none pointer-events-none text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase font-display animate-[heroQuoteSlideOut_650ms_ease-in_forwards]"
+            onAnimationEnd={() => setOutgoing(null)}
+          >
+            <span className="text-[#d7b158]">&#8220;</span>
+            <span className="text-[#f3ede2]">{outgoing.entry.quote}</span>
+            <span className="text-[#d7b158]">&#8221;</span>
+            <br />
+            <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
+              &ndash; {outgoing.entry.attribution.toUpperCase()}
+            </span>
+          </p>
+        )}
+        <div
+          onClick={handleHeadlineClick}
+          role={HERO_QUOTES.length > 1 ? "button" : undefined}
+          tabIndex={HERO_QUOTES.length > 1 ? 0 : undefined}
+          aria-label={HERO_QUOTES.length > 1 ? "Show another quote" : undefined}
+          onKeyDown={(e) => {
+            if (HERO_QUOTES.length < 2) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleHeadlineClick();
+            }
+          }}
+          className={`text-center lg:text-left select-none ${HERO_QUOTES.length > 1 ? "cursor-pointer" : ""} ${
+            outgoing ? "animate-[heroQuoteSlideIn_650ms_cubic-bezier(0.34,1.56,0.64,1)]" : ""
+          }`}
+        >
+          <p className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
+            <span className="text-[#d7b158]">&#8220;</span>
+            <span className="text-[#f3ede2]">{entry.quote}</span>
+            <span className="text-[#d7b158]">&#8221;</span>
+            <br />
+            <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
+              &ndash; {entry.attribution.toUpperCase()}
+            </span>
+          </p>
+        </div>
       </div>
 
       <div
@@ -197,10 +222,9 @@ export default function HeroQuote() {
         role="button"
         tabIndex={0}
         aria-label={`${entry.attribution} sculpted bust — hover to reveal the alternate pose, click and drag to tilt`}
-        className={`relative w-[220px] sm:w-[260px] lg:w-[300px] aspect-[308/376] shrink-0 select-none transition-opacity ease-out ${
+        className={`relative w-[220px] sm:w-[260px] lg:w-[300px] aspect-[308/376] shrink-0 select-none ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
-        style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
       >
         <img
           src={entry.bust}
@@ -220,6 +244,21 @@ export default function HeroQuote() {
             stage === 1 ? "opacity-100" : "opacity-0"
           }`}
         />
+        {/* Outgoing bust — soft blur-dissolve "morph" over the new bust already
+            settled underneath. Only opacity/filter are animated here (not
+            transform), so the live cursor-tilt below keeps applying to it
+            undisturbed right up until it's gone. */}
+        {outgoing && (
+          <img
+            key={outgoing.bustSrc}
+            src={outgoing.bustSrc}
+            alt=""
+            aria-hidden="true"
+            draggable={false}
+            style={{ transform: bustTransform }}
+            className="absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] animate-[heroBustMorphOut_650ms_ease-in_forwards]"
+          />
+        )}
       </div>
     </section>
   );
