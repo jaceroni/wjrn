@@ -343,7 +343,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer"
             style={{
               backgroundImage: `url(${twitchJoinButtonBg})`,
               backgroundSize: "100% 100%",
@@ -462,7 +462,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer"
             style={{
               backgroundImage: `url(${twitchJoinButtonBg})`,
               backgroundSize: "100% 100%",

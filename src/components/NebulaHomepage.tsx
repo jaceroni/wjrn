@@ -757,7 +757,7 @@ export default function NebulaHomepage({
                         e.preventDefault();
                         navigate(`/${STATION_SLUGS[station.id]}`);
                       }}
-                      className={`mt-2 w-full py-3 px-4 text-[10px] font-mono font-semibold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer ${textColorClass}`}
+                      className={`mt-2 w-full pt-[14px] pb-[14px] px-4 text-[10px] font-mono font-semibold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer ${textColorClass}`}
                       style={{
                         backgroundImage: `url(${LEARN_MORE_BUTTON_ARTWORKS[station.id] ?? homePlayerButtonTrg})`,
                         backgroundSize: "100% 100%",
