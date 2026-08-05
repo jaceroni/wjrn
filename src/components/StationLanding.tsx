@@ -748,13 +748,13 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                   }}
                 >
                   {pageAudioState === "connecting" ? (
-                    <><span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin transition-transform duration-300 group-hover:scale-125" />CONNECTING...</>
+                    <><span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin transition-transform duration-300 group-hover:scale-125" /><span className="inline-block transition-transform duration-300 group-hover:scale-110">CONNECTING...</span></>
                   ) : pageAudioState === "playing" ? (
-                    <><Pause className="w-4 h-4 fill-current transition-transform duration-300 group-hover:scale-125" />PAUSE STREAM</>
+                    <><Pause className="w-4 h-4 fill-current transition-transform duration-300 group-hover:scale-125" /><span className="inline-block transition-transform duration-300 group-hover:scale-110">PAUSE STREAM</span></>
                   ) : pageAudioState === "error" ? (
-                    "CONNECTION ERROR — RETRY"
+                    <span className="inline-block transition-transform duration-300 group-hover:scale-110">CONNECTION ERROR — RETRY</span>
                   ) : (
-                    <><Play className="w-4 h-4 fill-current translate-x-0.5 transition-transform duration-300 group-hover:scale-125" />LISTEN TO THIS STATION NOW</>
+                    <><Play className="w-4 h-4 fill-current translate-x-0.5 transition-transform duration-300 group-hover:scale-125" /><span className="inline-block transition-transform duration-300 group-hover:scale-110">LISTEN TO THIS STATION NOW</span></>
                   )}
                 </button>
               )}
