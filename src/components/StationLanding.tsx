@@ -748,19 +748,19 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                   }}
                 >
                   {pageAudioState === "connecting" ? (
-                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-[1.075]">
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-[1.0375]">
                       <span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin" />CONNECTING...
                     </span>
                   ) : pageAudioState === "playing" ? (
-                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-[1.075]">
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-[1.0375]">
                       <Pause className="w-4 h-4 fill-current" />PAUSE STREAM
                     </span>
                   ) : pageAudioState === "error" ? (
-                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-[1.075]">
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-[1.0375]">
                       CONNECTION ERROR — RETRY
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-[1.075]">
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-[1.0375]">
                       <Play className="w-4 h-4 fill-current translate-x-0.5" />LISTEN TO THIS STATION NOW
                     </span>
                   )}

@@ -764,7 +764,7 @@ export default function NebulaHomepage({
                         backgroundRepeat: "no-repeat",
                       }}
                     >
-                      <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/lm:scale-[1.075] group-hover/lm:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
+                      <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover/lm:scale-[1.0375] group-hover/lm:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
                         Learn More <span className="hidden sm:inline">About This Station</span> <ArrowRight className="w-3 h-3" />
                       </span>
                     </a>
