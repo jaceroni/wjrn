@@ -60,7 +60,11 @@ const TONEARM_PLAYING_DEG = 27;
 // the gold divider at ~y=307 and that seam); the now playing block centers in the larger
 // bottom panel (between the seam and the bottom frame at ~y=567).
 const TITLE_ZONE = { top: "52.2%", bottom: "35.2%", left: "9%", right: "9%" };
-const PLAYER_ZONE = { top: "64.8%", bottom: "6%", left: "9%", right: "9%" };
+// bottom measured against the cabinet's true inner frame edge (~row 573 of 588, where the
+// wood-grain trim begins) — the previous "6%" stopped ~15px short of that edge, so the
+// justify-center block below had less slack to distribute than the panel actually offers,
+// leaving the content hugging the seam above with a lopsided gap below the button.
+const PLAYER_ZONE = { top: "64.8%", bottom: "3%", left: "9%", right: "9%" };
 
 // Manifesto crate ambient tilt — same values as HeroQuote.tsx's busts, for a
 // consistent feel across every look-at-cursor element on the page.
