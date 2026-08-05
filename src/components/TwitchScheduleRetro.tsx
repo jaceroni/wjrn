@@ -350,7 +350,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
               backgroundRepeat: "no-repeat",
             }}
           >
-            <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/chat:scale-110 group-hover/chat:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
+            <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/chat:scale-[1.075] group-hover/chat:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
               JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
             </span>
           </a>
@@ -471,7 +471,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
               backgroundRepeat: "no-repeat",
             }}
           >
-            <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/chat:scale-110 group-hover/chat:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
+            <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/chat:scale-[1.075] group-hover/chat:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
               JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
             </span>
           </a>
