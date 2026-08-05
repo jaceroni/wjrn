@@ -343,14 +343,14 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="group w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center cursor-pointer"
+            className="group/chat w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center cursor-pointer"
             style={{
               backgroundImage: `url(${twitchJoinButtonBg})`,
               backgroundSize: "100% 100%",
               backgroundRepeat: "no-repeat",
             }}
           >
-            <span className="inline-flex items-center gap-2 transition-[transform,text-shadow] duration-300 group-hover:scale-110 group-hover:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
+            <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/chat:scale-110 group-hover/chat:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
               JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
             </span>
           </a>
@@ -464,14 +464,14 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="group w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center cursor-pointer"
+            className="group/chat w-full pt-[18px] pb-[18px] px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center cursor-pointer"
             style={{
               backgroundImage: `url(${twitchJoinButtonBg})`,
               backgroundSize: "100% 100%",
               backgroundRepeat: "no-repeat",
             }}
           >
-            <span className="inline-flex items-center gap-2 transition-[transform,text-shadow] duration-300 group-hover:scale-110 group-hover:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
+            <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/chat:scale-110 group-hover/chat:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
               JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
             </span>
           </a>

@@ -740,7 +740,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               {!isThisStationOnDemand && (
                 <button
                   onClick={() => toggleStation(stationId)}
-                  className="group w-full pt-[21px] pb-[21px] text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
+                  className="group w-full pt-[21px] pb-[21px] text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center cursor-pointer"
                   style={{
                     backgroundImage: `url(${config.listenButtonBg})`,
                     backgroundSize: "100% 100%",
@@ -748,13 +748,21 @@ export default function StationLanding({ stationId }: StationLandingProps) {
                   }}
                 >
                   {pageAudioState === "connecting" ? (
-                    <><span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin transition-transform duration-300 group-hover:scale-125" /><span className="inline-block transition-transform duration-300 group-hover:scale-110">CONNECTING...</span></>
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-110">
+                      <span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin" />CONNECTING...
+                    </span>
                   ) : pageAudioState === "playing" ? (
-                    <><Pause className="w-4 h-4 fill-current transition-transform duration-300 group-hover:scale-125" /><span className="inline-block transition-transform duration-300 group-hover:scale-110">PAUSE STREAM</span></>
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-110">
+                      <Pause className="w-4 h-4 fill-current" />PAUSE STREAM
+                    </span>
                   ) : pageAudioState === "error" ? (
-                    <span className="inline-block transition-transform duration-300 group-hover:scale-110">CONNECTION ERROR — RETRY</span>
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-110">
+                      CONNECTION ERROR — RETRY
+                    </span>
                   ) : (
-                    <><Play className="w-4 h-4 fill-current translate-x-0.5 transition-transform duration-300 group-hover:scale-125" /><span className="inline-block transition-transform duration-300 group-hover:scale-110">LISTEN TO THIS STATION NOW</span></>
+                    <span className="inline-flex items-center gap-3 transition-transform duration-300 group-hover:scale-110">
+                      <Play className="w-4 h-4 fill-current translate-x-0.5" />LISTEN TO THIS STATION NOW
+                    </span>
                   )}
                 </button>
               )}

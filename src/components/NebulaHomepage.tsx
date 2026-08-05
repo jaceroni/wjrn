@@ -757,14 +757,14 @@ export default function NebulaHomepage({
                         e.preventDefault();
                         navigate(`/${STATION_SLUGS[station.id]}`);
                       }}
-                      className={`group mt-2 w-full pt-[14px] pb-[14px] px-4 text-[10px] font-mono font-semibold uppercase tracking-[0.2em] flex items-center justify-center cursor-pointer ${textColorClass}`}
+                      className={`group/lm mt-2 w-full pt-[14px] pb-[14px] px-4 text-[10px] font-mono font-semibold uppercase tracking-[0.2em] flex items-center justify-center cursor-pointer ${textColorClass}`}
                       style={{
                         backgroundImage: `url(${LEARN_MORE_BUTTON_ARTWORKS[station.id] ?? homePlayerButtonTrg})`,
                         backgroundSize: "100% 100%",
                         backgroundRepeat: "no-repeat",
                       }}
                     >
-                      <span className="inline-flex items-center gap-2 transition-[transform,text-shadow] duration-300 group-hover:scale-110 group-hover:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
+                      <span className="inline-flex items-center gap-2 transition-[scale,text-shadow] duration-300 group-hover/lm:scale-110 group-hover/lm:[text-shadow:0_0_8px_rgba(0,0,0,0.9),0_0_2px_rgba(0,0,0,0.9)]">
                         Learn More <span className="hidden sm:inline">About This Station</span> <ArrowRight className="w-3 h-3" />
                       </span>
                     </a>
