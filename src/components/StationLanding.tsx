@@ -740,7 +740,7 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               {!isThisStationOnDemand && (
                 <button
                   onClick={() => toggleStation(stationId)}
-                  className="w-full pt-[21px] pb-[21px] text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_10px_var(--listen-btn-glow),0_0_18px_var(--listen-btn-glow)]"
+                  className="w-full pt-[21px] pb-[21px] text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer transition-[text-shadow] duration-300 hover:[text-shadow:0_0_5px_color-mix(in_srgb,var(--listen-btn-glow)_55%,transparent)]"
                   style={{
                     backgroundImage: `url(${config.listenButtonBg})`,
                     backgroundSize: "100% 100%",
