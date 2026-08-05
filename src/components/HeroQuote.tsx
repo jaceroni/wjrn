@@ -81,6 +81,20 @@ export default function HeroQuote() {
     goToNextQuote();
   };
 
+  // Preload every bust (default + alt) up front — otherwise the browser only
+  // fetches/decodes a given quote's images the first time it's actually
+  // rotated to, and keeps painting the previous quote's bitmap on screen
+  // until the new one finishes decoding (a "flash of stale image" right as
+  // it fades in). Warming the cache on mount means that decode is already
+  // done by the time any rotation happens, no matter how long the user
+  // lingers between clicks.
+  useEffect(() => {
+    HERO_QUOTES.forEach((q) => {
+      new Image().src = q.bust;
+      new Image().src = q.bustAlt;
+    });
+  }, []);
+
   const entry = HERO_QUOTES[index];
 
   // Hover reveals the alt pose — no more click-to-toggle (see AboutWjrn.tsx,
