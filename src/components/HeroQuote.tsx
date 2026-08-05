@@ -88,10 +88,23 @@ export default function HeroQuote() {
   // it fades in). Warming the cache on mount means that decode is already
   // done by the time any rotation happens, no matter how long the user
   // lingers between clicks.
+  //
+  // The `Image()` objects themselves have to be kept alive somewhere, or the
+  // fix doesn't actually hold: with nothing referencing them, they're
+  // eligible for GC the moment this effect returns, and the browser's
+  // decoded-bitmap cache (separate from the HTTP cache, and much more
+  // eagerly reclaimed) can get evicted right along with them — which is
+  // exactly why the flash came back after "waiting a while, then clicking":
+  // the longer the wait, the more likely GC had already swept them. A ref
+  // holds a real reference for the component's whole lifetime.
+  const preloadedImagesRef = useRef<HTMLImageElement[]>([]);
   useEffect(() => {
-    HERO_QUOTES.forEach((q) => {
-      new Image().src = q.bust;
-      new Image().src = q.bustAlt;
+    preloadedImagesRef.current = HERO_QUOTES.flatMap((q) => {
+      const defaultImg = new Image();
+      defaultImg.src = q.bust;
+      const altImg = new Image();
+      altImg.src = q.bustAlt;
+      return [defaultImg, altImg];
     });
   }, []);
 
