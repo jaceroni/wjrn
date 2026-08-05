@@ -41,23 +41,13 @@ const HERO_QUOTES: HeroQuoteEntry[] = [
 ];
 
 const ROTATE_MS = 16000;
-// Crossfade with vertical drift, applied to both the quote and the bust: the
-// outgoing one fades out while drifting down, the incoming one fades in while
-// drifting up into place, overlapping in time (see heroFadeSlideOutDown /
-// heroFadeSlideInUp in index.css) — replaced an earlier horizontal
-// slide+elastic-overshoot+blur-morph version that read as too busy/chaotic.
-const TRANSITION_MS = 650;
+const FADE_MS = 400;
 const MAX_TILT_DEG = 14;
 const TILT_DEPTH = 4000; // larger = gentler falloff, reaches max angle further out
 
 export default function HeroQuote() {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * HERO_QUOTES.length));
-
-  // The quote/bust that's currently animating out — null once settled. Holding
-  // the whole outgoing entry (not just a flag) lets the exiting ghost keep
-  // rendering its own text/bust after `index` has already moved on to the
-  // next one.
-  const [outgoing, setOutgoing] = useState<{ entry: HeroQuoteEntry; bustSrc: string } | null>(null);
+  const [visible, setVisible] = useState(true);
 
   // Paused for as long as the cursor is anywhere in the section — quote text
   // or bust — so someone reading slowly (or busy fiddling with the bust)
@@ -67,10 +57,11 @@ export default function HeroQuote() {
   const [isHovering, setIsHovering] = useState(false);
 
   const goToNextQuote = () => {
-    if (outgoing) return; // a transition is already mid-flight — let it finish
-    const currentEntry = HERO_QUOTES[index];
-    setOutgoing({ entry: currentEntry, bustSrc: isBustHovering ? currentEntry.bustAlt : currentEntry.bust });
-    setIndex((i) => (i + 1) % HERO_QUOTES.length);
+    setVisible(false);
+    setTimeout(() => {
+      setIndex((i) => (i + 1) % HERO_QUOTES.length);
+      setVisible(true);
+    }, FADE_MS);
   };
 
   // Auto-rotate through the set — no-ops gracefully while there's only one
@@ -168,48 +159,32 @@ export default function HeroQuote() {
       onMouseLeave={() => setIsHovering(false)}
       className="relative z-10 w-full max-w-7xl mx-auto -mt-[31px] md:-mt-[14px] flex flex-col lg:flex-row items-center gap-5"
     >
-      <div className="relative flex-1 min-w-0">
-        {outgoing && (
-          <p
-            aria-hidden="true"
-            className="absolute inset-0 text-center lg:text-left select-none pointer-events-none text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase font-display animate-[heroFadeSlideOutDown_650ms_ease-in_forwards]"
-            onAnimationEnd={() => setOutgoing(null)}
-          >
-            <span className="text-[#d7b158]">&#8220;</span>
-            <span className="text-[#f3ede2]">{outgoing.entry.quote}</span>
-            <span className="text-[#d7b158]">&#8221;</span>
-            <br />
-            <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
-              &ndash; {outgoing.entry.attribution.toUpperCase()}
-            </span>
-          </p>
-        )}
-        <div
-          onClick={handleHeadlineClick}
-          role={HERO_QUOTES.length > 1 ? "button" : undefined}
-          tabIndex={HERO_QUOTES.length > 1 ? 0 : undefined}
-          aria-label={HERO_QUOTES.length > 1 ? "Show another quote" : undefined}
-          onKeyDown={(e) => {
-            if (HERO_QUOTES.length < 2) return;
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleHeadlineClick();
-            }
-          }}
-          className={`text-center lg:text-left select-none ${HERO_QUOTES.length > 1 ? "cursor-pointer" : ""} ${
-            outgoing ? "animate-[heroFadeSlideInUp_650ms_ease-out]" : ""
-          }`}
-        >
-          <p className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
-            <span className="text-[#d7b158]">&#8220;</span>
-            <span className="text-[#f3ede2]">{entry.quote}</span>
-            <span className="text-[#d7b158]">&#8221;</span>
-            <br />
-            <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
-              &ndash; {entry.attribution.toUpperCase()}
-            </span>
-          </p>
-        </div>
+      <div
+        onClick={handleHeadlineClick}
+        role={HERO_QUOTES.length > 1 ? "button" : undefined}
+        tabIndex={HERO_QUOTES.length > 1 ? 0 : undefined}
+        aria-label={HERO_QUOTES.length > 1 ? "Show another quote" : undefined}
+        onKeyDown={(e) => {
+          if (HERO_QUOTES.length < 2) return;
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleHeadlineClick();
+          }
+        }}
+        className={`flex-1 min-w-0 text-center lg:text-left transition-opacity ease-out select-none ${
+          HERO_QUOTES.length > 1 ? "cursor-pointer" : ""
+        }`}
+        style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
+      >
+        <p className="text-[48px] sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold leading-[1] tracking-normal uppercase select-none font-display">
+          <span className="text-[#d7b158]">&#8220;</span>
+          <span className="text-[#f3ede2]">{entry.quote}</span>
+          <span className="text-[#d7b158]">&#8221;</span>
+          <br />
+          <span className="block mt-3 text-center sm:text-right text-[#f3ede2] text-[17px] sm:text-[22px] tracking-wide">
+            &ndash; {entry.attribution.toUpperCase()}
+          </span>
+        </p>
       </div>
 
       <div
@@ -222,50 +197,29 @@ export default function HeroQuote() {
         role="button"
         tabIndex={0}
         aria-label={`${entry.attribution} sculpted bust — hover to reveal the alternate pose, click and drag to tilt`}
-        className={`relative w-[220px] sm:w-[260px] lg:w-[300px] aspect-[308/376] shrink-0 select-none ${
+        className={`relative w-[220px] sm:w-[260px] lg:w-[300px] aspect-[308/376] shrink-0 select-none transition-opacity ease-out ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
+        style={{ opacity: visible ? 1 : 0, transitionDuration: `${FADE_MS}ms` }}
       >
-        {/* Wrapping the current pose pair (not the images themselves) lets the
-            whole thing drift up + fade in as one unit on rotation, without
-            touching the images' own tilt transform. Plain (non-positioned)
-            div — the images' `absolute inset-0` still resolves against the
-            outer bustRef container, same as before. */}
-        <div className={outgoing ? "animate-[heroFadeSlideInUp_650ms_ease-out]" : ""}>
-          <img
-            src={entry.bust}
-            alt={`${entry.attribution} sculpted bust`}
-            draggable={false}
-            style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
-            className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
-              stage === 0 ? "opacity-100" : "opacity-0"
-            }`}
-          />
-          <img
-            src={entry.bustAlt}
-            alt={`${entry.attribution} alternate sculpted bust`}
-            draggable={false}
-            style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
-            className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
-              stage === 1 ? "opacity-100" : "opacity-0"
-            }`}
-          />
-        </div>
-        {/* Outgoing bust — fades out while drifting down, same language as the
-            outgoing quote. Wrapped so the drift/fade animates on this div
-            while the image itself keeps its own live tilt transform. */}
-        {outgoing && (
-          <div className="absolute inset-0 animate-[heroFadeSlideOutDown_650ms_ease-in_forwards]">
-            <img
-              src={outgoing.bustSrc}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              style={{ transform: bustTransform }}
-              className="absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
-            />
-          </div>
-        )}
+        <img
+          src={entry.bust}
+          alt={`${entry.attribution} sculpted bust`}
+          draggable={false}
+          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
+          className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+            stage === 0 ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <img
+          src={entry.bustAlt}
+          alt={`${entry.attribution} alternate sculpted bust`}
+          draggable={false}
+          style={{ transition: "transform 150ms ease-out", transform: bustTransform }}
+          className={`absolute inset-0 m-auto w-auto h-auto max-w-full max-h-full select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)] ${
+            stage === 1 ? "opacity-100" : "opacity-0"
+          }`}
+        />
       </div>
     </section>
   );

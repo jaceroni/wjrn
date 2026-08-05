@@ -136,19 +136,3 @@ button:not(:disabled) {
   from { transform: rotate(0deg) translateZ(0); }
   to   { transform: rotate(-360deg) translateZ(0); }
 }
-
-/* Hero quote/bust rotation — a vertical-drift crossfade shared by both the
-   quote text and the bust: the outgoing one fades out while drifting down,
-   the incoming one fades in while drifting up into place, overlapping in
-   time so there's always something on screen. Replaced an earlier
-   horizontal-slide + elastic-overshoot + blur-morph version that read as
-   too busy/chaotic — this one is deliberately simple. */
-@keyframes heroFadeSlideOutDown {
-  0%   { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(24px); }
-}
-
-@keyframes heroFadeSlideInUp {
-  0%   { opacity: 0; transform: translateY(24px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
