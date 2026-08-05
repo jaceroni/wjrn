@@ -4,6 +4,7 @@ import twitchCardBg from "../assets/images/twitch-card-bg.png";
 import twitchCardBgKo from "../assets/images/twitch-card-bg-ko.png";
 import twitchCardBgMobile from "../assets/images/twitch-card-bg-mobile.png";
 import twitchCardBgKoMobile from "../assets/images/twitch-card-bg-ko-mobile.png";
+import twitchJoinButtonBg from "../assets/images/wjrn-home-player-button-twitch.png";
 
 declare global {
   interface Window {
@@ -342,7 +343,12 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
+            className="w-full py-4 px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer"
+            style={{
+              backgroundImage: `url(${twitchJoinButtonBg})`,
+              backgroundSize: "100% 100%",
+              backgroundRepeat: "no-repeat",
+            }}
           >
             JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
           </a>
@@ -456,7 +462,12 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             href="https://www.twitch.tv/jacewonmusic"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 px-4 rounded-xl border border-purple-500/50 bg-purple-500/20 text-purple-100 text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 hover:bg-purple-500 hover:border-purple-500 hover:text-black cursor-pointer"
+            className="w-full py-4 px-4 text-[#f3ede2] text-[11px] font-mono font-extrabold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer"
+            style={{
+              backgroundImage: `url(${twitchJoinButtonBg})`,
+              backgroundSize: "100% 100%",
+              backgroundRepeat: "no-repeat",
+            }}
           >
             JOIN THE LIVE CHAT <span className="hidden sm:inline">ON TWITCH.TV</span> <ArrowRight className="w-3 h-3" />
           </a>

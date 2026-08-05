@@ -28,11 +28,20 @@ import stationCardTonearm from "../assets/images/station-card-tonearm.png";
 import stationCardPlatterTrg from "../assets/images/station-card-platter-trg.png";
 import stationCardPlatterBchs from "../assets/images/station-card-platter-bchs.png";
 import stationCardPlatterGbs from "../assets/images/station-card-platter-gbs.png";
+import homePlayerButtonTrg from "../assets/images/wjrn-home-player-button-trg.png";
+import homePlayerButtonBchs from "../assets/images/wjrn-home-player-button-bchs.png";
+import homePlayerButtonGbs from "../assets/images/wjrn-home-player-button-gbs.png";
 
 const PLATTER_ARTWORKS: { [key: string]: string } = {
   rock_garden: stationCardPlatterTrg,
   bridge_city: stationCardPlatterBchs,
   golden_boombox: stationCardPlatterGbs,
+};
+
+const LEARN_MORE_BUTTON_ARTWORKS: { [key: string]: string } = {
+  rock_garden: homePlayerButtonTrg,
+  bridge_city: homePlayerButtonBchs,
+  golden_boombox: homePlayerButtonGbs,
 };
 
 // Anchor points measured against the native station-card-cabinet.png canvas (388x588).
@@ -540,12 +549,6 @@ export default function NebulaHomepage({
                 pulseColorBg = "bg-yellow-500";
               }
 
-              const learnMoreHoverClass =
-                station.id === "rock_garden" ? "hover:bg-emerald-500 hover:border-emerald-500" :
-                  station.id === "bridge_city" ? "hover:bg-pink-500 hover:border-pink-500" :
-                    station.id === "golden_boombox" ? "hover:bg-yellow-500 hover:border-yellow-500" :
-                      "hover:bg-[#d7b158] hover:border-[#d7b158]";
-
               const isOnline = !!station.streamUrl;
               const platterArt = PLATTER_ARTWORKS[station.id] || station.logoUrl;
               const isSpinning = isActive && audioState === "playing";
@@ -750,7 +753,12 @@ export default function NebulaHomepage({
                         e.preventDefault();
                         navigate(`/${STATION_SLUGS[station.id]}`);
                       }}
-                      className={`mt-2 w-full py-2.5 px-4 rounded-xl border text-[10px] font-mono font-semibold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center gap-2 bg-white/[0.03] hover:text-black ${textColorClass} border-current ${learnMoreHoverClass}`}
+                      className={`mt-2 w-full py-3 px-4 text-[10px] font-mono font-semibold uppercase tracking-[0.2em] flex items-center justify-center gap-2 cursor-pointer ${textColorClass}`}
+                      style={{
+                        backgroundImage: `url(${LEARN_MORE_BUTTON_ARTWORKS[station.id] ?? homePlayerButtonTrg})`,
+                        backgroundSize: "100% 100%",
+                        backgroundRepeat: "no-repeat",
+                      }}
                     >
                       Learn More <span className="hidden sm:inline">About This Station</span> <ArrowRight className="w-3 h-3" />
                     </a>

@@ -14,6 +14,9 @@ import tileBgRockGarden from "../assets/images/wjrn-tile-bg-trg-1a.png";
 import tileBgBridgeCity from "../assets/images/wjrn-tile-bg-bchs-1a.png";
 import tileBgGoldenBoombox from "../assets/images/wjrn-tile-bg-gbs-1a.png";
 import stationPagePlayerBg from "../assets/images/station-page-player-bg.png";
+import listenButtonBgTrg from "../assets/images/wjrn-station-page-player-button-trg.png";
+import listenButtonBgBchs from "../assets/images/wjrn-station-page-player-button-bchs.png";
+import listenButtonBgGbs from "../assets/images/wjrn-station-page-player-button-gbs.png";
 
 // Wood-frame / brushed-aluminum player panel — content sits inset from the plate edge
 // by this percentage on all sides, clearing the gold corner bolts (measured via pixel
@@ -73,6 +76,7 @@ interface StationConfig {
   logoSrc: string;
   textColorClass: string;
   buttonClass: string;
+  listenButtonBg: string;
   borderClass: string;
   pulseClass: string;
   streamUrl: string;
@@ -107,6 +111,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     logoSrc: logoRockGarden,
     textColorClass: "text-emerald-400",
     buttonClass: "bg-emerald-500 hover:bg-emerald-400",
+    listenButtonBg: listenButtonBgTrg,
     borderClass: "border-emerald-500/15 hover:border-emerald-500/55",
     pulseClass: "bg-emerald-500",
     streamUrl:
@@ -162,6 +167,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     logoSrc: logoBridgeCity,
     textColorClass: "text-pink-400",
     buttonClass: "bg-pink-500 hover:bg-pink-400",
+    listenButtonBg: listenButtonBgBchs,
     borderClass: "border-pink-500/15 hover:border-pink-500/55",
     pulseClass: "bg-pink-500",
     streamUrl:
@@ -217,6 +223,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     logoSrc: logoGoldenBoombox,
     textColorClass: "text-yellow-400",
     buttonClass: "bg-yellow-500 hover:bg-yellow-400",
+    listenButtonBg: listenButtonBgGbs,
     borderClass: "border-yellow-500/15 hover:border-yellow-500/55",
     pulseClass: "bg-yellow-500",
     streamUrl:
@@ -733,7 +740,12 @@ export default function StationLanding({ stationId }: StationLandingProps) {
               {!isThisStationOnDemand && (
                 <button
                   onClick={() => toggleStation(stationId)}
-                  className={`w-full py-4 rounded-xl text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black transition-all duration-300 active:scale-[0.98] ${config.buttonClass} flex items-center justify-center gap-3`}
+                  className="w-full py-4 text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-black active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
+                  style={{
+                    backgroundImage: `url(${config.listenButtonBg})`,
+                    backgroundSize: "100% 100%",
+                    backgroundRepeat: "no-repeat",
+                  }}
                 >
                   {pageAudioState === "connecting" ? (
                     <><span className="w-3 h-3 border-2 border-black/40 border-t-black rounded-full animate-spin" />CONNECTING...</>
