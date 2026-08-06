@@ -48,7 +48,7 @@ import { navigate } from "../navigate";
 | `/the-rock-garden` | `StationLanding` (stationId: `rock_garden`) |
 | `/bridge-city-hang-suite` | `StationLanding` (stationId: `bridge_city`) |
 | `/the-golden-boombox` | `StationLanding` (stationId: `golden_boombox`) |
-| `/about-wjrn` | `AboutWjrn` (team page) |
+| `/about` | `AboutWjrn` (team page; renamed from `/about-wjrn` 2026-08-06 — nginx 301-redirects the old URL) |
 
 Nginx has explicit `location` blocks for each of these that serve `index.html`.
 
