@@ -519,15 +519,15 @@ export default function StationLanding({ stationId }: StationLandingProps) {
 
           <span className="text-[var(--nav-accent)] text-[30px] leading-none">&middot;</span>
           <a
-            href="/about-wjrn"
+            href="/about"
             onClick={(e: React.MouseEvent) => {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
               e.preventDefault();
-              navigate("/about-wjrn");
+              navigate("/about");
             }}
             className="text-[#f3ede2]/80 hover:text-[var(--nav-accent)] transition-colors"
           >
-            About WJRN
+            About
           </a>
         </nav>
 

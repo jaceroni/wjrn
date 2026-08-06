@@ -92,14 +92,14 @@ export default function MobileNavOverlay({ STATIONS }: Props) {
           ))}
         </span>
         <a
-          href="/about-wjrn"
+          href="/about"
           onClick={(e: React.MouseEvent) => {
             e.preventDefault();
-            go("/about-wjrn");
+            go("/about");
           }}
           className="text-2xl text-[#f3ede2]/85 hover:text-[#d7b158] transition-colors"
         >
-          About WJRN
+          About
         </a>
       </nav>
 

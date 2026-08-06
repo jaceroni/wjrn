@@ -22,7 +22,7 @@ type ViewState =
 function resolveView(): ViewState {
   if (typeof window === "undefined") return { type: "retro" };
   const path = window.location.pathname;
-  if (path.startsWith("/about-wjrn")) return { type: "about" };
+  if (path.startsWith("/about")) return { type: "about" };
   for (const [slug, id] of Object.entries(SLUG_TO_STATION)) {
     if (path.startsWith(slug)) return { type: "station", stationId: id };
   }

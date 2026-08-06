@@ -224,7 +224,7 @@ export default function AboutWjrn({ STATIONS }: AboutWjrnProps) {
           </div>
 
           <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
-          <span className="text-[#d7b158]">About WJRN</span>
+          <span className="text-[#d7b158]">About</span>
         </nav>
 
         <div className="hidden md:flex items-center shrink-0">

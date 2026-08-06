@@ -431,15 +431,15 @@ export default function NebulaHomepage({
 
           <span className="text-[#d7b158] text-[30px] leading-none">&middot;</span>
           <a
-            href="/about-wjrn"
+            href="/about"
             onClick={(e) => {
               if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
               e.preventDefault();
-              navigate("/about-wjrn");
+              navigate("/about");
             }}
             className="text-[#f3ede2]/80 hover:text-[#d7b158] transition-colors"
           >
-            About WJRN
+            About
           </a>
         </nav>
 
