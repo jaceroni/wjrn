@@ -58,13 +58,13 @@ class MainActivity : AppCompatActivity() {
             KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_MEDIA_NEXT,
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
-                webView.evaluateJavascript("switchStation(1)", null)
+                touchNextStation()
                 return true
             }
             KeyEvent.KEYCODE_DPAD_LEFT,
             KeyEvent.KEYCODE_MEDIA_PREVIOUS,
             KeyEvent.KEYCODE_MEDIA_REWIND -> {
-                webView.evaluateJavascript("switchStation(-1)", null)
+                touchPrevStation()
                 return true
             }
             KeyEvent.KEYCODE_DPAD_UP,
@@ -74,24 +74,36 @@ class MainActivity : AppCompatActivity() {
         return super.dispatchKeyEvent(event)
     }
 
-    // Dispatch a real touch event at the artwork element coordinates.
-    // The web player's AudioContext requires a genuine user gesture on first play —
-    // evaluateJavascript doesn't satisfy that requirement, but a MotionEvent does.
-    private fun touchArtwork() {
+    // Dispatch a real touch event at a hit-zone's center, given its coordinates within the
+    // player's native 1280x443 canvas. The web player's AudioContext requires a genuine user
+    // gesture — evaluateJavascript doesn't satisfy that requirement (confirmed on-device:
+    // DPAD_LEFT/RIGHT routed through evaluateJavascript produced no effect at all, while this
+    // same touch-dispatch approach already worked reliably for play/pause), but a real
+    // MotionEvent does. MainActivity loads the player with no ?popout= param (Backdrop Mode),
+    // which positions the receiver's native canvas at (320, 340) within a 1920x1080 scene —
+    // so canvas-space coordinates just need that offset added, no extra scaling.
+    private fun dispatchTouchAtCanvasPoint(canvasX: Float, canvasY: Float) {
         val dm = DisplayMetrics()
         @Suppress("DEPRECATION")
         windowManager.defaultDisplay.getMetrics(dm)
         val scale = minOf(dm.widthPixels / 1920f, dm.heightPixels / 1080f)
         val offsetX = (dm.widthPixels - 1920f * scale) / 2f
         val offsetY = (dm.heightPixels - 1080f * scale) / 2f
-        // Artwork center within the 1920x1080 backdrop scene: (568, 578)
-        // Based on player position (320,340) + artwork offset (111,101) + half-size (137,137)
-        val x = offsetX + 568f * scale
-        val y = offsetY + 578f * scale
+        val x = offsetX + (320f + canvasX) * scale
+        val y = offsetY + (340f + canvasY) * scale
         val now = SystemClock.uptimeMillis()
         webView.dispatchTouchEvent(MotionEvent.obtain(now, now, MotionEvent.ACTION_DOWN, x, y, 0))
         webView.dispatchTouchEvent(MotionEvent.obtain(now, now + 100L, MotionEvent.ACTION_UP, x, y, 0))
     }
+
+    // hz-art center: left 111, top 101, width 274, height 274
+    private fun touchArtwork() = dispatchTouchAtCanvasPoint(111f + 137f, 101f + 137f)
+
+    // hz-tuning-knob center: left 993, top 212, width 188, height 67 — forward only
+    private fun touchNextStation() = dispatchTouchAtCanvasPoint(993f + 94f, 212f + 33.5f)
+
+    // hz-prev center: left 5, top 5, width 20, height 20 — invisible, remote-only backward hit zone
+    private fun touchPrevStation() = dispatchTouchAtCanvasPoint(5f + 10f, 5f + 10f)
 
     private fun hideSystemUI() {
         val decorView = window.decorView
