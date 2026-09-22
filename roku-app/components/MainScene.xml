@@ -6,20 +6,23 @@
         <!-- 1920x1080 Room Backdrop -->
         <Poster
             id="backdrop"
-            uri="pkg:/images/wjrn-player-backdrop.jpg"
+            uri="pkg:/images/wjrn-roku-player-backdrop.png"
             width="1920"
             height="1080" />
 
         <!-- Vintage Player Group centered on the credenza -->
         <Group id="playerContainer" translation="[320, 340]">
 
-            <!-- 1a. Fallback art (always the local packaged image, never blank) -->
+            <!-- 1a. Fallback art (always the local packaged image, never blank).
+                 loadDisplayMode="scaleToZoom" crops-to-fill a square window instead of
+                 stretching a 16:9 source image into it. -->
             <Poster
                 id="albumArtBase"
-                uri="pkg:/images/wjrn-player-app-startup-screen.jpg"
+                uri="pkg:/images/wjrn-roku-app-splash-screen.png"
                 translation="[111, 101]"
                 width="274"
-                height="274" />
+                height="274"
+                loadDisplayMode="scaleToZoom" />
 
             <!-- 1b. Remote now-playing art, layered on top — starts empty so albumArtBase
                  shows through underneath instead of a blank/transparent gap while it loads. -->
@@ -28,40 +31,69 @@
                 uri=""
                 translation="[111, 101]"
                 width="274"
-                height="274" />
+                height="274"
+                loadDisplayMode="scaleToZoom" />
 
             <!-- 2. Decorative VU meter bars (z-index: 1 - Behind faceplate) — Roku's Audio
                  node has no real-time amplitude API, so this is a lively decorative loop
-                 rather than genuine music-reactive analysis. -->
+                 rather than genuine music-reactive analysis. Anim/Interpolator nodes are
+                 siblings of the bars they animate — required for fieldToInterp to resolve. -->
             <Group id="vuMeter" translation="[0, 0]">
                 <Rectangle id="vuBar0" color="#d7b158" translation="[439, 143]" width="24" height="8" />
                 <Rectangle id="vuBar1" color="#d7b158" translation="[471, 143]" width="24" height="8" />
                 <Rectangle id="vuBar2" color="#d7b158" translation="[503, 143]" width="24" height="8" />
                 <Rectangle id="vuBar3" color="#d7b158" translation="[535, 143]" width="24" height="8" />
+
+                <Animation id="vuAnim0" duration="0.9" repeat="true" easeFunction="inOutQuad">
+                    <FloatFieldInterpolator id="vuInterp0" fieldToInterp="vuBar0.height" />
+                </Animation>
+                <Animation id="vuAnim1" duration="1.3" repeat="true" easeFunction="inOutQuad">
+                    <FloatFieldInterpolator id="vuInterp1" fieldToInterp="vuBar1.height" />
+                </Animation>
+                <Animation id="vuAnim2" duration="0.7" repeat="true" easeFunction="inOutQuad">
+                    <FloatFieldInterpolator id="vuInterp2" fieldToInterp="vuBar2.height" />
+                </Animation>
+                <Animation id="vuAnim3" duration="1.1" repeat="true" easeFunction="inOutQuad">
+                    <FloatFieldInterpolator id="vuInterp3" fieldToInterp="vuBar3.height" />
+                </Animation>
             </Group>
 
-            <!-- 3. Tuner Tick Line (z-index: 1 - Behind faceplate) -->
+            <!-- 3. Tuner Tick Line (z-index: 1 - Behind faceplate), slides between frequencies -->
             <Rectangle
                 id="tunerTick"
                 color="#ff3333"
                 translation="[682, 133]"
                 width="6"
                 height="38" />
+            <Animation id="tickAnim" duration="0.4" easeFunction="inOutExpo">
+                <Vector2DFieldInterpolator id="tickInterp" fieldToInterp="tunerTick.translation" />
+            </Animation>
 
-            <!-- 4. Metadata Ticker (z-index: 1 - Behind faceplate) -->
-            <Label
-                id="tickerText"
-                text="LOADING WJRN..."
-                translation="[410, 214]"
-                width="569"
-                height="48"
-                horizAlign="left"
-                vertAlign="center" />
+            <!-- 4. Metadata Ticker (z-index: 1 - Behind faceplate). Wrapped in its own Group
+                 with a clippingRect so scrolling text is actually contained to the ticker
+                 window (matching the web player's CSS overflow-clip) instead of bleeding
+                 into neighboring elements like the album art when it scrolls far. -->
+            <Group id="tickerClip" translation="[410, 214]" clippingRect="[0, 0, 569, 48]">
+                <Label
+                    id="tickerText"
+                    text="LOADING WJRN..."
+                    translation="[0, 0]"
+                    width="569"
+                    height="48"
+                    horizAlign="left"
+                    vertAlign="center"
+                    color="#f0a830">
+                    <Font role="font" size="28" />
+                </Label>
+                <Animation id="tickerAnim" duration="6" repeat="true" easeFunction="linear">
+                    <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerText.translation" />
+                </Animation>
+            </Group>
 
             <!-- 5. Faceplate Knockout Image overlay (z-index: 2) -->
             <Poster
                 id="faceplate"
-                uri="pkg:/images/wjrn-receiver-front-ko.png"
+                uri="pkg:/images/wjrn-roku-receiver-front-ko.png"
                 width="1280"
                 height="443" />
 
@@ -73,30 +105,5 @@
         <!-- Separate audio node for the one-shot tuning static sound effect, so it can
              play independently of (and briefly overlap with) the station stream swap. -->
         <Audio id="sfxPlayer" />
-
-        <!-- Tuner tick slide animation -->
-        <Animation id="tickAnim" duration="0.4" easeFunction="inOutExpo">
-            <Vector2DFieldInterpolator id="tickInterp" fieldToInterp="tunerTick.translation" />
-        </Animation>
-
-        <!-- Ticker marquee loop (only started when the current text is long enough to need it) -->
-        <Animation id="tickerAnim" duration="6" repeat="true" easeFunction="linear">
-            <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerText.translation" />
-        </Animation>
-
-        <!-- VU bar pulse loops — different durations so they drift out of phase instead of
-             pulsing in a mechanically identical loop. -->
-        <Animation id="vuAnim0" duration="0.9" repeat="true" easeFunction="inOutQuad">
-            <FloatFieldInterpolator id="vuInterp0" fieldToInterp="vuBar0.height" />
-        </Animation>
-        <Animation id="vuAnim1" duration="1.3" repeat="true" easeFunction="inOutQuad">
-            <FloatFieldInterpolator id="vuInterp1" fieldToInterp="vuBar1.height" />
-        </Animation>
-        <Animation id="vuAnim2" duration="0.7" repeat="true" easeFunction="inOutQuad">
-            <FloatFieldInterpolator id="vuInterp2" fieldToInterp="vuBar2.height" />
-        </Animation>
-        <Animation id="vuAnim3" duration="1.1" repeat="true" easeFunction="inOutQuad">
-            <FloatFieldInterpolator id="vuInterp3" fieldToInterp="vuBar3.height" />
-        </Animation>
     </children>
 </component>

@@ -57,19 +57,21 @@ end function
 sub tuneToStation(index as Integer)
     station = m.stations[index]
 
-    ' Animate the tuner tick sliding to the new frequency instead of teleporting
-    animateTunerTick(station.tickX)
-
-    ' One-shot tuning static burst, independent of the stream audio node
-    playTuningStatic()
-
-    ' Swap audio stream
+    ' Swap audio stream — kept as the first thing that happens, matching the original
+    ' working order, before any of the newer animation/SFX calls below.
     streamContent = createObject("roSGNode", "ContentNode")
     streamContent.url = station.stream
     streamContent.streamformat = "mp3"
 
     m.audioPlayer.content = streamContent
     m.audioPlayer.control = "play"
+
+    ' Animate the tuner tick sliding to the new frequency instead of teleporting
+    animateTunerTick(station.tickX)
+
+    ' One-shot tuning static burst, independent of the stream audio node
+    playTuningStatic()
+
     startVU()
 
     ' Update status on the ticker
@@ -136,19 +138,23 @@ end sub
 
 ' ── Metadata ticker + marquee ────────────────────────────────────────────────
 ' Roku's Label has no built-in marquee — long text is scrolled manually via a looping
-' translation animation; short text just sits centered-left, static. The faceplate PNG's
-' own opaque art crops anything that scrolls past the real ticker window, so no separate
-' clip mask is needed. Character-count is a rough stand-in for real text-width measurement.
+' translation animation; short text just sits centered-left, static. Containment comes
+' from tickerClip's clippingRect (see MainScene.xml) — text is never actually visible
+' outside the ticker window, however far it scrolls. Character-count is a rough stand-in
+' for real text-width measurement (Roku doesn't expose that pre-render without extra work).
 sub setTickerText(text as String)
     m.tickerText.text = text
     m.tickerAnim.control = "stop"
-    m.tickerText.translation = [410, 214]
+    m.tickerText.translation = [0, 0]
 
+    ' tickerText's translation is now relative to the tickerClip Group's own origin
+    ' (which sits at [410, 214] in playerContainer) — so 0 is "at rest," and scrolling is
+    ' purely negative from there. tickerClip's clippingRect keeps anything off-window hidden.
     approxTextWidth = Len(text) * 16
     visibleWidth = 569
     if approxTextWidth > visibleWidth
         scrollDistance = (approxTextWidth - visibleWidth) + 60
-        m.tickerInterp.keyValue = [[410, 214], [410 - scrollDistance, 214]]
+        m.tickerInterp.keyValue = [[0, 0], [0 - scrollDistance, 0]]
         m.tickerInterp.key = [0.0, 1.0]
         m.tickerAnim.duration = (Len(text) * 0.12)
         m.tickerAnim.control = "start"
