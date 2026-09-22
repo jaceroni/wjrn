@@ -25,7 +25,6 @@ if [ -f "src/assets/images/wjrn-receiver-front-ko.png" ]; then
 fi
 if [ -f "src/assets/images/wjrn-player-backdrop.jpg" ]; then
   cp src/assets/images/wjrn-player-backdrop.jpg public/player/wjrn-player-backdrop.jpg
-  cp src/assets/images/wjrn-player-backdrop.jpg roku-app/images/wjrn-player-backdrop.jpg
 fi
 
 echo "=== Building React project locally ==="
