@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Android signing secrets — never commit
+android-tv-app/keystore.properties
+android-tv-app/*.jks
+android-tv-app/*.keystore
+android-tv-app/release-keystore/
