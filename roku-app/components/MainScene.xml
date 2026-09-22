@@ -46,39 +46,54 @@
                 width="1280"
                 height="443" />
 
-            <!-- 3. Decorative VU meter bars, on top of the faceplate — Roku's Audio node has
-                 no real-time amplitude API, so this is a lively decorative loop rather than
-                 genuine music-reactive analysis. Anim/Interpolator nodes are siblings of the
-                 bars they animate — required for fieldToInterp to resolve. -->
-            <Group id="vuMeter" translation="[0, 0]">
-                <Rectangle id="vuBar0" color="#d7b158" translation="[439, 143]" width="24" height="8" />
-                <Rectangle id="vuBar1" color="#d7b158" translation="[471, 143]" width="24" height="8" />
-                <Rectangle id="vuBar2" color="#d7b158" translation="[503, 143]" width="24" height="8" />
-                <Rectangle id="vuBar3" color="#d7b158" translation="[535, 143]" width="24" height="8" />
+            <!-- 3. VU meter — a real pivoting needle, matching the web player's canvas-drawn
+                 gauge exactly (public/player/index.html drawVU(): pivot at box-local (75.5,79),
+                 needle length 60, sweeps between vuAngle=PI/4 and PI/4+PI/2 i.e. a 90° sweep
+                 centered on straight-up). Box sits at (423,104), so the pivot in
+                 playerContainer space is (423+75.5, 104+79) = (498.5, 183). Roku's Rectangle
+                 has no separate pivot field for rotation — scaleRotateCenter in the
+                 Rectangle's own LOCAL coordinates does that job; set to the rectangle's
+                 bottom-center [1,60] so translation [497.5,123] (pivot minus that local
+                 offset) places the true pivot at (498.5,183) as intended, and `rotation`
+                 (radians; Roku docs: positive = counterclockwise, rotates about
+                 scaleRotateCenter) then swings the needle around its base rather than its
+                 top-left corner. Roku's Audio node has no real-time amplitude API like the
+                 web player's AnalyserNode, so the sweep is a decorative loop while playing,
+                 not genuine audio-reactive analysis — same platform limitation as before,
+                 now at least shaped like the real gauge instead of an unrelated bar meter. -->
+            <Rectangle
+                id="vuNeedle"
+                color="#ff3333"
+                translation="[497.5, 123]"
+                width="2"
+                height="60"
+                scaleRotateCenter="[1, 60]"
+                rotation="0.785" />
+            <Animation id="vuAnim" duration="0.5" repeat="true" easeFunction="inOutQuad">
+                <FloatFieldInterpolator id="vuInterp" fieldToInterp="vuNeedle.rotation" />
+            </Animation>
 
-                <Animation id="vuAnim0" duration="0.9" repeat="true" easeFunction="inOutQuad">
-                    <FloatFieldInterpolator id="vuInterp0" fieldToInterp="vuBar0.height" />
-                </Animation>
-                <Animation id="vuAnim1" duration="1.3" repeat="true" easeFunction="inOutQuad">
-                    <FloatFieldInterpolator id="vuInterp1" fieldToInterp="vuBar1.height" />
-                </Animation>
-                <Animation id="vuAnim2" duration="0.7" repeat="true" easeFunction="inOutQuad">
-                    <FloatFieldInterpolator id="vuInterp2" fieldToInterp="vuBar2.height" />
-                </Animation>
-                <Animation id="vuAnim3" duration="1.1" repeat="true" easeFunction="inOutQuad">
-                    <FloatFieldInterpolator id="vuInterp3" fieldToInterp="vuBar3.height" />
-                </Animation>
-            </Group>
-
-            <!-- 4. Tuner Tick Line, on top of the faceplate — slides between frequencies -->
+            <!-- 4. Tuner Tick Line, on top of the faceplate — slides between frequencies.
+                 Matches #tuner-tick exactly: width 4px (not 6), color #ff3333. Roku's
+                 Rectangle has no box-shadow field, so the CSS drop shadow
+                 (1px 2px 4px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.35)) is faked with a
+                 dark, slightly larger, offset Rectangle drawn directly behind it — same
+                 offset-duplicate trick used for the ticker glow. -->
+            <Rectangle
+                id="tunerTickShadow"
+                color="0x00000099"
+                translation="[683, 135]"
+                width="5"
+                height="39" />
             <Rectangle
                 id="tunerTick"
                 color="#ff3333"
                 translation="[682, 133]"
-                width="6"
+                width="4"
                 height="38" />
             <Animation id="tickAnim" duration="0.4" easeFunction="inOutExpo">
                 <Vector2DFieldInterpolator id="tickInterp" fieldToInterp="tunerTick.translation" />
+                <Vector2DFieldInterpolator id="tickShadowInterp" fieldToInterp="tunerTickShadow.translation" />
             </Animation>
 
             <!-- 5. Metadata Ticker, on top of the faceplate. Wrapped in its own Group
@@ -93,14 +108,24 @@
                      duplicate labels at reduced opacity behind the real one — a standard
                      Roku technique for approximating a soft glow. All three live inside
                      tickerScroll so one animation moves all three together for the marquee. -->
-                <!-- No monospace system font exists on Roku (verified against official docs —
-                     TinySystemFont through ExtraLargeBoldSystemFont, all proportional, no
-                     monospace variant), so this uses the closest bold system font instead
-                     of guessing at a font file that doesn't exist in this project. -->
+                <!-- Reference #ticker-text is font-size: 14px — none of Roku's named system
+                     fonts (TinySystemFont..ExtraLargeBoldSystemFont, all proportional, no
+                     monospace variant, verified against official docs) land anywhere near
+                     that at this canvas scale, so this uses a Font node with an explicit
+                     size instead — a Font's `size` field works with no `uri` given (falls
+                     back to Roku's default font family at that exact pixel size), unlike
+                     the earlier named-keyword approach which was stuck at a fixed, too-large
+                     size. -->
                 <Group id="tickerScroll" translation="[0, 0]">
-                    <Label id="tickerGlow1" text="" translation="[-1, -1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5" font="font:LargeBoldSystemFont" />
-                    <Label id="tickerGlow2" text="" translation="[1, 1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5" font="font:LargeBoldSystemFont" />
-                    <Label id="tickerText" text="LOADING WJRN..." translation="[0, 0]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" font="font:LargeBoldSystemFont" />
+                    <Label id="tickerGlow1" text="" translation="[-1, -1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5">
+                        <Font role="font" size="14" />
+                    </Label>
+                    <Label id="tickerGlow2" text="" translation="[1, 1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5">
+                        <Font role="font" size="14" />
+                    </Label>
+                    <Label id="tickerText" text="LOADING WJRN..." translation="[0, 0]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91">
+                        <Font role="font" size="14" />
+                    </Label>
                 </Group>
                 <Animation id="tickerAnim" duration="6" repeat="true" easeFunction="linear">
                     <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerScroll.translation" />

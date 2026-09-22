@@ -2,6 +2,7 @@ sub init()
     m.audioPlayer = m.top.findNode("audioPlayer")
     m.sfxPlayer = m.top.findNode("sfxPlayer")
     m.tunerTick = m.top.findNode("tunerTick")
+    m.tunerTickShadow = m.top.findNode("tunerTickShadow")
     m.tickerScroll = m.top.findNode("tickerScroll")
     m.tickerText = m.top.findNode("tickerText")
     m.tickerGlow1 = m.top.findNode("tickerGlow1")
@@ -11,17 +12,24 @@ sub init()
 
     m.tickAnim = m.top.findNode("tickAnim")
     m.tickInterp = m.top.findNode("tickInterp")
+    m.tickShadowInterp = m.top.findNode("tickShadowInterp")
     m.tickerAnim = m.top.findNode("tickerAnim")
     m.tickerInterp = m.top.findNode("tickerInterp")
 
-    m.vuBars = [m.top.findNode("vuBar0"), m.top.findNode("vuBar1"), m.top.findNode("vuBar2"), m.top.findNode("vuBar3")]
-    m.vuAnims = [m.top.findNode("vuAnim0"), m.top.findNode("vuAnim1"), m.top.findNode("vuAnim2"), m.top.findNode("vuAnim3")]
-    m.vuInterps = [m.top.findNode("vuInterp0"), m.top.findNode("vuInterp1"), m.top.findNode("vuInterp2"), m.top.findNode("vuInterp3")]
-    m.vuRanges = [[8.0, 28.0], [8.0, 36.0], [6.0, 24.0], [8.0, 32.0]]
+    m.vuNeedle = m.top.findNode("vuNeedle")
+    m.vuAnim = m.top.findNode("vuAnim")
+    m.vuInterp = m.top.findNode("vuInterp")
+    ' Matches drawVU() in public/player/index.html: vuAngle sweeps from PI/4 to PI/4+PI/2
+    ' (a 90° arc). See the long comment on the vuNeedle Rectangle in MainScene.xml for the
+    ' full canvas-angle-to-Roku-rotation derivation — net result is the needle's `rotation`
+    ' field ranges from +0.785 rad (idle/quiet, swung toward up-left) to -0.785 rad
+    ' (loud/max, swung toward up-right), pivoting around its base the whole time.
+    m.vuRestRotation = 0.785
+    m.vuMaxRotation = -0.785
 
     print "WJRN init: audioPlayer="; type(m.audioPlayer); " tunerTick="; type(m.tunerTick); " tickerText="; type(m.tickerText)
     print "WJRN init: tickAnim="; type(m.tickAnim); " tickInterp="; type(m.tickInterp); " tickerAnim="; type(m.tickerAnim); " tickerInterp="; type(m.tickerInterp)
-    print "WJRN init: vuBars="; type(m.vuBars[0]); " vuAnims="; type(m.vuAnims[0]); " vuInterps="; type(m.vuInterps[0])
+    print "WJRN init: vuNeedle="; type(m.vuNeedle); " vuAnim="; type(m.vuAnim); " vuInterp="; type(m.vuInterp)
 
     m.top.setFocus(true)
 
@@ -140,8 +148,13 @@ end sub
 sub animateTunerTick(targetX as Float)
     m.tickAnim.control = "stop"
     startPos = m.tunerTick.translation
+    shadowStartPos = m.tunerTickShadow.translation
     m.tickInterp.keyValue = [startPos, [targetX, 133]]
     m.tickInterp.key = [0.0, 1.0]
+    ' Shadow rectangle is offset +1,+2 from the real tick line — keep that fixed offset
+    ' as it slides so it still reads as a shadow the whole way, not just at rest.
+    m.tickShadowInterp.keyValue = [shadowStartPos, [targetX + 1, 135]]
+    m.tickShadowInterp.key = [0.0, 1.0]
     m.tickAnim.control = "start"
     print "WJRN animateTunerTick: from="; startPos; " to=["; targetX; ", 133] control="; m.tickAnim.control
 end sub
@@ -177,25 +190,21 @@ sub setTickerText(rawText as String)
     end if
 end sub
 
-' ── Decorative VU meter ──────────────────────────────────────────────────────
+' ── Decorative VU meter needle ───────────────────────────────────────────────
 ' Roku's Audio node has no real-time amplitude/frequency API like Web Audio's AnalyserNode,
-' so this is a lively decorative loop tied to play/pause state, not genuine audio analysis.
+' so this sweeps the needle back and forth between its rest and max rotation while playing —
+' a decorative loop, not genuine audio analysis (see the derivation comment in init()/XML).
 sub startVU()
     print "WJRN startVU called"
-    for i = 0 to m.vuBars.count() - 1
-        range = m.vuRanges[i]
-        m.vuInterps[i].keyValue = [range[0], range[1]]
-        m.vuInterps[i].key = [0.0, 1.0]
-        m.vuAnims[i].control = "start"
-    end for
-    print "WJRN startVU: vuAnim0.control="; m.vuAnims[0].control
+    m.vuInterp.keyValue = [m.vuRestRotation, m.vuMaxRotation]
+    m.vuInterp.key = [0.0, 1.0]
+    m.vuAnim.control = "start"
+    print "WJRN startVU: vuAnim.control="; m.vuAnim.control
 end sub
 
 sub stopVU()
-    for i = 0 to m.vuAnims.count() - 1
-        m.vuAnims[i].control = "stop"
-        m.vuBars[i].height = m.vuRanges[i][0]
-    end for
+    m.vuAnim.control = "stop"
+    m.vuNeedle.rotation = m.vuRestRotation
 end sub
 
 ' ── One-shot tuning static sound effect ──────────────────────────────────────
