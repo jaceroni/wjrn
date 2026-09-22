@@ -4,51 +4,99 @@
 
     <children>
         <!-- 1920x1080 Room Backdrop -->
-        <Poster 
-            id="backdrop" 
-            uri="pkg:/images/wjrn-player-backdrop.jpg" 
-            width="1920" 
+        <Poster
+            id="backdrop"
+            uri="pkg:/images/wjrn-player-backdrop.jpg"
+            width="1920"
             height="1080" />
 
         <!-- Vintage Player Group centered on the credenza -->
         <Group id="playerContainer" translation="[320, 340]">
-            
-            <!-- 1. Album Art (z-index: 1 - Behind faceplate) -->
-            <Poster 
-                id="albumArt" 
-                uri="pkg:/images/wjrn-player-app-startup-screen.jpg" 
-                translation="[111, 101]" 
-                width="274" 
+
+            <!-- 1a. Fallback art (always the local packaged image, never blank) -->
+            <Poster
+                id="albumArtBase"
+                uri="pkg:/images/wjrn-player-app-startup-screen.jpg"
+                translation="[111, 101]"
+                width="274"
                 height="274" />
 
-            <!-- 2. Tuner Tick Line (z-index: 1 - Behind faceplate) -->
-            <Rectangle 
-                id="tunerTick" 
-                color="#ff3333" 
-                translation="[682, 133]" 
-                width="6" 
+            <!-- 1b. Remote now-playing art, layered on top — starts empty so albumArtBase
+                 shows through underneath instead of a blank/transparent gap while it loads. -->
+            <Poster
+                id="albumArtRemote"
+                uri=""
+                translation="[111, 101]"
+                width="274"
+                height="274" />
+
+            <!-- 2. Decorative VU meter bars (z-index: 1 - Behind faceplate) — Roku's Audio
+                 node has no real-time amplitude API, so this is a lively decorative loop
+                 rather than genuine music-reactive analysis. -->
+            <Group id="vuMeter" translation="[0, 0]">
+                <Rectangle id="vuBar0" color="#d7b158" translation="[439, 143]" width="24" height="8" />
+                <Rectangle id="vuBar1" color="#d7b158" translation="[471, 143]" width="24" height="8" />
+                <Rectangle id="vuBar2" color="#d7b158" translation="[503, 143]" width="24" height="8" />
+                <Rectangle id="vuBar3" color="#d7b158" translation="[535, 143]" width="24" height="8" />
+            </Group>
+
+            <!-- 3. Tuner Tick Line (z-index: 1 - Behind faceplate) -->
+            <Rectangle
+                id="tunerTick"
+                color="#ff3333"
+                translation="[682, 133]"
+                width="6"
                 height="38" />
 
-            <!-- 3. Metadata Ticker (z-index: 1 - Behind faceplate) -->
-            <Label 
-                id="tickerText" 
-                text="LOADING WJRN..." 
-                translation="[410, 214]" 
-                width="569" 
-                height="48" 
-                horizAlign="left" 
+            <!-- 4. Metadata Ticker (z-index: 1 - Behind faceplate) -->
+            <Label
+                id="tickerText"
+                text="LOADING WJRN..."
+                translation="[410, 214]"
+                width="569"
+                height="48"
+                horizAlign="left"
                 vertAlign="center" />
 
-            <!-- 4. Faceplate Knockout Image overlay (z-index: 2) -->
-            <Poster 
-                id="faceplate" 
-                uri="pkg:/images/wjrn-receiver-front-ko.png" 
-                width="1280" 
+            <!-- 5. Faceplate Knockout Image overlay (z-index: 2) -->
+            <Poster
+                id="faceplate"
+                uri="pkg:/images/wjrn-receiver-front-ko.png"
+                width="1280"
                 height="443" />
 
         </Group>
 
         <!-- Hidden Native Audio Engine -->
         <Audio id="audioPlayer" />
+
+        <!-- Separate audio node for the one-shot tuning static sound effect, so it can
+             play independently of (and briefly overlap with) the station stream swap. -->
+        <Audio id="sfxPlayer" />
+
+        <!-- Tuner tick slide animation -->
+        <Animation id="tickAnim" duration="0.4" easeFunction="inOutExpo">
+            <Vector2DFieldInterpolator id="tickInterp" fieldToInterp="tunerTick.translation" />
+        </Animation>
+
+        <!-- Ticker marquee loop (only started when the current text is long enough to need it) -->
+        <Animation id="tickerAnim" duration="6" repeat="true" easeFunction="linear">
+            <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerText.translation" />
+        </Animation>
+
+        <!-- VU bar pulse loops — different durations so they drift out of phase instead of
+             pulsing in a mechanically identical loop. -->
+        <Animation id="vuAnim0" duration="0.9" repeat="true" easeFunction="inOutQuad">
+            <FloatFieldInterpolator id="vuInterp0" fieldToInterp="vuBar0.height" />
+        </Animation>
+        <Animation id="vuAnim1" duration="1.3" repeat="true" easeFunction="inOutQuad">
+            <FloatFieldInterpolator id="vuInterp1" fieldToInterp="vuBar1.height" />
+        </Animation>
+        <Animation id="vuAnim2" duration="0.7" repeat="true" easeFunction="inOutQuad">
+            <FloatFieldInterpolator id="vuInterp2" fieldToInterp="vuBar2.height" />
+        </Animation>
+        <Animation id="vuAnim3" duration="1.1" repeat="true" easeFunction="inOutQuad">
+            <FloatFieldInterpolator id="vuInterp3" fieldToInterp="vuBar3.height" />
+        </Animation>
     </children>
 </component>
