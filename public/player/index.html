@@ -573,9 +573,10 @@ function goToStation(targetIndex) {
 }
 
 function switchStation(dir) {
-  if (isTuning || !audioCtx) { if (!audioCtx) { initAudio(); return; } return; }
+  if (isTuning) return;
   var d = (dir !== undefined) ? dir : 1;
   var target = (currentStation + d + STATIONS.length) % STATIONS.length;
+  if (!audioCtx) { initAudio(target); return; }
   goToStation(target);
 }
 
