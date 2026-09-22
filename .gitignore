@@ -12,3 +12,6 @@ android-tv-app/keystore.properties
 android-tv-app/*.jks
 android-tv-app/*.keystore
 android-tv-app/release-keystore/
+
+# Roku channel package (build artifact, not source)
+roku-app/*.zip

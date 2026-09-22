@@ -2,7 +2,7 @@ sub init()
     m.top.functionName = "runTask"
 end sub
 
-function runTask()
+sub runTask()
     shortcode = m.top.shortcode
     if shortcode = "" or shortcode = invalid then return
 
@@ -29,4 +29,4 @@ function runTask()
 
         sleep(15000)
     end while
-end function
+end sub
