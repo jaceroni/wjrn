@@ -179,14 +179,22 @@ sub setTickerText(rawText as String)
     ' negative from there, and animating this one wrapping group moves all three stacked
     ' labels (the real text + its two glow copies) together. tickerClip's clippingRect
     ' keeps anything off-window hidden.
-    approxTextWidth = Len(text) * 16
+    ' Recalibrated for the real 14px font (was tuned for the old, wrong 28px system font —
+    ' half that per-character estimate now that the font is actually half the size).
+    approxTextWidth = Len(text) * 8
     visibleWidth = 569
+    print "WJRN setTickerText: text="; text; " len="; Len(text); " approxWidth="; approxTextWidth; " willScroll="; (approxTextWidth > visibleWidth)
     if approxTextWidth > visibleWidth
         scrollDistance = (approxTextWidth - visibleWidth) + 60
-        m.tickerInterp.keyValue = [[0, 0], [0 - scrollDistance, 0]]
-        m.tickerInterp.key = [0.0, 1.0]
-        m.tickerAnim.duration = (Len(text) * 0.12)
+        ' Three keyframes (out, then back to start) instead of two — with only two and
+        ' repeat=true, Roku snaps instantly back to the first keyframe every loop instead
+        ' of reversing, which is exactly the "spazzing" jump the VU needle had for the same
+        ' reason (see startVU()). This scrolls out and eases back smoothly instead.
+        m.tickerInterp.keyValue = [[0, 0], [0 - scrollDistance, 0], [0, 0]]
+        m.tickerInterp.key = [0.0, 0.5, 1.0]
+        m.tickerAnim.duration = (Len(text) * 0.24)
         m.tickerAnim.control = "start"
+        print "WJRN setTickerText: scrollDistance="; scrollDistance; " duration="; m.tickerAnim.duration; " control="; m.tickerAnim.control
     end if
 end sub
 
@@ -196,8 +204,12 @@ end sub
 ' a decorative loop, not genuine audio analysis (see the derivation comment in init()/XML).
 sub startVU()
     print "WJRN startVU called"
-    m.vuInterp.keyValue = [m.vuRestRotation, m.vuMaxRotation]
-    m.vuInterp.key = [0.0, 1.0]
+    ' Three keyframes (rest -> max -> rest), not two — with only two and repeat=true, Roku
+    ' snaps instantly back to the first keyframe every loop instead of reversing, which is
+    ' the "spazzing / full left, full right, snap" behavior reported on-device. This sweeps
+    ' out and back smoothly within each cycle instead.
+    m.vuInterp.keyValue = [m.vuRestRotation, m.vuMaxRotation, m.vuRestRotation]
+    m.vuInterp.key = [0.0, 0.5, 1.0]
     m.vuAnim.control = "start"
     print "WJRN startVU: vuAnim.control="; m.vuAnim.control
 end sub

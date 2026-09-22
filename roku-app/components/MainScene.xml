@@ -69,7 +69,7 @@
                 height="60"
                 scaleRotateCenter="[1, 60]"
                 rotation="0.785" />
-            <Animation id="vuAnim" duration="0.5" repeat="true" easeFunction="inOutQuad">
+            <Animation id="vuAnim" duration="0.9" repeat="true" easeFunction="inOutQuad">
                 <FloatFieldInterpolator id="vuInterp" fieldToInterp="vuNeedle.rotation" />
             </Animation>
 
