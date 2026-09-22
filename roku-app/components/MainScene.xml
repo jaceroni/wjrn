@@ -86,19 +86,24 @@
                  window (matching the web player's CSS overflow-clip) instead of bleeding
                  into neighboring elements like the album art when it scrolls far. -->
             <Group id="tickerClip" translation="[410, 214]" clippingRect="[0, 0, 569, 48]">
-                <Label
-                    id="tickerText"
-                    text="LOADING WJRN..."
-                    translation="[0, 0]"
-                    width="569"
-                    height="48"
-                    horizAlign="left"
-                    vertAlign="center"
-                    color="#f0a830">
-                    <Font role="font" size="28" />
-                </Label>
+                <!-- Matches public/player/index.html's #ticker-text exactly: color #23bf91,
+                     uppercase (applied in BRS via UCase), monospace, letter-spaced. Roku's
+                     Label has no text-shadow/glow field, so the CSS glow
+                     (text-shadow: 0 0 8px rgba(35,191,145,0.6)) is faked with two offset
+                     duplicate labels at reduced opacity behind the real one — a standard
+                     Roku technique for approximating a soft glow. All three live inside
+                     tickerScroll so one animation moves all three together for the marquee. -->
+                <!-- No monospace system font exists on Roku (verified against official docs —
+                     TinySystemFont through ExtraLargeBoldSystemFont, all proportional, no
+                     monospace variant), so this uses the closest bold system font instead
+                     of guessing at a font file that doesn't exist in this project. -->
+                <Group id="tickerScroll" translation="[0, 0]">
+                    <Label id="tickerGlow1" text="" translation="[-1, -1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5" font="font:LargeBoldSystemFont" />
+                    <Label id="tickerGlow2" text="" translation="[1, 1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5" font="font:LargeBoldSystemFont" />
+                    <Label id="tickerText" text="LOADING WJRN..." translation="[0, 0]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" font="font:LargeBoldSystemFont" />
+                </Group>
                 <Animation id="tickerAnim" duration="6" repeat="true" easeFunction="linear">
-                    <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerText.translation" />
+                    <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerScroll.translation" />
                 </Animation>
             </Group>
 

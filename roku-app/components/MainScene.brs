@@ -2,7 +2,10 @@ sub init()
     m.audioPlayer = m.top.findNode("audioPlayer")
     m.sfxPlayer = m.top.findNode("sfxPlayer")
     m.tunerTick = m.top.findNode("tunerTick")
+    m.tickerScroll = m.top.findNode("tickerScroll")
     m.tickerText = m.top.findNode("tickerText")
+    m.tickerGlow1 = m.top.findNode("tickerGlow1")
+    m.tickerGlow2 = m.top.findNode("tickerGlow2")
     m.albumArtBase = m.top.findNode("albumArtBase")
     m.albumArtRemote = m.top.findNode("albumArtRemote")
 
@@ -149,14 +152,20 @@ end sub
 ' from tickerClip's clippingRect (see MainScene.xml) — text is never actually visible
 ' outside the ticker window, however far it scrolls. Character-count is a rough stand-in
 ' for real text-width measurement (Roku doesn't expose that pre-render without extra work).
-sub setTickerText(text as String)
+sub setTickerText(rawText as String)
+    ' Matches the web player's #ticker-text exactly: text-transform: uppercase.
+    text = UCase(rawText)
     m.tickerText.text = text
+    m.tickerGlow1.text = text
+    m.tickerGlow2.text = text
     m.tickerAnim.control = "stop"
-    m.tickerText.translation = [0, 0]
+    m.tickerScroll.translation = [0, 0]
 
-    ' tickerText's translation is now relative to the tickerClip Group's own origin
-    ' (which sits at [410, 214] in playerContainer) — so 0 is "at rest," and scrolling is
-    ' purely negative from there. tickerClip's clippingRect keeps anything off-window hidden.
+    ' tickerScroll's translation is relative to the tickerClip Group's own origin (which
+    ' sits at [410, 214] in playerContainer) — so 0 is "at rest," scrolling is purely
+    ' negative from there, and animating this one wrapping group moves all three stacked
+    ' labels (the real text + its two glow copies) together. tickerClip's clippingRect
+    ' keeps anything off-window hidden.
     approxTextWidth = Len(text) * 16
     visibleWidth = 569
     if approxTextWidth > visibleWidth
