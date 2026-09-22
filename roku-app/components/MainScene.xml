@@ -13,12 +13,15 @@
         <!-- Vintage Player Group centered on the credenza -->
         <Group id="playerContainer" translation="[320, 340]">
 
-            <!-- 1a. Fallback art (always the local packaged image, never blank).
-                 loadDisplayMode="scaleToZoom" crops-to-fill a square window instead of
-                 stretching a 16:9 source image into it. -->
+            <!-- 1a. Fallback art (always the local packaged image, never blank) — same
+                 square default-art image the website/Android app fall back to
+                 (jacewon-thumbnail.jpg), not the widescreen splash screen. The splash
+                 screen is a 1920x1080 marketing graphic; scaleToZoom into a 274x274
+                 window was cropping it into an unrecognizable "screenshot" any time
+                 remote art was cleared on station change. -->
             <Poster
                 id="albumArtBase"
-                uri="pkg:/images/wjrn-roku-app-splash-screen.png"
+                uri="pkg:/images/wjrn-roku-default-art.png"
                 translation="[111, 101]"
                 width="274"
                 height="274"
@@ -34,10 +37,19 @@
                 height="274"
                 loadDisplayMode="scaleToZoom" />
 
-            <!-- 2. Decorative VU meter bars (z-index: 1 - Behind faceplate) — Roku's Audio
-                 node has no real-time amplitude API, so this is a lively decorative loop
-                 rather than genuine music-reactive analysis. Anim/Interpolator nodes are
-                 siblings of the bars they animate — required for fieldToInterp to resolve. -->
+            <!-- 2. Faceplate — masks the album art behind its one knockout window. Everything
+                 below this point (VU meter, tuner tick, ticker) renders ON TOP of the
+                 faceplate, not behind it — only the art sits behind/through the cutout. -->
+            <Poster
+                id="faceplate"
+                uri="pkg:/images/wjrn-roku-receiver-front-ko.png"
+                width="1280"
+                height="443" />
+
+            <!-- 3. Decorative VU meter bars, on top of the faceplate — Roku's Audio node has
+                 no real-time amplitude API, so this is a lively decorative loop rather than
+                 genuine music-reactive analysis. Anim/Interpolator nodes are siblings of the
+                 bars they animate — required for fieldToInterp to resolve. -->
             <Group id="vuMeter" translation="[0, 0]">
                 <Rectangle id="vuBar0" color="#d7b158" translation="[439, 143]" width="24" height="8" />
                 <Rectangle id="vuBar1" color="#d7b158" translation="[471, 143]" width="24" height="8" />
@@ -58,7 +70,7 @@
                 </Animation>
             </Group>
 
-            <!-- 3. Tuner Tick Line (z-index: 1 - Behind faceplate), slides between frequencies -->
+            <!-- 4. Tuner Tick Line, on top of the faceplate — slides between frequencies -->
             <Rectangle
                 id="tunerTick"
                 color="#ff3333"
@@ -69,7 +81,7 @@
                 <Vector2DFieldInterpolator id="tickInterp" fieldToInterp="tunerTick.translation" />
             </Animation>
 
-            <!-- 4. Metadata Ticker (z-index: 1 - Behind faceplate). Wrapped in its own Group
+            <!-- 5. Metadata Ticker, on top of the faceplate. Wrapped in its own Group
                  with a clippingRect so scrolling text is actually contained to the ticker
                  window (matching the web player's CSS overflow-clip) instead of bleeding
                  into neighboring elements like the album art when it scrolls far. -->
@@ -89,13 +101,6 @@
                     <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerText.translation" />
                 </Animation>
             </Group>
-
-            <!-- 5. Faceplate Knockout Image overlay (z-index: 2) -->
-            <Poster
-                id="faceplate"
-                uri="pkg:/images/wjrn-roku-receiver-front-ko.png"
-                width="1280"
-                height="443" />
 
         </Group>
 

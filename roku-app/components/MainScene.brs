@@ -16,6 +16,10 @@ sub init()
     m.vuInterps = [m.top.findNode("vuInterp0"), m.top.findNode("vuInterp1"), m.top.findNode("vuInterp2"), m.top.findNode("vuInterp3")]
     m.vuRanges = [[8.0, 28.0], [8.0, 36.0], [6.0, 24.0], [8.0, 32.0]]
 
+    print "WJRN init: audioPlayer="; type(m.audioPlayer); " tunerTick="; type(m.tunerTick); " tickerText="; type(m.tickerText)
+    print "WJRN init: tickAnim="; type(m.tickAnim); " tickInterp="; type(m.tickInterp); " tickerAnim="; type(m.tickerAnim); " tickerInterp="; type(m.tickerInterp)
+    print "WJRN init: vuBars="; type(m.vuBars[0]); " vuAnims="; type(m.vuAnims[0]); " vuInterps="; type(m.vuInterps[0])
+
     m.top.setFocus(true)
 
     ' Define stations (matching PlayerContext.tsx and public/player/index.html)
@@ -56,6 +60,7 @@ end function
 
 sub tuneToStation(index as Integer)
     station = m.stations[index]
+    print "WJRN tuneToStation: "; station.name; " shortcode="; station.shortcode
 
     ' Swap audio stream — kept as the first thing that happens, matching the original
     ' working order, before any of the newer animation/SFX calls below.
@@ -107,6 +112,7 @@ end sub
 
 sub onMetadataChange()
     metadata = m.nowPlayingTask.metadata
+    print "WJRN onMetadataChange fired, metadata="; type(metadata)
     if metadata = invalid then return
 
     station = m.stations[m.activeStationIndex]
@@ -134,6 +140,7 @@ sub animateTunerTick(targetX as Float)
     m.tickInterp.keyValue = [startPos, [targetX, 133]]
     m.tickInterp.key = [0.0, 1.0]
     m.tickAnim.control = "start"
+    print "WJRN animateTunerTick: from="; startPos; " to=["; targetX; ", 133] control="; m.tickAnim.control
 end sub
 
 ' ── Metadata ticker + marquee ────────────────────────────────────────────────
@@ -165,12 +172,14 @@ end sub
 ' Roku's Audio node has no real-time amplitude/frequency API like Web Audio's AnalyserNode,
 ' so this is a lively decorative loop tied to play/pause state, not genuine audio analysis.
 sub startVU()
+    print "WJRN startVU called"
     for i = 0 to m.vuBars.count() - 1
         range = m.vuRanges[i]
         m.vuInterps[i].keyValue = [range[0], range[1]]
         m.vuInterps[i].key = [0.0, 1.0]
         m.vuAnims[i].control = "start"
     end for
+    print "WJRN startVU: vuAnim0.control="; m.vuAnims[0].control
 end sub
 
 sub stopVU()
