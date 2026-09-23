@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TextMeasureTask" extends="Task">
+    <!-- roFontRegistry is confirmed unusable on the Scene's own render thread (real
+         on-device error: "creating MAIN|TASK-only component failed on RENDER thread") —
+         but IS usable here, since Task nodes run in a MAIN|TASK-eligible context. This
+         exists specifically to get the ticker's real rendered text width instead of the
+         guessed px-per-character estimate that was causing a visible mismatch at the
+         scroll's wrap point (see MainScene.brs setTickerText/onTickerWidthMeasured). -->
+    <script type="text/brightscript" uri="pkg:/components/TextMeasureTask.brs" />
+    <interface>
+        <field id="text" type="string" />
+        <field id="gen" type="integer" />
+        <field id="measuredWidth" type="float" />
+    </interface>
+</component>

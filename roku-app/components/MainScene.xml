@@ -10,8 +10,36 @@
             width="1920"
             height="1080" />
 
-        <!-- Vintage Player Group centered on the credenza -->
-        <Group id="playerContainer" translation="[320, 340]">
+        <!-- Vintage Player Group centered on the credenza. scale="[1.1,1.1]" added per direct
+             request: the static reference screenshot shows the receiver noticeably larger
+             than what actually renders once the app is running. A Group's scale pivots
+             around scaleRotateCenter, which defaults to [0,0] — its own top-left local
+             origin — so scaling with no override grew the receiver outward to the right
+             and down only, visibly shifting it off-center (confirmed exactly this from the
+             last screenshot). scaleRotateCenter="[640, 221.5]" is the true center of the
+             1280x443 faceplate (the receiver's own full frame, everything else positioned
+             relative to it) — pivoting there instead makes the 10% growth expand evenly in
+             all four directions, keeping the receiver's apparent center fixed in place. -->
+        <Group id="playerContainer" translation="[320, 322]" scale="[1.1, 1.1]" scaleRotateCenter="[640, 221.5]">
+
+            <!-- 0. Drop shadow, matching the web/Android receiver embed's own CSS shadow
+                 (0 25px 45px rgba(0,0,0,.9), 0 10px 15px rgba(0,0,0,.7)) — a real
+                 Gaussian-blurred PNG (Roku has no CSS-blur/box-shadow equivalent), sampled
+                 from the exact same offsets/opacities. This is the FIRST child of the
+                 group, so it renders behind every other receiver element (art, faceplate,
+                 needle, ticker) — it can only ever peek out around the receiver's edges,
+                 never show through the album-art knockout, since the opaque faceplate and
+                 art poster both draw on top of it. Canvas is padded 120px on every side
+                 (1520x683 vs the 1280x443 faceplate) so the blur has room to bleed outward
+                 without being hard-clipped at the image's own edge; translation is offset
+                 by that same -120,-120 so the shadow's "faceplate footprint" region lines
+                 up exactly with the real faceplate at (0,0)-(1280,443). -->
+            <Poster
+                id="receiverShadow"
+                uri="pkg:/images/wjrn-roku-receiver-shadow.png"
+                translation="[-120, -120]"
+                width="1520"
+                height="683" />
 
             <!-- 1a. Fallback art (always the local packaged image, never blank) — same
                  square default-art image the website/Android app fall back to
@@ -69,7 +97,7 @@
                 height="60"
                 scaleRotateCenter="[1, 60]"
                 rotation="0.785" />
-            <Animation id="vuAnim" duration="0.9" repeat="true" easeFunction="inOutQuad">
+            <Animation id="vuAnim" duration="0.9" easeFunction="inOutQuad">
                 <FloatFieldInterpolator id="vuInterp" fieldToInterp="vuNeedle.rotation" />
             </Animation>
 
@@ -96,49 +124,72 @@
                 <Vector2DFieldInterpolator id="tickShadowInterp" fieldToInterp="tunerTickShadow.translation" />
             </Animation>
 
-            <!-- 5. Metadata Ticker, on top of the faceplate. Wrapped in its own Group
-                 with a clippingRect so scrolling text is actually contained to the ticker
-                 window (matching the web player's CSS overflow-clip) instead of bleeding
-                 into neighboring elements like the album art when it scrolls far. -->
-            <Group id="tickerClip" translation="[410, 214]" clippingRect="[0, 0, 569, 48]">
-                <!-- Matches public/player/index.html's #ticker-text exactly: color #23bf91,
-                     uppercase (applied in BRS via UCase), monospace, letter-spaced. Roku's
-                     Label has no text-shadow/glow field, so the CSS glow
-                     (text-shadow: 0 0 8px rgba(35,191,145,0.6)) is faked with two offset
-                     duplicate labels at reduced opacity behind the real one — a standard
-                     Roku technique for approximating a soft glow. All three live inside
-                     tickerScroll so one animation moves all three together for the marquee. -->
-                <!-- Reference #ticker-text is font-size: 14px — none of Roku's named system
-                     fonts (TinySystemFont..ExtraLargeBoldSystemFont, all proportional, no
-                     monospace variant, verified against official docs) land anywhere near
-                     that at this canvas scale, so this uses a Font node with an explicit
-                     size instead — a Font's `size` field works with no `uri` given (falls
-                     back to Roku's default font family at that exact pixel size), unlike
-                     the earlier named-keyword approach which was stuck at a fixed, too-large
-                     size. -->
+            <!-- 5. Metadata Ticker, on top of the faceplate. Box is 460px wide (not 569) —
+                 matches CLAUDE.md's authoritative coordinate table for the real faceplate
+                 (Metadata ticker: 410,213,460,48), which the Roku faceplate art shares the
+                 same layout as; 569 was stale from before the WJRN-preset-button redesign
+                 narrowed this window on the real player. Wrapped in its own Group with a
+                 clippingRect so scrolling text is actually contained to the window instead
+                 of bleeding into neighboring elements. -->
+            <Group id="tickerClip" translation="[410, 214]" clippingRect="[0, 0, 460, 48]">
+                <!-- Matches public/player/index.html's #ticker-text: color #23bf91,
+                     uppercase (applied in BRS via UCase). Roku's Label has no text-shadow/
+                     glow field, so the CSS glow (text-shadow: 0 0 8px rgba(35,191,145,0.6))
+                     is faked with two offset duplicate labels at reduced opacity behind the
+                     real one. All three live inside tickerScroll so one per-tick position
+                     update (see tickerTimer below) moves all three together.
+                     Font: a bare nested <Font size="14"/> with no uri rendered NO visible
+                     glyphs at all on-device (confirmed via telnet — text was being set
+                     correctly the whole time, nothing ever appeared). Swapping to a named
+                     system font made it visible but ~2x too big. Real fix: an actual bundled
+                     .ttf (JetBrains Mono, the same family already used site-wide for
+                     font-mono/UI labels) with both uri AND size set — Roku's Font node docs
+                     only guarantee correct sizing when uri points to a real font file. -->
                 <Group id="tickerScroll" translation="[0, 0]">
-                    <Label id="tickerGlow1" text="" translation="[-1, -1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5">
-                        <Font role="font" size="14" />
+                    <Label id="tickerGlow1" text="" translation="[-1, -1]" width="2000" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5">
+                        <Font role="font" uri="pkg:/fonts/JetBrainsMono-Regular.ttf" size="14" />
                     </Label>
-                    <Label id="tickerGlow2" text="" translation="[1, 1]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5">
-                        <Font role="font" size="14" />
+                    <Label id="tickerGlow2" text="" translation="[1, 1]" width="2000" height="48" horizAlign="left" vertAlign="center" color="#23bf91" opacity="0.5">
+                        <Font role="font" uri="pkg:/fonts/JetBrainsMono-Regular.ttf" size="14" />
                     </Label>
-                    <Label id="tickerText" text="LOADING WJRN..." translation="[0, 0]" width="569" height="48" horizAlign="left" vertAlign="center" color="#23bf91">
-                        <Font role="font" size="14" />
+                    <Label id="tickerText" text="LOADING WJRN..." translation="[0, 0]" width="2000" height="48" horizAlign="left" vertAlign="center" color="#23bf91">
+                        <Font role="font" uri="pkg:/fonts/JetBrainsMono-Regular.ttf" size="14" />
                     </Label>
                 </Group>
-                <Animation id="tickerAnim" duration="6" repeat="true" easeFunction="linear">
-                    <Vector2DFieldInterpolator id="tickerInterp" fieldToInterp="tickerScroll.translation" />
-                </Animation>
             </Group>
+            <!-- Scroll is driven by tickerTimer (below, root-level) doing a direct per-tick
+                 translation update in MainScene.brs — not a Roku Animation node. An
+                 Animation with repeat="true" was producing a periodic mid-scroll stutter on
+                 real hardware even after ruling out every logic-level cause (confirmed via
+                 telnet that setTickerText wasn't being re-triggered by the 15s metadata
+                 poll); the animation-repeat snap mechanism itself was the remaining
+                 suspect. This instead ports the web player's own technique exactly —
+                 animateTicker() in public/player/index.html decrements a plain number every
+                 frame and wraps it via modulo, never "restarting" an animation object at
+                 all — which structurally can't have a repeat-boundary hitch. -->
+            <Timer id="tickerTimer" duration="0.02" repeat="true" />
+
+            <!-- Edge fade over the ticker, matching the web player's mask-image gradient
+                 (transparent 0%, opaque 6%, opaque 94%, transparent 100%) so scrolling text
+                 softens into the background at the edges instead of clipping hard. Roku has
+                 no CSS-mask equivalent, so this is two small pre-rendered gradient PNGs
+                 (solid-to-transparent black, sampled from the faceplate's actual ticker
+                 window background color — confirmed #000000 via pixel sampling) laid on top
+                 of the ticker, not a real mask — they only look right against this specific
+                 black window background. -->
+            <Poster id="tickerFadeLeft" uri="pkg:/images/wjrn-roku-ticker-fade-left.png" translation="[410, 214]" width="28" height="48" />
+            <Poster id="tickerFadeRight" uri="pkg:/images/wjrn-roku-ticker-fade-right.png" translation="[842, 214]" width="28" height="48" />
 
         </Group>
 
         <!-- Hidden Native Audio Engine -->
         <Audio id="audioPlayer" />
 
-        <!-- Separate audio node for the one-shot tuning static sound effect, so it can
-             play independently of (and briefly overlap with) the station stream swap. -->
+        <!-- Separate audio node for the one-shot tuning static sound effect. Confirmed
+             on-device: Roku hard-rejects a second Audio node playing while another is
+             still active (errorCode=-5 "only one playing instance supported"), so this
+             can never truly overlap the live stream — the live stream is deferred in
+             MainScene.brs until this one reports state="finished". -->
         <Audio id="sfxPlayer" />
     </children>
 </component>
