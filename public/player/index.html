@@ -67,15 +67,15 @@ html, body {
 /* Backdrop scene decor — real-time wall clock + incense smoke. Only meaningful in
    Backdrop Mode (the room scene); popout mode hides the whole backdrop already,
    so these ride along with it. */
-#clock-hand-hour, #clock-hand-minute { position: absolute; left: 1267px; top: 123px; width: 18px; height: auto; transform-origin: 9px 9px; pointer-events: none; }
+#clock-hand-hour, #clock-hand-minute { position: absolute; left: 1267px; top: 123px; width: 18px; height: auto; transform-origin: 9px 9px; pointer-events: none; filter: drop-shadow(1.5px 2.5px 1.5px rgba(0,0,0,0.55)); }
 #clock-hand-hour { z-index: 1; }
 #clock-hand-minute { z-index: 2; }
-#clock-hub { position: absolute; left: 1263px; top: 119px; width: 26px; height: 26px; z-index: 3; pointer-events: none; }
-#incense-smoke { position: absolute; left: 1732px; top: 270px; width: 180px; height: 380px; z-index: 1; pointer-events: none; overflow: hidden; filter: blur(3px); }
-#incense-smoke .particle { position: absolute; left: 0; top: 0; border-radius: 50%; offset-rotate: 0deg; animation: smoke-rise linear infinite; animation-fill-mode: both; background-image: radial-gradient(circle at 25% 0%, rgba(0,0,0,0), rgba(0,0,0,0.5)); }
+#clock-hub { position: absolute; left: 1263px; top: 119px; width: 26px; height: 26px; z-index: 3; pointer-events: none; filter: drop-shadow(1px 1.5px 1px rgba(0,0,0,0.5)); }
+#incense-smoke { position: absolute; left: 1732px; top: 270px; width: 180px; height: 380px; z-index: 1; pointer-events: none; overflow: hidden; filter: blur(3.4px); }
+#incense-smoke .particle { position: absolute; left: 0; top: 0; border-radius: 50%; offset-rotate: 0deg; animation: smoke-rise linear infinite; animation-fill-mode: both; background-image: radial-gradient(ellipse at 35% 15%, rgba(0,0,0,0), rgba(0,0,0,0.45)); }
 @keyframes smoke-rise {
-  0% { offset-distance: 0%; transform: scale(1) rotate(var(--rot-start, 0deg)); opacity: var(--op-start, 0.22); }
-  100% { offset-distance: 100%; transform: scale(var(--end-scale, 0.9)) scaleX(var(--end-scale-x, 1.6)) scaleY(var(--end-scale-y, 1.8)) rotate(var(--rot-end, 0deg)); opacity: 0; }
+  0% { offset-distance: 0%; transform: scale(1) rotate(var(--rot-start, 0deg)); opacity: var(--op-start, 0.16); }
+  100% { offset-distance: 100%; transform: scale(var(--end-scale, 1.3)) scaleX(var(--end-scale-x, 1.15)) scaleY(var(--end-scale-y, 1.6)) rotate(var(--rot-end, 0deg)); opacity: 0; }
 }
 #scene.popout-mode .backdrop-fx { display: none !important; }
 </style>
@@ -380,56 +380,61 @@ setInterval(updateClockHands, 1000);
 
 // ── INCENSE SMOKE (backdrop scene) ────────────────────────────────────────────
 // Adapted from a CSS motion-path smoke technique (particles riding a bezier
-// offset-path, stretching via scaleX/scaleY as they rise, fading via opacity) —
-// each particle's own elongation + drift reads as flowing, unlike the earlier
-// canvas version's discrete growing/fading circles. The original (a CodePen)
-// used Sass to emit one @keyframes block per particle, each with its own
-// randomized end-state baked into literal keyframe values. Here the randomized
-// part is CSS custom properties set inline per particle against ONE shared
-// @keyframes (smoke-rise, in the <style> block above), with a unique
-// offset-path curve per particle — same visual effect, no per-particle
-// keyframe generation needed. Purely decorative, CSS-animation-driven (no rAF
-// loop) — runs independent of audio/playback state.
+// offset-path, fading via opacity), same shared-@keyframes-plus-custom-props
+// structure as before, but tuned to read as one steady rising ribbon rather
+// than a "choo-choo train" of separate puffs. Three things were causing the
+// puff-train look: (1) particles were circles that only became streaks partway
+// through their life, so each one visibly popped in round; (2) rotation swung
+// freely 0-90deg, so some particles tumbled sideways out of line with the flow;
+// (3) too few particles on too wide a spread of independent curves, leaving
+// visible gaps. Fixed by making particles thin vertical capsules from birth,
+// constraining rotation to a small sway instead of a free spin, narrowing how
+// far each particle's curve can drift from a shared centerline, and packing
+// many more of them so consecutive particles overlap into one continuous
+// blurred thread. Purely decorative, CSS-animation-driven (no rAF loop).
 (function() {
   var container = document.getElementById('incense-smoke');
   if (!container) return;
   var W = 180, H = 380; // must match #incense-smoke's CSS width/height
   var originX = W / 2, originY = H - 4;
-  var NUM_PARTICLES = 26;
+  var NUM_PARTICLES = 55;
   var frag = document.createDocumentFragment();
 
   for (var i = 0; i < NUM_PARTICLES; i++) {
     var el = document.createElement('div');
     el.className = 'particle';
 
-    var size = 6 + Math.random() * 16;
-    var startX = originX + (Math.random() * 14 - 7);
-    var c1x = originX + (Math.random() * 60 - 30);
+    var pw = 3 + Math.random() * 4;   // narrow — a slim streak, not a dot
+    var ph = 16 + Math.random() * 18; // tall — reads as a segment of ribbon even before the keyframe stretch
+    var startX = originX + (Math.random() * 8 - 4);
+    var c1x = originX + (Math.random() * 36 - 18);   // narrower sway than before — keeps every particle close to one shared centerline
     var c1y = originY - H * 0.32;
-    var c2x = originX + (Math.random() * 90 - 45);
+    var c2x = originX + (Math.random() * 56 - 28);
     var c2y = originY - H * 0.7;
-    var endX = originX + (Math.random() * 100 - 50);
+    var endX = originX + (Math.random() * 70 - 35);
     var endY = -20; // exits above the container; overflow:hidden clips it, matching where opacity already hits 0
     var path = "path('M " + startX + " " + originY + " C " + c1x + " " + c1y + ", " + c2x + " " + c2y + ", " + endX + " " + endY + "')";
 
-    var duration = 3200 + Math.random() * 4200;
+    var duration = 4200 + Math.random() * 4000;
     // Negative delay: each particle starts already partway through its cycle,
-    // so the wisp looks continuously alive from the first frame instead of
+    // so the ribbon looks continuously alive from the first frame instead of
     // every particle launching together from the tip on page load.
     var delay = -(Math.random() * duration);
 
-    el.style.width = size + 'px';
-    el.style.height = size + 'px';
+    el.style.width = pw + 'px';
+    el.style.height = ph + 'px';
     el.style.offsetPath = el.style.webkitOffsetPath = path;
     el.style.animationDuration = duration + 'ms';
     el.style.animationDelay = delay + 'ms';
-    el.style.backgroundColor = 'hsla(30,12%,' + Math.round(72 + Math.random() * 22) + '%,' + (0.28 + Math.random() * 0.22).toFixed(2) + ')';
-    el.style.setProperty('--rot-start', (Math.random() * 90).toFixed(1) + 'deg');
-    el.style.setProperty('--rot-end', (Math.random() * 90).toFixed(1) + 'deg');
-    el.style.setProperty('--op-start', (0.16 + Math.random() * 0.12).toFixed(2));
-    el.style.setProperty('--end-scale', (0.5 + Math.random() * 0.5).toFixed(2));
-    el.style.setProperty('--end-scale-x', (1.2 + Math.random() * 1.6).toFixed(2));
-    el.style.setProperty('--end-scale-y', (1.4 + Math.random() * 0.9).toFixed(2));
+    el.style.backgroundColor = 'hsla(30,12%,' + Math.round(72 + Math.random() * 22) + '%,' + (0.16 + Math.random() * 0.16).toFixed(2) + ')';
+    // Small sway, not a free spin — keeps every streak aligned with the flow
+    // direction instead of some ending up tumbled sideways like debris.
+    el.style.setProperty('--rot-start', (Math.random() * 16 - 8).toFixed(1) + 'deg');
+    el.style.setProperty('--rot-end', (Math.random() * 16 - 8).toFixed(1) + 'deg');
+    el.style.setProperty('--op-start', (0.10 + Math.random() * 0.10).toFixed(2));
+    el.style.setProperty('--end-scale', (1.1 + Math.random() * 0.4).toFixed(2));
+    el.style.setProperty('--end-scale-x', (1.0 + Math.random() * 0.35).toFixed(2));
+    el.style.setProperty('--end-scale-y', (1.3 + Math.random() * 0.6).toFixed(2));
 
     frag.appendChild(el);
   }
