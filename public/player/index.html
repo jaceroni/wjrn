@@ -406,12 +406,12 @@ setInterval(updateClockHands, 1000);
 
     var pw = 3 + Math.random() * 4;   // narrow — a slim streak, not a dot
     var ph = 16 + Math.random() * 18; // tall — reads as a segment of ribbon even before the keyframe stretch
-    var startX = originX + (Math.random() * 8 - 4);
-    var c1x = originX + (Math.random() * 36 - 18);   // narrower sway than before — keeps every particle close to one shared centerline
+    var startX = originX + (Math.random() * 8 - 4);         // tight at the source — this is what keeps the base of the ribbon narrow
+    var c1x = originX + (Math.random() * 36 - 18);          // still narrow a third of the way up
     var c1y = originY - H * 0.32;
-    var c2x = originX + (Math.random() * 56 - 28);
+    var c2x = originX + (Math.random() * 84 - 42);          // fanning out starts here, two-thirds up
     var c2y = originY - H * 0.7;
-    var endX = originX + (Math.random() * 70 - 35);
+    var endX = originX + (Math.random() * 130 - 65);        // widest spread at the very top, where it's dissipating
     var endY = -20; // exits above the container; overflow:hidden clips it, matching where opacity already hits 0
     var path = "path('M " + startX + " " + originY + " C " + c1x + " " + c1y + ", " + c2x + " " + c2y + ", " + endX + " " + endY + "')";
 
@@ -433,8 +433,12 @@ setInterval(updateClockHands, 1000);
     el.style.setProperty('--rot-end', (Math.random() * 16 - 8).toFixed(1) + 'deg');
     el.style.setProperty('--op-start', (0.10 + Math.random() * 0.10).toFixed(2));
     el.style.setProperty('--end-scale', (1.1 + Math.random() * 0.4).toFixed(2));
-    el.style.setProperty('--end-scale-x', (1.0 + Math.random() * 0.35).toFixed(2));
-    el.style.setProperty('--end-scale-y', (1.3 + Math.random() * 0.6).toFixed(2));
+    // Width growth is the dominant motion here — each streak broadens well
+    // beyond its birth width as it climbs, on top of the collective fan-out
+    // from the widening path spread above, so the ribbon as a whole visibly
+    // grows wider toward the top instead of staying a constant-width column.
+    el.style.setProperty('--end-scale-x', (1.6 + Math.random() * 1.6).toFixed(2));
+    el.style.setProperty('--end-scale-y', (1.2 + Math.random() * 0.5).toFixed(2));
 
     frag.appendChild(el);
   }
