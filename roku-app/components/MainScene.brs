@@ -26,6 +26,14 @@ sub init()
     m.pendingTickerText = ""
     m.tickerTimer.control = "start"
 
+    ' Analog wall clock (backdrop decor) — real device-local time, ticking once a second.
+    m.clockHandHour = m.top.findNode("clockHandHour")
+    m.clockHandMinute = m.top.findNode("clockHandMinute")
+    m.clockTimer = m.top.findNode("clockTimer")
+    m.clockTimer.observeField("fire", "onClockTick")
+    m.clockTimer.control = "start"
+    updateClockHands()
+
     m.vuNeedle = m.top.findNode("vuNeedle")
     m.vuAnim = m.top.findNode("vuAnim")
     m.vuInterp = m.top.findNode("vuInterp")
@@ -352,6 +360,34 @@ sub onTickerTick()
         m.tickerX = m.tickerX + m.tickerUnitWidth
     end if
     m.tickerScroll.translation = [Int(m.tickerX), 0]
+end sub
+
+' ── Analog wall clock (backdrop decor) ───────────────────────────────────────
+' Exact port of updateClockHands() in public/player/index.html: real device-local
+' time, recomputed fresh every tick (no incremental/interpolated rotation), so
+' there's nothing to snap backward through at the 59->0 minute/hour wrap. Neutral
+' (rotation=0) hand art points straight down — 180deg in standard clockface-degree
+' terms (0=12, measured clockwise) — and Roku's rotation field is radians with
+' POSITIVE = COUNTERCLOCKWISE, the opposite of CSS's clockwise-positive rotate(),
+' so the sign flips versus the web version's (clockAngle - 180): here it's
+' (180 - clockAngle).
+sub onClockTick()
+    updateClockHands()
+end sub
+
+sub updateClockHands()
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+    hrs = dt.GetHours() mod 12
+    mins = dt.GetMinutes()
+    secs = dt.GetSeconds()
+
+    minuteDeg = 180 - (6 * mins + 0.1 * secs)
+    hourDeg = 180 - (30 * hrs + 0.5 * mins)
+    degToRad = 3.14159265 / 180
+
+    m.clockHandMinute.rotation = minuteDeg * degToRad
+    m.clockHandHour.rotation = hourDeg * degToRad
 end sub
 
 ' ── Decorative VU meter needle ───────────────────────────────────────────────

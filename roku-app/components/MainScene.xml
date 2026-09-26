@@ -10,6 +10,39 @@
             width="1920"
             height="1080" />
 
+        <!-- Analog wall clock overlay — real device-time hour/minute hands drawn over the
+             backdrop's blank clock face, ported from public/player/index.html's identical
+             technique. Center of the clock face on the backdrop art is (1276,132). Anchor
+             point baked into both hand PNGs is their own local (9,9) — a pivot dot near the
+             top of each 18px-wide image, tail extending down — so translation is offset by
+             that same (9,9) to land the true pivot exactly on the clock center regardless of
+             rotation, and scaleRotateCenter="[9,9]" makes rotation pivot around that dot
+             instead of the image's top-left corner (same trick as vuNeedle below). Neutral
+             (rotation=0) art points straight down (6 o'clock) — see updateClockHands() in
+             MainScene.brs for the clockface-angle -> Roku-radians conversion (Roku's
+             rotation is positive=counterclockwise, the opposite of CSS's rotate()). -->
+        <Poster
+            id="clockHandHour"
+            uri="pkg:/images/wjrn-clock-hand-small.png"
+            translation="[1267, 123]"
+            width="18"
+            height="50"
+            scaleRotateCenter="[9, 9]" />
+        <Poster
+            id="clockHandMinute"
+            uri="pkg:/images/wjrn-clock-hand-large.png"
+            translation="[1267, 123]"
+            width="18"
+            height="65"
+            scaleRotateCenter="[9, 9]" />
+        <Poster
+            id="clockHub"
+            uri="pkg:/images/wjrn-clock-centerpoint.png"
+            translation="[1263, 119]"
+            width="26"
+            height="26" />
+        <Timer id="clockTimer" duration="1" repeat="true" />
+
         <!-- Vintage Player Group centered on the credenza. scale="[1.1,1.1]" added per direct
              request: the static reference screenshot shows the receiver noticeably larger
              than what actually renders once the app is running. A Group's scale pivots
