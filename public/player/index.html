@@ -391,12 +391,17 @@ setInterval(updateClockHands, 1000);
   var W = canvas.width, H = canvas.height;
   var originX = W / 2, originY = H - 6;
   var riseDistance = H - 50;
-  var SAMPLE_MS = 40;   // coarser than one point per rAF frame — plenty smooth once blurred, much cheaper to stroke
-  var NUM_BANDS = 10;   // discrete tapering steps along each trail (width/alpha), blur hides the seams
+  // Fixed points-per-band (not n/NUM_BANDS recomputed every frame — that was the
+  // "glitch": as n grew, every band's boundaries shifted retroactively each
+  // frame, reassigning width/alpha to already-drawn stretches of the trail).
+  // With a fixed size, a band's point range — and the taper it's given, based on
+  // the real height its far end had reached — never changes once it exists;
+  // only the newest, still-filling band at the tip updates.
+  var BAND_SIZE = 8;
 
   function resetWisp(w, ts, xOffset) {
     w.points = [{ x: xOffset, y: originY }];
-    w.lastSampleAt = ts;
+    w.lastUpdate = ts;
     w.x = xOffset;
     w.y = originY;
     w.t0 = ts;
@@ -408,7 +413,11 @@ setInterval(updateClockHands, 1000);
     w.phase2 = Math.random() * Math.PI * 2;
     w.baseWidth = 1.6 + Math.random() * 0.8;
     w.baseAlpha = 0.15 + Math.random() * 0.05;
-    w.lifespan = 5200 + Math.random() * 1800;
+    // Tie lifespan to how long this wisp actually takes to rise (instead of an
+    // independent random duration) so it fades right as it finishes traveling,
+    // not while frozen mid-air waiting on an unrelated timer.
+    w.riseTime = riseDistance / w.riseSpeed;
+    w.lifespan = w.riseTime + 700;
   }
 
   var wisps = [
@@ -436,19 +445,18 @@ setInterval(updateClockHands, 1000);
       var age = ts - w.t0;
       if (age > w.lifespan) { resetWisp(w, ts, originX + w.cfg.xOffset); age = 0; }
 
+      var dt = ts - w.lastUpdate;
+      w.lastUpdate = ts;
       var heightT = Math.min(1, (originY - w.y) / riseDistance);
-      var swayA1 = 3 + 9 * heightT;
-      var swayA2 = 1.5 + 5 * heightT;
-      var noiseX = Math.sin(age * 0.0026 * w.freq1 + w.phase1) * swayA1 +
-                   Math.sin(age * 0.006 * w.freq2 + w.phase2) * swayA2 +
-                   w.driftBias * heightT * 16;
-
-      if (ts - w.lastSampleAt >= SAMPLE_MS && heightT < 1) {
-        var dt = ts - w.lastSampleAt;
+      if (heightT < 1) {
+        var swayA1 = 3 + 9 * heightT;
+        var swayA2 = 1.5 + 5 * heightT;
+        var noiseX = Math.sin(age * 0.0026 * w.freq1 + w.phase1) * swayA1 +
+                     Math.sin(age * 0.006 * w.freq2 + w.phase2) * swayA2 +
+                     w.driftBias * heightT * 16;
         w.y -= w.riseSpeed * dt;
         w.x = originX + w.cfg.xOffset + noiseX;
         w.points.push({ x: w.x, y: w.y });
-        w.lastSampleAt = ts;
       }
 
       var fadeIn = Math.min(1, age / 400);
@@ -460,12 +468,13 @@ setInterval(updateClockHands, 1000);
       var n = pts.length;
       if (n < 2) continue;
 
-      var chunk = Math.max(1, Math.ceil(n / NUM_BANDS));
-      for (var c = 0; c * chunk < n - 1; c++) {
-        var startIdx = c * chunk;
-        var endIdx = Math.min(n - 1, startIdx + chunk);
+      for (var startIdx = 0; startIdx < n - 1; startIdx += BAND_SIZE) {
+        var endIdx = Math.min(n - 1, startIdx + BAND_SIZE);
         if (endIdx <= startIdx) continue;
-        var t = c / (NUM_BANDS - 1);
+        // Taper driven by the real height this band's far end reached, not by
+        // point-count position — physically grounded, and fixed forever once
+        // this band's endIdx stops being the trail's growing tip.
+        var t = Math.min(1, (originY - pts[endIdx].y) / riseDistance);
         ctx.lineWidth = w.baseWidth * (1 + 3.4 * t);
         ctx.strokeStyle = 'rgba(208,205,198,' + (w.baseAlpha * Math.pow(1 - t, 1.3) * fadeMul) + ')';
         ctx.beginPath();
