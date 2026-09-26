@@ -64,6 +64,15 @@ html, body {
 #ticker-text { white-space: nowrap; font-family: monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 0.15em; color: #23bf91; text-shadow: 0 0 8px rgba(35,191,145,0.6); line-height: 1; }
 #tuner-tick { position: absolute; top: 133px; width: 4px; height: 38px; background: #ff3333; z-index: 3; transition: left 0.6s cubic-bezier(0.25,0.1,0.25,1); box-shadow: 1px 2px 4px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.35); }
 #faceplate { position: absolute; left: 0; top: 0; width: 1280px; height: 443px; z-index: 2; pointer-events: none; display: block; }
+/* Backdrop scene decor — real-time wall clock + incense smoke. Only meaningful in
+   Backdrop Mode (the room scene); popout mode hides the whole backdrop already,
+   so these ride along with it. */
+#clock-hand-hour, #clock-hand-minute { position: absolute; left: 1267px; top: 123px; width: 18px; height: auto; transform-origin: 9px 9px; pointer-events: none; }
+#clock-hand-hour { z-index: 1; }
+#clock-hand-minute { z-index: 2; }
+#clock-hub { position: absolute; left: 1263px; top: 119px; width: 26px; height: 26px; z-index: 3; pointer-events: none; }
+#incense-smoke { position: absolute; left: 1702px; top: 250px; width: 240px; height: 420px; z-index: 1; pointer-events: none; }
+#scene.popout-mode .backdrop-fx { display: none !important; }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -98,6 +107,10 @@ html, body {
     <div class="hit" id="hz-mono"          style="left:416px;top:343px;width:28px;height:27px"></div>
     <div class="hit" id="hz-power"         style="left:1130px;top:293px;width:30px;height:28px"></div>
     </div>
+    <img id="clock-hand-hour" class="backdrop-fx" src="./wjrn-clock-hand-small.png" alt="">
+    <img id="clock-hand-minute" class="backdrop-fx" src="./wjrn-clock-hand-large.png" alt="">
+    <img id="clock-hub" class="backdrop-fx" src="./wjrn-clock-centerpoint.png" alt="">
+    <canvas id="incense-smoke" class="backdrop-fx" width="240" height="420"></canvas>
   </div>
 </div>
 <script>
@@ -340,6 +353,83 @@ function drawVU() {
   ctx.lineWidth = 2;
   ctx.stroke();
 }
+
+// ── ANALOG WALL CLOCK (backdrop scene — real viewer-device time) ──────────────
+// Hand art's neutral (0deg) pose points straight down (pivot dot near the top of
+// each image), i.e. 180deg in standard clockface-degree terms (0=12, measured
+// clockwise) — so the CSS rotation needed is always (clockAngle - 180). Angles
+// are computed fresh each tick (no CSS transition) rather than incrementally, so
+// there's nothing to snap backward through at the 59->0 minute/hour wrap.
+function updateClockHands() {
+  var now = new Date();
+  var h = now.getHours() % 12;
+  var m = now.getMinutes();
+  var s = now.getSeconds();
+  var minuteHand = document.getElementById('clock-hand-minute');
+  var hourHand = document.getElementById('clock-hand-hour');
+  if (minuteHand) minuteHand.style.transform = 'rotate(' + ((6 * m + 0.1 * s) - 180) + 'deg)';
+  if (hourHand) hourHand.style.transform = 'rotate(' + ((30 * h + 0.5 * m) - 180) + 'deg)';
+}
+updateClockHands();
+setInterval(updateClockHands, 1000);
+
+// ── INCENSE SMOKE (backdrop scene) ────────────────────────────────────────────
+// Lightweight canvas particle wisp: soft radial-gradient puffs spawned at the
+// incense tip, drifting upward with sine wobble, growing and fading over their
+// lifetime. Purely decorative — runs independent of audio/playback state.
+(function() {
+  var canvas = document.getElementById('incense-smoke');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var originX = W / 2, originY = H - 4;
+  var particles = [];
+  var lastSpawn = 0;
+
+  function spawnParticle(ts) {
+    particles.push({
+      x: originX + (Math.random() * 6 - 3),
+      wobblePhase: Math.random() * Math.PI * 2,
+      wobbleSpeed: 0.5 + Math.random() * 0.5,
+      radius: 3 + Math.random() * 2,
+      maxRadius: 20 + Math.random() * 14,
+      alpha: 0.16 + Math.random() * 0.08,
+      born: ts,
+      life: 3200 + Math.random() * 1800
+    });
+  }
+
+  function drawSmoke(ts) {
+    requestAnimationFrame(drawSmoke);
+    if (!lastSpawn) lastSpawn = ts;
+    if (ts - lastSpawn > 220) {
+      spawnParticle(ts);
+      lastSpawn = ts;
+    }
+    ctx.clearRect(0, 0, W, H);
+    for (var i = particles.length - 1; i >= 0; i--) {
+      var p = particles[i];
+      var age = ts - p.born;
+      var t = age / p.life;
+      if (t >= 1) { particles.splice(i, 1); continue; }
+      var riseY = t * (H - 40);
+      var wob = Math.sin(p.wobblePhase + age * 0.0016 * p.wobbleSpeed * 10) * (10 + t * 26);
+      var x = p.x + wob;
+      var y = originY - riseY;
+      var r = p.radius + t * p.maxRadius;
+      var alpha = p.alpha * (t < 0.15 ? t / 0.15 : (1 - (t - 0.15) / 0.85));
+      if (alpha <= 0) continue;
+      var grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, 'rgba(214,208,198,' + (alpha * 0.9) + ')');
+      grad.addColorStop(1, 'rgba(214,208,198,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  requestAnimationFrame(drawSmoke);
+})();
 
 // ── TUNER TICK ────────────────────────────────────────────────────────────────
 function setTunerTick(freq) {
