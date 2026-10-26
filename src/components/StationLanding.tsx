@@ -96,9 +96,9 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     description:
       "Where the groove was born, the funk was forged, and every sample we love found its soul. This is The Rock Garden — an all-vinyl experience broadcasted live every Tuesday at 7PM Pacific.",
     sensory: {
-      soundsLike: "Wax & Wires",
+      soundsLike: "Dusty Wax",
       smellsLike: "Leather & Tobacco",
-      tastesLike: "Whiskey & Regret",
+      tastesLike: "Whiskey & Cheap Beer",
       feelsLike: "The Open Road",
     },
     meshGradient: "radial-gradient(circle at 80% 20% in oklab, #222b15 0%, #121809 100%)",
@@ -152,10 +152,10 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     description:
       "Late nights, deep cuts, and all the feelings you didn't know you needed to feel. Bridge City Hang Suite is grown-folk R&B at its purest — curated for the after-hours crowd, live every Wednesday at 7PM Pacific.",
     sensory: {
-      soundsLike: "Candlelight & Bass",
-      smellsLike: "Cognac & Jasmine",
-      tastesLike: "Dark Chocolate",
-      feelsLike: "2AM on a Friday",
+      soundsLike: "A Panther in Heat",
+      smellsLike: "Nag Champa & Cognac",
+      tastesLike: "Cherries Dipped in Chocolate",
+      feelsLike: "Silk Sheets & Regret",
     },
     meshGradient: "radial-gradient(circle at 80% 20% in oklab, #3a1725 0%, #13050b 100%)",
     tileBg: tileBgBridgeCity,
