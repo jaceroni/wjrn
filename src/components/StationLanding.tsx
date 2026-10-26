@@ -206,7 +206,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     name: "THE GOLDEN BOOMBOX",
     genres: ["GOLDEN ERA HIP-HOP", "FUTURE CLASSICS"],
     description:
-      "From Queensbridge to Compton, from '88 to now — The Golden Boombox runs the full spectrum of real hip-hop, no features required. Live every Friday at 7PM Pacific.",
+      "From Queensbridge to Compton, from '88 to now — The Golden Boombox runs the full spectrum of real hip-hop, no features required. Live every Thursday at 7PM Pacific.",
     sensory: {
       soundsLike: "College Radio",
       smellsLike: "Blacktop & Cardboard",
