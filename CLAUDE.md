@@ -24,6 +24,12 @@ This builds locally, rsyncs `dist/` to the VPS, syncs nginx config, and reloads 
 SSH key: `/Users/jacebrown/Dropbox/Jacewon/Radio/newradiokey.pem`  
 Web root on server: `/var/www/wjrn-landing`
 
+**Roku app changes (`roku-app/`) — same rule, don't skip it.** After ANY edit under `roku-app/` (components, images, audio, fonts, manifest), immediately rebuild the sideload zip as part of finishing the task, without being asked:
+```bash
+cd roku-app && rm -f wjrn-roku-channel.zip && zip -r wjrn-roku-channel.zip manifest source components images audio fonts -x ".*"
+```
+This is the exact artifact the user drags into `http://<roku-ip>` (Development Application Installer) to get the new code onto the device, and from there into the Packager page (`http://<roku-ip>/plugin_package`) to produce the `.pkg` for a Roku Developer Dashboard submission. Producing this zip is not optional busywork to describe — it's a build artifact Claude has every tool needed to generate directly, exactly like `dist/` for the web app. Don't stop at explaining the steps; run them and hand over the file. (Roku TV device IP for this household, if ever needed: `192.168.1.52`.)
+
 ---
 
 ## Routing
