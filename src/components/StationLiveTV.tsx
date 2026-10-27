@@ -11,6 +11,20 @@ import { SHOW_WEEKDAY, formatCountdown, msUntilNextShow } from "../utils/showSch
 // edges on its own, like CRT glass.
 const SCREEN_WINDOW = { left: "10.234%", top: "13.697%", width: "79.531%", height: "70.061%" };
 
+// Click zones around the two CTAs baked into the bottom row of the PNG ("JOIN THE CHAT ON ⧉"
+// left of the logo, "◻ GIVE US A FOLLOW" right of it). Text measured by gold-pixel search
+// (left x114-242, right x1033-1165, both y~752-768), then padded ~12px/10px so they're
+// comfortable to hit — percentages of the native 1280x825 canvas, same as SCREEN_WINDOW.
+const CHAT_ZONE = { left: "7.969%", top: "89.818%", width: "11.875%", height: "4.727%" };
+const FOLLOW_ZONE = { left: "79.766%", top: "89.818%", width: "12.188%", height: "4.727%" };
+
+const TWITCH_URL = "https://www.twitch.tv/jacewonmusic";
+const INSTAGRAM_URL: Record<string, string> = {
+  rock_garden: "https://www.instagram.com/therockgarden.tv/",
+  bridge_city: "https://www.instagram.com/bridgecityhangsuite/",
+  golden_boombox: "https://www.instagram.com/goldenboomboxsessions/",
+};
+
 interface StationLiveTVProps {
   stationId: string;
 }
@@ -112,6 +126,24 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
         alt=""
         draggable={false}
         className="relative z-[1] w-full h-auto block select-none pointer-events-none drop-shadow-[0_20px_40px_rgba(0,0,0,0.45)]"
+      />
+
+      {/* CTA click zones over the baked-in text — open in a new tab */}
+      <a
+        href={TWITCH_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Join the chat on Twitch"
+        className="absolute z-[2]"
+        style={{ left: CHAT_ZONE.left, top: CHAT_ZONE.top, width: CHAT_ZONE.width, height: CHAT_ZONE.height }}
+      />
+      <a
+        href={INSTAGRAM_URL[stationId]}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Follow us on Instagram"
+        className="absolute z-[2]"
+        style={{ left: FOLLOW_ZONE.left, top: FOLLOW_ZONE.top, width: FOLLOW_ZONE.width, height: FOLLOW_ZONE.height }}
       />
     </div>
   );
