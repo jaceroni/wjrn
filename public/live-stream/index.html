@@ -82,7 +82,7 @@ html, body {
       <img id="frame" src="./wjrn-twitch-live-stream-tv-1280x825.png" alt="">
       <!-- CTA click zones over the text baked into the frame's bottom row (native px) -->
       <a class="cta" id="cta-chat" href="https://www.twitch.tv/jacewonmusic" target="_blank" rel="noopener noreferrer" aria-label="Join the chat on Twitch" style="left:102px;top:741px;width:152px;height:39px"></a>
-      <a class="cta" id="cta-follow" href="https://www.instagram.com/therockgarden.tv/" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" style="left:1021px;top:741px;width:156px;height:39px"></a>
+      <a class="cta" id="cta-follow" href="https://www.instagram.com/jacewonmusic/" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" style="left:1021px;top:741px;width:156px;height:39px"></a>
     </div>
   </div>
 </div>
@@ -150,14 +150,15 @@ function formatCountdown(ms) {
   return parts.join(' ');
 }
 
-// Station whose show day it is right now (Pacific, 4 AM rollover), else the station with the next show.
-function currentOrNextShow(now) {
+// The show whose day it is right now (Pacific, 4 AM rollover), or null on a non-show day.
+function todayShow(now) {
   var weekday = getPacific(new Date(now.getTime() - DAY_ROLLOVER_HOURS * 3600000)).weekday;
   for (var i = 0; i < SHOWS.length; i++) if (SHOWS[i].weekday === weekday) return SHOWS[i];
-  var best = SHOWS[0], bestMs = Infinity;
-  SHOWS.forEach(function (s) { var ms = msUntilNextShow(s.weekday, now); if (ms < bestMs) { bestMs = ms; best = s; } });
-  return best;
+  return null;
 }
+
+// Used whenever there's no better context (not live, no station passed in, off-schedule stream).
+var DEFAULT_INSTAGRAM = 'https://www.instagram.com/jacewonmusic/';
 
 var isLive = false;
 var requestedStation = params.get('station');
@@ -169,11 +170,11 @@ function tick() {
   SHOWS.forEach(function (s) { minMs = Math.min(minMs, msUntilNextShow(s.weekday, now)); });
   document.getElementById('countdown-time').textContent = formatCountdown(minMs);
 
-  // Instagram CTA follows the show that's actually on air while the channel is live; when
-  // offline it's the station the viewer came from (?station=), else whichever show is next.
+  // Instagram CTA: while live it follows the show actually on air (weekday rule); otherwise
+  // the station the viewer came from (?station=); otherwise the default account.
   var fromOpener = SHOWS.filter(function (s) { return s.station === requestedStation; })[0];
-  var show = (isLive ? currentOrNextShow(now) : fromOpener) || currentOrNextShow(now);
-  document.getElementById('cta-follow').href = show.instagram;
+  var show = (isLive && todayShow(now)) || fromOpener;
+  document.getElementById('cta-follow').href = show ? show.instagram : DEFAULT_INSTAGRAM;
 }
 tick();
 setInterval(tick, 1000);
