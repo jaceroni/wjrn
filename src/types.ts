@@ -33,7 +33,7 @@ export interface BroadcastSlot {
 export interface RadioConfig {
   azuracastHost: string;
   twitchChannel: string;
-  twitchLiveSchedule: string; // e.g., "Tuesdays, Weds, and Fridays @ 7PM Pacific"
+  twitchLiveSchedule: string; // e.g., "Tuesdays, Weds, and Thursdays @ 7PM Pacific"
   stations: {
     [key: string]: {
       streamUrl: string;

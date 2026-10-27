@@ -90,7 +90,7 @@ const STORAGE_KEY = "wjrn_broadcasting_config";
 const DEFAULT_CONFIG: RadioConfig = {
   azuracastHost: "https://radio.jacewonmusic.com",
   twitchChannel: "jacewonmusic",
-  twitchLiveSchedule: "LIVE on Twitch.tv Tues, Weds, & Fridays @ 7PM Pacific",
+  twitchLiveSchedule: "LIVE on Twitch.tv Tues, Weds, & Thursdays @ 7PM Pacific",
   stations: {
     wjrn: {
       streamUrl: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3",

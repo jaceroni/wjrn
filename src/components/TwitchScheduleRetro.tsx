@@ -48,7 +48,7 @@ const BROADCAST_EVENTS: BroadcastEvent[] = [
     description: "Grownfolk R&B, Soul, & Electronica."
   },
   {
-    day: "Friday",
+    day: "Thursday",
     time: "7:00 PM - 11:00 PM PST",
     title: "The Golden Boombox",
     description: "Golden Era & Future Classic Hip-Hop."
@@ -173,8 +173,8 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
     function calculateCountdown() {
       const now = new Date();
       
-      // Target days: 2 (Tuesday), 3 (Wednesday), 5 (Friday)
-      const targetDays = [2, 3, 5];
+      // Target days: 2 (Tuesday), 3 (Wednesday), 4 (Thursday)
+      const targetDays = [2, 3, 4];
       const targetHour = 19; // 7:00 PM Pacific (19:00)
       const targetMinute = 0;
 
