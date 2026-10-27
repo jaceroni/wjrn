@@ -169,8 +169,10 @@ function tick() {
   SHOWS.forEach(function (s) { minMs = Math.min(minMs, msUntilNextShow(s.weekday, now)); });
   document.getElementById('countdown-time').textContent = formatCountdown(minMs);
 
-  // Instagram CTA: the station passed in by the opener, else whichever show is on / next.
-  var show = SHOWS.filter(function (s) { return s.station === requestedStation; })[0] || currentOrNextShow(now);
+  // Instagram CTA follows the show that's actually on air while the channel is live; when
+  // offline it's the station the viewer came from (?station=), else whichever show is next.
+  var fromOpener = SHOWS.filter(function (s) { return s.station === requestedStation; })[0];
+  var show = (isLive ? currentOrNextShow(now) : fromOpener) || currentOrNextShow(now);
   document.getElementById('cta-follow').href = show.instagram;
 }
 tick();

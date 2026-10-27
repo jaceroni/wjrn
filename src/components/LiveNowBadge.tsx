@@ -24,7 +24,7 @@ function scrollToWhenReady(id: string, tries = 20) {
 
 export default function LiveNowBadge() {
   const { isChannelLive, liveStationId } = useLiveStatus();
-  const { isMiniPlayerVisible } = usePlayer();
+  const { isMiniPlayerVisible, stopPlayback } = usePlayer();
   const [path, setPath] = useState(() => window.location.pathname);
   const [targetInView, setTargetInView] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
@@ -62,7 +62,16 @@ export default function LiveNowBadge() {
 
   if (!isChannelLive || dismissed || targetInView) return null;
 
+  // Clicking the badge always stops whatever's playing (station or on-demand) — the
+  // viewer is switching to the broadcast. Desktop opens the standalone /live-stream/
+  // page in a new tab (the site tab stays put); phones can't use that page well (the
+  // cover-scaled scene crops the TV), so they go to the station's TV on the page instead.
   const handleClick = () => {
+    stopPlayback();
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      window.open(`/live-stream/${liveStationId ? `?station=${liveStationId}` : ""}`, "_blank", "noopener");
+      return;
+    }
     if (!onTargetPage) navigate(targetPath);
     scrollToWhenReady(targetId);
   };
