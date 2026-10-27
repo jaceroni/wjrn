@@ -27,6 +27,13 @@ if [ -f "src/assets/images/wjrn-player-backdrop.jpg" ]; then
   cp src/assets/images/wjrn-player-backdrop.jpg public/player/wjrn-player-backdrop.jpg
 fi
 
+echo "=== Syncing live-stream page assets ==="
+for f in wjrn-twitch-live-stream-tv-1280x825.png wjrn-twitch-live-stream-page-bg-1920x1080.jpg; do
+  if [ -f "src/assets/images/$f" ]; then
+    cp "src/assets/images/$f" "public/live-stream/$f"
+  fi
+done
+
 echo "=== Building React project locally ==="
 npm run build
 

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/assets/images/wjrn-favicon.png" />
+<title>WJRN Live Stream</title>
+
+<!-- OpenGraph/Facebook/Text message metadata -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="WJRN Live Stream" />
+<meta property="og:description" content="Watch the WJRN live broadcast on a vintage TV." />
+<meta property="og:image" content="https://radio.jacewonmusic.com/live-stream/wjrn-twitch-live-stream-page-bg-1920x1080.jpg" />
+<meta property="og:url" content="https://radio.jacewonmusic.com/live-stream/" />
+
+<!-- Twitter metadata -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="WJRN Live Stream" />
+<meta name="twitter:description" content="Watch the WJRN live broadcast on a vintage TV." />
+<meta name="twitter:image" content="https://radio.jacewonmusic.com/live-stream/wjrn-twitch-live-stream-page-bg-1920x1080.jpg" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; background: #000;
+  user-select: none; -webkit-user-select: none;
+  display: flex; justify-content: center; align-items: center;
+}
+#scaler {
+  width: 100%; height: 100%;
+  display: flex; justify-content: center; align-items: center;
+  overflow: hidden; position: relative;
+}
+/* Backdrop mode: fixed 1920x1080 scene, scaled to cover the window (same as /player/). */
+#scene {
+  position: relative; width: 1920px; height: 1080px;
+  background: #000 url('./wjrn-twitch-live-stream-page-bg-1920x1080.jpg') no-repeat center center;
+  background-size: cover;
+  transform-origin: center center; flex-shrink: 0;
+}
+/* The TV is authored in its native 1280x825 coordinates. In the scene it's drawn at 76.6%
+   (x471, y102) — measured by matching the frame PNG against the TV already baked into the
+   backdrop, so the live video lines up with it exactly. The backdrop already carries the
+   TV's own shadow, so none is added here. */
+#tv {
+  position: absolute; left: 471px; top: 102px; width: 1280px; height: 825px;
+  transform: scale(0.766); transform-origin: 0 0;
+}
+/* Popout mode: just the TV at native size, no backdrop. */
+#scene.popout-mode { width: 1280px !important; height: 825px !important; background: #000 !important; }
+#scene.popout-mode #tv { position: relative !important; left: 0 !important; top: 0 !important; transform: none !important; }
+
+/* True opening of the frame (where its soft vignette reaches opaque): x131-1148, y113-690. */
+#screen { position: absolute; left: 131px; top: 113px; width: 1018px; height: 578px; background: #080605; overflow: hidden; z-index: 0; }
+#embed { width: 100%; height: 100%; }
+#countdown {
+  position: absolute; inset: 0; background: #080605;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+#countdown.hidden { display: none; }
+#countdown .label { font-size: 17px; letter-spacing: 0.1em; text-transform: uppercase; color: #a3a3a3; margin-bottom: 14px; }
+#countdown .time { font-size: 72px; font-weight: 700; letter-spacing: -0.02em; color: #d7b158; font-variant-numeric: tabular-nums; }
+#frame { position: absolute; left: 0; top: 0; width: 1280px; height: 825px; z-index: 1; pointer-events: none; display: block; }
+.cta { position: absolute; z-index: 2; display: block; }
+</style>
+</head>
+<body oncontextmenu="return false;">
+<div id="scaler">
+  <div id="scene">
+    <div id="tv">
+      <div id="screen">
+        <div id="embed"></div>
+        <div id="countdown">
+          <div class="label">Next live stream countdown:</div>
+          <div class="time" id="countdown-time"></div>
+        </div>
+      </div>
+      <img id="frame" src="./wjrn-twitch-live-stream-tv-1280x825.png" alt="">
+      <!-- CTA click zones over the text baked into the frame's bottom row (native px) -->
+      <a class="cta" id="cta-chat" href="https://www.twitch.tv/jacewonmusic" target="_blank" rel="noopener noreferrer" aria-label="Join the chat on Twitch" style="left:102px;top:741px;width:152px;height:39px"></a>
+      <a class="cta" id="cta-follow" href="https://www.instagram.com/therockgarden.tv/" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" style="left:1021px;top:741px;width:156px;height:39px"></a>
+    </div>
+  </div>
+</div>
+
+<script>
+var params = new URLSearchParams(window.location.search);
+var isPopout = params.get('popout') === 'true';
+var TWITCH_CHANNEL = 'jacewonmusic';
+
+// ── SCHEDULE ──────────────────────────────────────────────────────────────────
+// Mirrors src/utils/showSchedule.ts in the React app — keep the two in sync if a show
+// day changes. Weekday numbers: 0 = Sunday.
+var SHOWS = [
+  { station: 'rock_garden',    weekday: 2, instagram: 'https://www.instagram.com/therockgarden.tv/' },
+  { station: 'bridge_city',    weekday: 3, instagram: 'https://www.instagram.com/bridgecityhangsuite/' },
+  { station: 'golden_boombox', weekday: 4, instagram: 'https://www.instagram.com/goldenboomboxsessions/' }
+];
+var SHOW_HOUR = 19;           // 7 PM Pacific
+var DAY_ROLLOVER_HOURS = 4;   // a show running past midnight still counts as that day's
+var WEEKDAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+var pacificFmt = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'America/Los_Angeles', hourCycle: 'h23',
+  year: 'numeric', month: 'numeric', day: 'numeric',
+  hour: 'numeric', minute: 'numeric', second: 'numeric', weekday: 'short'
+});
+
+function getPacific(date) {
+  var p = {};
+  pacificFmt.formatToParts(date).forEach(function (part) { p[part.type] = part.value; });
+  return { year: +p.year, month: +p.month, day: +p.day, hour: +p.hour, minute: +p.minute, second: +p.second, weekday: WEEKDAY_INDEX[p.weekday] };
+}
+
+function pacificWallToUtcMs(year, month, day, hour) {
+  var guess = Date.UTC(year, month - 1, day, hour, 0, 0);
+  function offsetAt(t) {
+    var p = getPacific(new Date(t));
+    return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(t / 1000) * 1000;
+  }
+  var utc = guess - offsetAt(guess);
+  utc = guess - offsetAt(utc);
+  return utc;
+}
+
+function msUntilNextShow(weekday, now) {
+  var today = getPacific(now);
+  for (var offset = 0; offset <= 7; offset++) {
+    if ((today.weekday + offset) % 7 !== weekday) continue;
+    var d = new Date(Date.UTC(today.year, today.month - 1, today.day + offset));
+    var target = pacificWallToUtcMs(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), SHOW_HOUR);
+    if (target > now.getTime()) return target - now.getTime();
+  }
+  return Infinity;
+}
+
+function formatCountdown(ms) {
+  if (!isFinite(ms)) return 'Searching next show...';
+  var days = Math.floor(ms / 86400000);
+  var hours = Math.floor((ms % 86400000) / 3600000);
+  var minutes = Math.floor((ms % 3600000) / 60000);
+  var seconds = Math.floor((ms % 60000) / 1000);
+  var parts = [];
+  if (days > 0) parts.push(days + 'd');
+  if (hours > 0 || days > 0) parts.push(hours + 'h');
+  parts.push(minutes + 'm', seconds + 's');
+  return parts.join(' ');
+}
+
+// Station whose show day it is right now (Pacific, 4 AM rollover), else the station with the next show.
+function currentOrNextShow(now) {
+  var weekday = getPacific(new Date(now.getTime() - DAY_ROLLOVER_HOURS * 3600000)).weekday;
+  for (var i = 0; i < SHOWS.length; i++) if (SHOWS[i].weekday === weekday) return SHOWS[i];
+  var best = SHOWS[0], bestMs = Infinity;
+  SHOWS.forEach(function (s) { var ms = msUntilNextShow(s.weekday, now); if (ms < bestMs) { bestMs = ms; best = s; } });
+  return best;
+}
+
+var isLive = false;
+var requestedStation = params.get('station');
+
+function tick() {
+  var now = new Date();
+  // Channel-wide page: count down to the soonest show of any station (like the homepage card).
+  var minMs = Infinity;
+  SHOWS.forEach(function (s) { minMs = Math.min(minMs, msUntilNextShow(s.weekday, now)); });
+  document.getElementById('countdown-time').textContent = formatCountdown(minMs);
+
+  // Instagram CTA: the station passed in by the opener, else whichever show is on / next.
+  var show = SHOWS.filter(function (s) { return s.station === requestedStation; })[0] || currentOrNextShow(now);
+  document.getElementById('cta-follow').href = show.instagram;
+}
+tick();
+setInterval(tick, 1000);
+
+// ── TWITCH EMBED ──────────────────────────────────────────────────────────────
+// Same approach as the homepage Twitch card: official Embed SDK, visible + autoplaying + muted,
+// ONLINE/OFFLINE registered on the embed itself (not embed.getPlayer()). This page is always
+// fully on screen, so there's no wait-until-visible step. The opaque countdown covers the
+// player while the channel is offline.
+function setLive(live) {
+  isLive = live;
+  document.getElementById('countdown').classList.toggle('hidden', live);
+}
+
+function createEmbed() {
+  var embed = new window.Twitch.Embed('embed', {
+    width: '100%', height: '100%',
+    channel: TWITCH_CHANNEL,
+    parent: [window.location.hostname],
+    layout: 'video',
+    autoplay: true,
+    muted: true
+  });
+  embed.addEventListener(window.Twitch.Player.ONLINE, function () { setLive(true); });
+  embed.addEventListener(window.Twitch.Player.OFFLINE, function () { setLive(false); });
+}
+
+(function loadSdk() {
+  var script = document.createElement('script');
+  script.src = 'https://embed.twitch.tv/embed/v1.js';
+  script.async = true;
+  script.onload = createEmbed;
+  document.body.appendChild(script);
+})();
+
+// ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
+function scaleScene() {
+  var scene = document.getElementById('scene');
+  var scale = isPopout
+    ? Math.min(window.innerWidth / 1280, window.innerHeight / 825)   // just the TV, letterboxed
+    : Math.max(window.innerWidth / 1920, window.innerHeight / 1080); // scene fills the window
+  scene.style.transform = 'scale(' + scale + ')';
+}
+if (isPopout) document.getElementById('scene').classList.add('popout-mode');
+window.addEventListener('resize', scaleScene);
+scaleScene();
+</script>
+</body>
+</html>

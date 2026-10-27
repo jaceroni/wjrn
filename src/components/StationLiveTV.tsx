@@ -18,6 +18,10 @@ const SCREEN_WINDOW = { left: "10.234%", top: "13.697%", width: "79.531%", heigh
 const CHAT_ZONE = { left: "7.969%", top: "89.818%", width: "11.875%", height: "4.727%" };
 const FOLLOW_ZONE = { left: "79.766%", top: "89.818%", width: "12.188%", height: "4.727%" };
 
+// The baked-in "jacewon" logo opens the standalone TV page as a pop-out window, like the
+// vintage player's logo does (x572-711, y747-768, padded).
+const LOGO_ZONE = { left: "43.75%", top: "89.818%", width: "12.734%", height: "4.727%" };
+
 const TWITCH_URL = "https://www.twitch.tv/jacewonmusic";
 const INSTAGRAM_URL: Record<string, string> = {
   rock_garden: "https://www.instagram.com/therockgarden.tv/",
@@ -136,6 +140,22 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
         aria-label="Join the chat on Twitch"
         className="absolute z-[2]"
         style={{ left: CHAT_ZONE.left, top: CHAT_ZONE.top, width: CHAT_ZONE.width, height: CHAT_ZONE.height }}
+      />
+      <a
+        href={`/live-stream/?station=${stationId}`}
+        onClick={(e) => {
+          e.preventDefault();
+          const w = Math.min(1280, window.screen.availWidth);
+          const h = Math.min(825, window.screen.availHeight - 60);
+          window.open(
+            `/live-stream/?popout=true&station=${stationId}`,
+            "WJRNLiveTV",
+            `width=${w},height=${h},resizable=yes,scrollbars=no`
+          );
+        }}
+        aria-label="Pop out the live TV"
+        className="absolute z-[2]"
+        style={{ left: LOGO_ZONE.left, top: LOGO_ZONE.top, width: LOGO_ZONE.width, height: LOGO_ZONE.height }}
       />
       <a
         href={INSTAGRAM_URL[stationId]}
