@@ -88,7 +88,7 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
   }, [reportChannelLive]);
 
   return (
-    <div id="station-live-tv" className="relative w-full max-w-5xl mx-auto" style={{ aspectRatio: "1280 / 825" }}>
+    <div id="station-live-tv" className="relative w-full" style={{ aspectRatio: "1280 / 825" }}>
       {/* Screen — video when live, countdown when not; sits under the frame PNG */}
       <div
         className="absolute z-0 overflow-hidden bg-[#080605]"
