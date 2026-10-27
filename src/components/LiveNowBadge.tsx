@@ -85,13 +85,13 @@ export default function LiveNowBadge() {
   return (
     <div
       className="fixed right-3 md:right-6 z-40 transition-[bottom] duration-300 ease-in-out"
-      style={{ bottom: (isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0) + 12 }}
+      style={{ bottom: (isMiniPlayerVisible ? MINI_PLAYER_HEIGHT : 0) + 20 }}
     >
       <button
         type="button"
         onClick={handleClick}
         aria-label="Live now — watch the broadcast"
-        className="live-badge-pulse block w-[104px] md:w-[136px]"
+        className="live-badge-pulse block w-[94px] md:w-[122px]"
       >
         <img src={liveBadge} alt="" draggable={false} className="w-full h-auto block select-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)]" />
       </button>
@@ -99,7 +99,7 @@ export default function LiveNowBadge() {
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss live notification"
-        className="absolute -top-1 -left-1 w-5 h-5 flex items-center justify-center rounded-full bg-[#120e0b] border border-[#f3ede2]/30 text-[#f3ede2]/80 hover:text-[#f3ede2]"
+        className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full bg-[#120e0b] border border-[#f3ede2]/30 text-[#f3ede2]/80 hover:text-[#f3ede2]"
       >
         <X className="w-3 h-3" />
       </button>
