@@ -136,3 +136,15 @@ button:not(:disabled) {
   from { transform: rotate(0deg) translateZ(0); }
   to   { transform: rotate(-360deg) translateZ(0); }
 }
+
+/* Floating LIVE badge — gentle attention pulse. translateZ baked into the keyframes
+   (a static inline transform would be clobbered by the animation) per the anti-flicker rules. */
+@keyframes liveBadgePulse {
+  0%, 100% { transform: scale(1) translateZ(0); }
+  50%      { transform: scale(1.06) translateZ(0); }
+}
+.live-badge-pulse {
+  animation: liveBadgePulse 1.6s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}

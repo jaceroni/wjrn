@@ -17,6 +17,7 @@ import stationPagePlayerBg from "../assets/images/station-page-player-bg.png";
 import listenButtonBgTrg from "../assets/images/wjrn-station-page-player-button-trg.png";
 import listenButtonBgBchs from "../assets/images/wjrn-station-page-player-button-bchs.png";
 import listenButtonBgGbs from "../assets/images/wjrn-station-page-player-button-gbs.png";
+import StationLiveTV from "./StationLiveTV";
 
 // Wood-frame / brushed-aluminum player panel — content sits inset from the plate edge
 // by this percentage on all sides, clearing the gold corner bolts (measured via pixel
@@ -878,6 +879,11 @@ export default function StationLanding({ stationId }: StationLandingProps) {
             )}
           </>
         )}
+      </section>
+
+      {/* Live broadcast TV — countdown until this station's show, Twitch embed while it's on air */}
+      <section className="relative z-10 w-full max-w-7xl mx-auto pb-20">
+        <StationLiveTV stationId={stationId} />
       </section>
 
       {/* ------------------------------------------------------------------ */}

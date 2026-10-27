@@ -9,6 +9,8 @@ import { PlayerProvider } from "./context/PlayerContext";
 import MiniPlayer from "./components/MiniPlayer";
 import PopoutWidget from "./components/PopoutWidget";
 import MobileNavOverlay from "./components/MobileNavOverlay";
+import LiveNowBadge from "./components/LiveNowBadge";
+import { LiveStatusProvider } from "./context/LiveStatusContext";
 
 const SLUG_TO_STATION: { [key: string]: string } = {
   "/the-rock-garden":        "rock_garden",
@@ -119,6 +121,7 @@ export default function App() {
 
   return (
     <PlayerProvider>
+     <LiveStatusProvider>
       {view.type === "station" && (
         <StationLanding stationId={(view as { type: "station"; stationId: string }).stationId} />
       )}
@@ -130,6 +133,9 @@ export default function App() {
       {/* Mini player — hidden while PiP widget is active */}
       {!pipWindow && <MiniPlayer />}
 
+      {/* Floating "LIVE" call-to-action — shown on every page while the channel is broadcasting */}
+      <LiveNowBadge />
+
       {/* Full-screen mobile nav — shared by every page's header logo tap below md */}
       <MobileNavOverlay STATIONS={STATIONS} />
 
@@ -139,6 +145,7 @@ export default function App() {
           <PopoutWidget isPip onClose={() => { pipWindow.close(); setPipWindow(null); }} />,
           pipWindow.document.body
         )}
+     </LiveStatusProvider>
     </PlayerProvider>
   );
 }
