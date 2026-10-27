@@ -58,6 +58,8 @@ import { navigate } from "../navigate";
 
 Nginx has explicit `location` blocks for each of these that serve `index.html`.
 
+Two **standalone, non-SPA pages** also live under `public/` and have their own nginx `location` blocks: `/player/` (vintage receiver) and `/live-stream/` (live TV scene + `?popout=true`; see "Live show TV + floating LIVE badge" below). Linking to either from the SPA is a full page load, so open them with `window.open`/`target="_blank"` — never a same-tab navigate while audio is playing (the LIVE badge is the one place that deliberately stops playback first).
+
 ---
 
 ## Key files
