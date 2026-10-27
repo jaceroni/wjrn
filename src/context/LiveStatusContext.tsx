@@ -15,9 +15,11 @@ interface LiveStatus {
   isChannelLive: boolean;
   /** The station whose show day it is, but only while the channel is live — else null. */
   liveStationId: string | null;
+  /** Lets a visible embed (StationLiveTV) feed its ONLINE/OFFLINE result into the shared state. */
+  reportChannelLive: (live: boolean) => void;
 }
 
-const LiveStatusContext = createContext<LiveStatus>({ isChannelLive: false, liveStationId: null });
+const LiveStatusContext = createContext<LiveStatus>({ isChannelLive: false, liveStationId: null, reportChannelLive: () => {} });
 
 export const useLiveStatus = () => useContext(LiveStatusContext);
 
@@ -95,8 +97,8 @@ export function LiveStatusProvider({ children }: { children: ReactNode }) {
   }, [fake]);
 
   const value: LiveStatus = fake
-    ? { isChannelLive: true, liveStationId: fake === "1" ? todayStation : fake }
-    : { isChannelLive, liveStationId: isChannelLive ? todayStation : null };
+    ? { isChannelLive: true, liveStationId: fake === "1" ? todayStation : fake, reportChannelLive: () => {} }
+    : { isChannelLive, liveStationId: isChannelLive ? todayStation : null, reportChannelLive: setIsChannelLive };
 
   return (
     <LiveStatusContext.Provider value={value}>

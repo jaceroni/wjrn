@@ -13,7 +13,7 @@ interface StationLiveTVProps {
 }
 
 export default function StationLiveTV({ stationId }: StationLiveTVProps) {
-  const { liveStationId } = useLiveStatus();
+  const { liveStationId, reportChannelLive } = useLiveStatus();
   const isLive = liveStationId === stationId;
   const embedContainerRef = useRef<HTMLDivElement>(null);
   const [countdownText, setCountdownText] = useState("");
@@ -27,18 +27,21 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
     return () => clearInterval(id);
   }, [stationId]);
 
-  // Visible, autoplaying embed — only created while this station is live, and only once
-  // the TV is actually in the viewport (Twitch's autoplay requires visibility at creation;
-  // see CLAUDE.md's Twitch section). Torn down again when the show ends.
+  // Same path as the homepage Twitch card, which is the proven one: a visible, autoplaying
+  // embed created once the TV is in the viewport (Twitch's autoplay requires visibility at
+  // creation; see CLAUDE.md's Twitch section), with ONLINE/OFFLINE registered on the embed
+  // itself. Always created (not gated on "live") — the countdown screen covers it while the
+  // channel is offline — and its result feeds the app-wide state, so on a station page this
+  // path is authoritative and the hidden probe is only needed for the badge elsewhere.
   useEffect(() => {
     const container = embedContainerRef.current;
-    if (!isLive || !container || typeof window === "undefined") return;
+    if (!container || typeof window === "undefined") return;
     let cancelled = false;
 
     function createEmbed() {
       if (cancelled || !container || !window.Twitch) return;
       container.innerHTML = "";
-      new window.Twitch.Embed(container, {
+      const embed = new window.Twitch.Embed(container, {
         width: "100%",
         height: "100%",
         channel: TWITCH_CHANNEL,
@@ -47,6 +50,8 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
         autoplay: true,
         muted: true,
       });
+      embed.addEventListener(window.Twitch.Player.ONLINE, () => reportChannelLive(true));
+      embed.addEventListener(window.Twitch.Player.OFFLINE, () => reportChannelLive(false));
     }
 
     function loadSdkAndCreate() {
@@ -77,7 +82,7 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
       observer.disconnect();
       container.innerHTML = "";
     };
-  }, [isLive]);
+  }, [reportChannelLive]);
 
   return (
     <div id="station-live-tv" className="relative w-full max-w-5xl mx-auto" style={{ aspectRatio: "1280 / 825" }}>
@@ -88,7 +93,7 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
       >
         <div ref={embedContainerRef} className="w-full h-full" />
         {!isLive && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-3">
+          <div className="absolute inset-0 bg-[#080605] flex flex-col items-center justify-center text-center px-3">
             <p className="text-[10px] sm:text-xs md:text-sm font-mono text-neutral-400 mb-2 uppercase tracking-wider">
               NEXT LIVE STREAM COUNTDOWN:
             </p>
