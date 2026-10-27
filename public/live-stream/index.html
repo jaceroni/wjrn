@@ -47,7 +47,7 @@ html, body {
    TV's own shadow, so none is added here. */
 #tv {
   position: absolute; left: 471px; top: 102px; width: 1280px; height: 825px;
-  transform: scale(0.766); transform-origin: 0 0;
+  transform: scale(0.766); transform-origin: 0 0; z-index: 2;
 }
 /* Popout mode: just the TV at native size, no backdrop. */
 #scene.popout-mode { width: 1280px !important; height: 825px !important; background: #000 !important; }
@@ -66,6 +66,35 @@ html, body {
 #countdown .time { font-size: 72px; font-weight: 700; letter-spacing: -0.02em; color: #d7b158; font-variant-numeric: tabular-nums; }
 #frame { position: absolute; left: 0; top: 0; width: 1280px; height: 825px; z-index: 1; pointer-events: none; display: block; }
 .cta { position: absolute; z-index: 2; display: block; }
+
+/* ── Room decor, ported from the Skywave page (jacebrown.design/skywave) — same room picture, so its
+   measured positions carry over unchanged. Scene mode only; popout has no room. ── */
+#scene.popout-mode .backdrop-fx { display: none !important; }
+
+/* VCR clock over the picture's blank display: real seven-segment digits, x1094 y800 50x17 in picture px,
+   with Skywave's vacuum-fluorescent glow (tight halo + wide soft one). Skywave expresses the glow in cqw of
+   the 1920px room: 0.1cqw = 1.92px, 0.28cqw = 5.38px. */
+#vcr-clock { position: absolute; left: 1094px; top: 800px; width: 50px; height: 17px; z-index: 4; pointer-events: none;
+  filter: drop-shadow(0 0 1.92px rgba(150,225,45,0.9)) drop-shadow(0 0 5.38px rgba(104,168,24,0.7)); }
+#vcr-clock svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.vcr-seg { fill: #68a818; opacity: 0; }
+.vcr-seg.is-on { opacity: 1; }
+.vcr-colon rect { fill: #68a818; }
+.vcr-colon { animation: vcr-blink 1s steps(1, end) infinite; }
+@keyframes vcr-blink { 0% { opacity: 1; } 50% { opacity: 0; } }
+
+/* Cigarette smoke: Skywave's retuned version of the incense technique (thinner, slower, lighter shade than
+   the player's). 240x640 box, tip 4px above its bottom centre, at the cigarette's lit end (662, 1002). */
+#cig-smoke { position: absolute; left: 542px; top: 366px; width: 240px; height: 640px; z-index: 3;
+  pointer-events: none; overflow: hidden; filter: blur(3px); }
+#cig-smoke .particle { position: absolute; left: 0; top: 0; border-radius: 50%; offset-rotate: 0deg;
+  animation: smoke-rise linear infinite; animation-fill-mode: both;
+  background-image: radial-gradient(ellipse at 35% 15%, rgba(0,0,0,0), rgba(0,0,0,0.18)); }
+@keyframes smoke-rise {
+  0%   { offset-distance: 0%; transform: scale(1) rotate(var(--rot-start, 0deg)); opacity: var(--op-start, 0.16); }
+  100% { offset-distance: 100%; transform: scale(var(--end-scale, 1.3)) scaleX(var(--end-scale-x, 1.15)) scaleY(var(--end-scale-y, 1.6)) rotate(var(--rot-end, 0deg)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { #cig-smoke { display: none; } .vcr-colon { animation: none; } }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -84,6 +113,8 @@ html, body {
       <a class="cta" id="cta-chat" href="https://www.twitch.tv/jacewonmusic" target="_blank" rel="noopener noreferrer" aria-label="Join the chat on Twitch" style="left:102px;top:741px;width:152px;height:39px"></a>
       <a class="cta" id="cta-follow" href="https://www.instagram.com/jacewonmusic/" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram" style="left:1021px;top:741px;width:156px;height:39px"></a>
     </div>
+    <div id="vcr-clock" class="backdrop-fx" aria-hidden="true"></div>
+    <div id="cig-smoke" class="backdrop-fx" aria-hidden="true"></div>
   </div>
 </div>
 
@@ -208,6 +239,119 @@ function createEmbed() {
   script.async = true;
   script.onload = createEmbed;
   document.body.appendChild(script);
+})();
+
+// ── VCR CLOCK (backdrop scene) ────────────────────────────────────────────────
+// Ported from Skywave's ui/vcr-clock.js: 12-hour, no AM/PM, no seconds, no leading zero ("7:39"),
+// colon blinking once a second (CSS). Skywave shows the time at the place being tuned; here it
+// reads the viewer's own device clock, same as the vintage player's wall clock. Geometry is
+// Skywave's VCR_CLOCK config: a 50x17 box, cell x's relative to it (the first cell is the blank
+// hour-tens digit, used for "1" at 10, 11 and 12 o'clock).
+(function () {
+  var root = document.getElementById('vcr-clock');
+  if (!root) return;
+  var V = { box: { w: 50, h: 17 }, cells: [1, 11, 25, 35], cellW: 8, cellH: 15, top: 1, thick: 1.9,
+            colon: { x: 21.5, y1: 4.0, y2: 11.0, size: 2.4 } };
+  var SEGMENTS = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs) {
+    var n = document.createElementNS(NS, name);
+    Object.keys(attrs || {}).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    return n;
+  }
+  // One segment as a bevelled hexagon in a w x h cell, t thick.
+  function segmentPoints(seg, w, h, t) {
+    var e = t / 2, mid = h / 2, g = 0.35; // g = the gap between segments
+    function hbar(y) { return [[e, y + e], [e + e, y], [w - e - e, y], [w - e, y + e], [w - e - e, y + t], [e + e, y + t]]; }
+    function vbar(x, y0, y1) { return [[x + e, y0], [x + t, y0 + e], [x + t, y1 - e], [x + e, y1], [x, y1 - e], [x, y0 + e]]; }
+    switch (seg) {
+      case 'a': return hbar(0);
+      case 'd': return hbar(h - t);
+      case 'g': return hbar(mid - e);
+      case 'f': return vbar(0, g, mid - g);
+      case 'b': return vbar(w - t, g, mid - g);
+      case 'e': return vbar(0, mid + g, h - g);
+      case 'c': return vbar(w - t, mid + g, h - g);
+    }
+    return [];
+  }
+  var svg = el('svg', { viewBox: '0 0 ' + V.box.w + ' ' + V.box.h, 'aria-hidden': 'true', focusable: 'false' });
+  var cells = V.cells.map(function (x) {
+    var g = el('g', { transform: 'translate(' + x + ' ' + V.top + ')' });
+    var segs = {};
+    'abcdefg'.split('').forEach(function (s) {
+      var p = el('polygon', { 'class': 'vcr-seg', points: segmentPoints(s, V.cellW, V.cellH, V.thick).map(function (q) { return q.join(','); }).join(' ') });
+      g.appendChild(p); segs[s] = p;
+    });
+    svg.appendChild(g);
+    return segs;
+  });
+  var colon = el('g', { 'class': 'vcr-colon' });
+  [V.colon.y1, V.colon.y2].forEach(function (y) {
+    colon.appendChild(el('rect', { x: V.colon.x - V.colon.size / 2, y: y - V.colon.size / 2, width: V.colon.size, height: V.colon.size }));
+  });
+  svg.appendChild(colon);
+  root.appendChild(svg);
+
+  var last = '';
+  function paint() {
+    var d = new Date(), hour = d.getHours(), m = d.getMinutes();
+    var h = hour % 12 || 12;
+    var digits = [h >= 10 ? 1 : null, h % 10, Math.floor(m / 10), m % 10];
+    var key = digits.join('|');
+    if (key === last) return;
+    last = key;
+    digits.forEach(function (digit, i) {
+      var on = digit == null ? '' : SEGMENTS[digit];
+      Object.keys(cells[i]).forEach(function (s) { cells[i][s].classList.toggle('is-on', on.indexOf(s) >= 0); });
+    });
+  }
+  paint();
+  setInterval(paint, 1000);
+})();
+
+// ── CIGARETTE SMOKE (backdrop scene) ──────────────────────────────────────────
+// Ported from Skywave's ui/smoke.js + its SMOKE config: the incense technique retuned for a cigarette
+// (thinner, slower, lighter shade). Thin vertical streaks each riding their own curved CSS offset-path up
+// from the cigarette's lit end, fading as they climb, negative delay so it's alive on the first frame.
+// No JS animation loop — the browser animates it.
+(function () {
+  var root = document.getElementById('cig-smoke');
+  if (!root || !(typeof CSS !== 'undefined' && CSS.supports && CSS.supports('offset-path', "path('M0 0 L1 1')"))) return;
+  var S = {
+    box: { w: 240, h: 640 }, originInset: 4, particles: 60,
+    width: [3, 7], height: [14, 30], startSpread: 3, c1Spread: 16, c2Spread: 52, endSpread: 90, drift: 14,
+    durationMs: [10000, 18000], sway: 8, startOpacity: [0.225, 0.375],
+    lightness: [84, 98], alpha: [0.225, 0.40],
+    endScale: [1.1, 1.5], endScaleX: [1.8, 3.2], endScaleY: [1.2, 1.7]
+  };
+  function between(r) { return r[0] + Math.random() * (r[1] - r[0]); }
+  function spread(a) { return Math.random() * 2 * a - a; }
+  var originX = S.box.w / 2, originY = S.box.h - S.originInset;
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < S.particles; i++) {
+    var startX = originX + spread(S.startSpread);
+    var c1x = originX + S.drift * 0.3 + spread(S.c1Spread), c1y = originY - S.box.h * 0.32;
+    var c2x = originX + S.drift * 0.7 + spread(S.c2Spread), c2y = originY - S.box.h * 0.7;
+    var endX = originX + S.drift + spread(S.endSpread), endY = -20; // leaves above the box; overflow:hidden clips it where opacity is already 0
+    var duration = between(S.durationMs);
+    var el = document.createElement('div');
+    el.className = 'particle';
+    el.style.width = between(S.width) + 'px';
+    el.style.height = between(S.height) + 'px';
+    el.style.offsetPath = el.style.webkitOffsetPath = "path('M " + startX.toFixed(1) + ' ' + originY + ' C ' + c1x.toFixed(1) + ' ' + c1y.toFixed(1) + ', ' + c2x.toFixed(1) + ' ' + c2y.toFixed(1) + ', ' + endX.toFixed(1) + ' ' + endY + "')";
+    el.style.animationDuration = duration + 'ms';
+    el.style.animationDelay = -(Math.random() * duration) + 'ms'; // already partway through its climb
+    el.style.backgroundColor = 'hsla(30,10%,' + Math.round(between(S.lightness)) + '%,' + between(S.alpha).toFixed(2) + ')';
+    el.style.setProperty('--rot-start', spread(S.sway).toFixed(1) + 'deg');
+    el.style.setProperty('--rot-end', spread(S.sway).toFixed(1) + 'deg');
+    el.style.setProperty('--op-start', between(S.startOpacity).toFixed(2));
+    el.style.setProperty('--end-scale', between(S.endScale).toFixed(2));
+    el.style.setProperty('--end-scale-x', between(S.endScaleX).toFixed(2));
+    el.style.setProperty('--end-scale-y', between(S.endScaleY).toFixed(2));
+    frag.appendChild(el);
+  }
+  root.appendChild(frag);
 })();
 
 // ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
