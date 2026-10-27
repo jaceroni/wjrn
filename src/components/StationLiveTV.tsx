@@ -3,10 +3,13 @@ import tvFrame from "../assets/images/wjrn-twitch-live-stream-tv-1280x825.png";
 import { TWITCH_CHANNEL, useLiveStatus } from "../context/LiveStatusContext";
 import { SHOW_WEEKDAY, formatCountdown, msUntilNextShow } from "../utils/showSchedule";
 
-// Measured by alpha-channel search against the native 1280x825 PNG: the fully
-// transparent core spans x 198-1082, y 178-625. (Its soft inner vignette is baked
-// into the PNG's partial-alpha edge and overlays the video on its own.)
-const SCREEN_WINDOW = { left: "15.469%", top: "21.576%", width: "69.141%", height: "54.303%" };
+// Measured by alpha-channel search against the native 1280x825 PNG. The *fully* transparent
+// core is only x 198-1082, y 178-625, but it's ringed by a ~55px soft vignette of partial
+// alpha that fades out to the opaque bezel — anchoring to the core left a visible gap (the
+// screen looked ~50px short of the bezel on every side). The true opening is where alpha
+// first reaches opaque: x 131-1148, y 113-690. The vignette then darkens the video's
+// edges on its own, like CRT glass.
+const SCREEN_WINDOW = { left: "10.234%", top: "13.697%", width: "79.531%", height: "70.061%" };
 
 interface StationLiveTVProps {
   stationId: string;
