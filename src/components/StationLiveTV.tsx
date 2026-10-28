@@ -9,7 +9,7 @@ import { SHOW_WEEKDAY, formatCountdown, msUntilNextShow } from "../utils/showSch
 // screen looked ~50px short of the bezel on every side). The true opening is where alpha
 // first reaches opaque: x 131-1148, y 113-690. The vignette then darkens the video's
 // edges on its own, like CRT glass.
-const SCREEN_WINDOW = { left: "10.234%", top: "13.697%", width: "79.531%", height: "70.061%" };
+const SCREEN_WINDOW = { left: "9.688%", top: "12.485%", width: "81.094%", height: "72.485%" };
 
 // Click zones around the two CTAs baked into the bottom row of the PNG ("JOIN THE CHAT ON ⧉"
 // left of the logo, "◻ GIVE US A FOLLOW" right of it). Text measured by gold-pixel search
