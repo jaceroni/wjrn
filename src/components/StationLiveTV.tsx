@@ -9,6 +9,12 @@ import { SHOW_WEEKDAY, formatCountdown, msUntilNextShow } from "../utils/showSch
 // screen looked ~50px short of the bezel on every side). The true opening is where alpha
 // first reaches opaque: x 131-1148, y 113-690. The vignette then darkens the video's
 // edges on its own, like CRT glass.
+const STATION_LABEL: Record<string, string> = {
+  rock_garden: "ROCK GARDEN",
+  bridge_city: "BRIDGE CITY HANG SUITE",
+  golden_boombox: "GOLDEN BOOMBOX SESSIONS",
+};
+
 const SCREEN_WINDOW = { left: "9.688%", top: "12.485%", width: "81.094%", height: "72.485%" };
 
 // Click zones around the two CTAs baked into the bottom row of the PNG ("JOIN THE CHAT ON ⧉"
@@ -116,7 +122,7 @@ export default function StationLiveTV({ stationId }: StationLiveTVProps) {
         {!isLive && (
           <div className="absolute inset-0 bg-[#080605] flex flex-col items-center justify-center text-center px-3">
             <p className="text-[10px] sm:text-xs md:text-sm font-mono text-neutral-400 mb-2 uppercase tracking-wider">
-              NEXT LIVE STREAM COUNTDOWN:
+              THE NEXT {STATION_LABEL[stationId] ?? ""} LIVE STREAM IS IN:
             </p>
             <div className="font-mono text-2xl sm:text-4xl md:text-6xl font-bold tracking-tight">
               <span className="font-mono tabular-nums" style={{ color: "#d7b158" }}>{countdownText}</span>

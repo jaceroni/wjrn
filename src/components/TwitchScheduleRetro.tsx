@@ -278,7 +278,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
             {!isLiveActive && (
               <div className="w-full h-full flex flex-col items-center justify-center text-center px-2">
                 <p className="text-[8px] font-mono text-neutral-400 mb-1 uppercase tracking-wider">
-                  NEXT LIVE STREAM COUNTDOWN:
+                  THE NEXT LIVE STREAM IS IN:
                 </p>
                 <div className="font-mono text-base font-bold tracking-tight select-all">
                   <span className="font-mono tabular-nums" style={{ color: "#d7b158" }}>{countdownText}</span>
@@ -387,7 +387,7 @@ export default function TwitchSchedule({ twitchChannel, scheduledDaysText }: Twi
           {!isLiveActive && (
             <div className="w-full h-full flex flex-col items-center justify-center text-center px-3">
               <p className="text-[10px] sm:text-xs font-mono text-neutral-400 mb-2 uppercase tracking-wider">
-                NEXT LIVE STREAM COUNTDOWN:
+                THE NEXT LIVE STREAM IS IN:
               </p>
               <div className="font-mono text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight select-all">
                 <span className="font-mono tabular-nums" style={{ color: "#d7b158" }}>{countdownText}</span>
