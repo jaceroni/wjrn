@@ -118,7 +118,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     streamUrl:
       "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
     shortcode: "the_rock_garden",
-    demandLabel: "LISTEN TO PAST TRIBUTES ON DEMAND",
+    demandLabel: "LISTEN TO PAST LIVE BROADCASTS ON DEMAND",
     onDemand: [
       {
         title: "Groove Architects Vol. 12",
@@ -174,7 +174,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     streamUrl:
       "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3",
     shortcode: "bridge_city_hang_suite",
-    demandLabel: "LISTEN TO PAST SESSIONS ON DEMAND",
+    demandLabel: "LISTEN TO PAST LIVE BROADCASTS ON DEMAND",
     onDemand: [
       {
         title: "After Hours With The Hang Suite",
@@ -230,7 +230,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     streamUrl:
       "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3",
     shortcode: "golden_boombox_sessions",
-    demandLabel: "LISTEN TO PAST SESSIONS ON DEMAND",
+    demandLabel: "LISTEN TO PAST LIVE BROADCASTS ON DEMAND",
     onDemand: [
       {
         title: "The Golden Era Codex",
