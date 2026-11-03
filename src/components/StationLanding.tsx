@@ -151,7 +151,7 @@ const STATION_CONFIGS: { [key: string]: StationConfig } = {
     name: "BRIDGE CITY HANG SUITE",
     genres: ["GROWNFOLK R&B", "SOUL", "ELECTRONICA"],
     description:
-      "Late nights, deep cuts, and all the feelings you didn't know you needed to feel. Bridge City Hang Suite is grown-folk R&B at its purest — curated for the after-hours crowd, live every Wednesday at 7PM Pacific.",
+      "Late nights, afterhours, deep cuts, and all the classics that make you feel some sort of way. Sometimes uptempo, sometimes a slow burn...either, always a vibe. Bridge City Hang Suite is grown-folk R&B at its purest — curated for the after-hours crowd, live every Wednesday at 7PM Pacific.",
     sensory: {
       soundsLike: "A Panther in Heat",
       smellsLike: "Nag Champa & Cognac",
