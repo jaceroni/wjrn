@@ -55,9 +55,16 @@ html, body {
 
 /* True opening of the frame (where its soft vignette reaches opaque): x124-1162, y103-701 (re-measured 2026-10-28 for the softer-shadow render). */
 #screen { position: absolute; left: 124px; top: 103px; width: 1038px; height: 598px; background: #080605; overflow: hidden; z-index: 0; }
-/* 16:9 box centred on the glass opening (centre ~x641 y398 native). Sized so Twitch's control bar (mute
-   etc., along the bottom edge) sits just above the bezel's soft bottom vignette, not buried in it. */
-#embed { position: absolute; left: 38px; top: 25px; width: 960px; height: 540px; }
+/* Video covers the whole opening: 16:9 at the opening's full height (598) is 1063 wide, centred, with the
+   12px overflow each side clipped by #screen. Twitch's own control bar ends up under the bezel's vignette,
+   so mute/unmute is our own button (#mute-btn) on top of the frame. */
+#embed { position: absolute; left: -12px; top: 0; width: 1063px; height: 598px; }
+#mute-btn { position: absolute; left: 150px; top: 640px; width: 38px; height: 38px; z-index: 3; display: none;
+  align-items: center; justify-content: center; border-radius: 50%; border: 1px solid rgba(215,177,88,0.6);
+  background: rgba(8,6,5,0.72); color: #d7b158; cursor: pointer; padding: 0; }
+#mute-btn:hover { background: rgba(8,6,5,0.9); border-color: #d7b158; }
+#mute-btn svg { width: 20px; height: 20px; }
+#mute-btn.show { display: flex; }
 #countdown {
   position: absolute; inset: 0; background: #080605;
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
@@ -110,6 +117,7 @@ html, body {
           <div class="time" id="countdown-time"></div>
         </div>
       </div>
+      <button id="mute-btn" type="button" aria-label="Unmute"></button>
       <img id="frame" src="./wjrn-twitch-live-stream-tv-1280x825.png" alt="">
       <!-- CTA click zones over the text baked into the frame's bottom row (native px) -->
       <a class="cta" id="cta-chat" href="https://www.twitch.tv/jacewonmusic" target="_blank" rel="noopener noreferrer" aria-label="Join the chat on Twitch" style="left:102px;top:741px;width:152px;height:39px"></a>
@@ -235,6 +243,31 @@ function createEmbed() {
   });
   embed.addEventListener(window.Twitch.Player.ONLINE, function () { setLive(true); });
   embed.addEventListener(window.Twitch.Player.OFFLINE, function () { setLive(false); });
+  setupMuteButton(embed);
+}
+
+// Our own mute toggle: the embed starts muted (autoplay), and Twitch's native control bar sits under the
+// bezel's vignette now that the video fills the opening. Playback methods live on embed.getPlayer().
+var SPEAKER_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>';
+var SPEAKER_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+function setupMuteButton(embed) {
+  var btn = document.getElementById('mute-btn');
+  var muted = true;
+  function render() {
+    btn.innerHTML = muted ? SPEAKER_OFF : SPEAKER_ON;
+    btn.setAttribute('aria-label', muted ? 'Unmute' : 'Mute');
+    btn.title = muted ? 'Unmute' : 'Mute';
+  }
+  render();
+  btn.classList.add('show');
+  btn.addEventListener('click', function () {
+    var player = embed.getPlayer();
+    if (!player) return;
+    muted = !muted;
+    player.setMuted(muted);
+    if (!muted) player.setVolume(1);
+    render();
+  });
 }
 
 (function loadSdk() {
