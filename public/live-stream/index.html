@@ -55,7 +55,9 @@ html, body {
 
 /* True opening of the frame (where its soft vignette reaches opaque): x124-1162, y103-701 (re-measured 2026-10-28 for the softer-shadow render). */
 #screen { position: absolute; left: 124px; top: 103px; width: 1038px; height: 598px; background: #080605; overflow: hidden; z-index: 0; }
-#embed { width: 100%; height: 100%; }
+/* Inset so Twitch's control bar (mute etc., along the iframe's bottom edge) lands in the frame's fully
+   transparent core (x190-1096, bottom y648) instead of under the bezel's soft bottom/left vignette. */
+#embed { position: absolute; left: 66px; top: 17px; width: 906px; height: 528px; }
 #countdown {
   position: absolute; inset: 0; background: #080605;
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
