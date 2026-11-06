@@ -59,13 +59,13 @@ html, body {
    vertically (7px spare top and bottom). Twitch's own control bar sits under the bezel's vignette at this
    size, so mute/unmute is our own button (#mute-btn) on top of the frame. */
 #embed { position: absolute; left: 0; top: 7px; width: 1038px; height: 584px; }
-#mute-btn { position: absolute; left: 593px; top: 352px; width: 100px; height: 100px; z-index: 3; display: none;
+#mute-btn { position: absolute; left: 568px; top: 327px; width: 150px; height: 150px; z-index: 3; display: none;
   align-items: center; justify-content: center; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
   background: #d7b158; color: #120e0b; box-shadow: 0 8px 28px rgba(0,0,0,0.55); transition: transform 150ms ease-out; }
 #mute-btn::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(215,177,88,0.7);
   animation: mute-pulse 1.8s ease-out infinite; pointer-events: none; }
 #mute-btn:hover { transform: scale(1.06); }
-#mute-btn svg { width: 50px; height: 50px; }
+#mute-btn svg { width: 76px; height: 76px; }
 #mute-btn.show { display: flex; }
 @keyframes mute-pulse { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.35); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #mute-btn::after { animation: none; } }
