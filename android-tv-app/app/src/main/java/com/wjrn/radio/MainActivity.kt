@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +33,11 @@ class MainActivity : AppCompatActivity() {
         settings.useWideViewPort = true
         settings.loadWithOverviewMode = true
         settings.mediaPlaybackRequiresUserGesture = false
+        // Never trust a cached copy of the player page: it's loaded live so site fixes reach the TV, and a
+        // stale cached copy defeats that. Clear whatever an older install left behind, then bypass the cache.
+        settings.cacheMode = WebSettings.LOAD_NO_CACHE
+        webView.clearCache(true)
+        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -40,7 +46,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        webView.loadUrl("https://radio.jacewonmusic.com/player/")
+        webView.loadUrl("https://radio.jacewonmusic.com/player/?app=tv&build=4")
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
