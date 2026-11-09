@@ -4,7 +4,7 @@
 <script>
 // TEMP diagnostics box, created before anything else so it shows even if the main script dies. Android only.
 (function() {
-  if (!/Android|wv\)/i.test(navigator.userAgent) && !/[?&]diag=1/.test(location.search)) return; // ?diag=1 forces it on in any browser
+  if (!/[?&]diag=1/.test(location.search)) return; // debug readout, opt-in via ?diag=1 only
   window.__dbgErr = '';
   window.addEventListener('error', function(e) { window.__dbgErr = 'JS: ' + e.message + ' @' + (e.lineno || '?'); });
   window.addEventListener('unhandledrejection', function(e) { window.__dbgErr = 'REJ: ' + (e.reason && e.reason.message || e.reason); });
@@ -415,12 +415,12 @@ setInterval(updateClockHands, 1000);
 (function() {
   var container = document.getElementById('incense-smoke');
   if (!container) return;
-  // TV WebView ran 4-12fps with the full 55-particle blurred smoke (measured 2026-11-09), so Android gets a lighter one.
-  var isAndroid = /Android/i.test(navigator.userAgent);
-  if (isAndroid) container.style.filter = 'none';
+  // The Google TV WebView can't keep up with it: 4-12fps with the full smoke, still under 30 with a light one
+  // (measured 2026-11-09), and the ticker, VU needle and remote all lag. Off on Android; fine in browsers.
+  if (/Android/i.test(navigator.userAgent)) { container.style.display = 'none'; return; }
   var W = 240, H = 380; // must match #incense-smoke's CSS width/height
   var originX = W / 2, originY = H - 4;
-  var NUM_PARTICLES = isAndroid ? 14 : 55;
+  var NUM_PARTICLES = 55;
   var frag = document.createDocumentFragment();
 
   for (var i = 0; i < NUM_PARTICLES; i++) {
