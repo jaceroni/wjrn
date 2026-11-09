@@ -5,7 +5,7 @@
 if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add('lite');
 // TEMP diagnostics box, created before anything else so it shows even if the main script dies. Android only.
 (function() {
-  if (!/Android|wv\)/i.test(navigator.userAgent)) return;
+  if (!/Android|wv\)/i.test(navigator.userAgent) && !/[?&]diag=1/.test(location.search)) return; // ?diag=1 forces it on in any browser
   window.__dbgErr = '';
   window.addEventListener('error', function(e) { window.__dbgErr = 'JS: ' + e.message + ' @' + (e.lineno || '?'); });
   window.addEventListener('unhandledrejection', function(e) { window.__dbgErr = 'REJ: ' + (e.reason && e.reason.message || e.reason); });
