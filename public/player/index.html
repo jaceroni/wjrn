@@ -16,8 +16,8 @@ if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add
     b.textContent = 'DIAG v3 boot';
     document.body.appendChild(b);
     setInterval(function() {
-      if (window.__dbgDetail) return;
-      b.textContent = 'DIAG v3 (main script did not finish)\n' + navigator.userAgent + '\n' + window.__dbgErr;
+      b.textContent = window.__dbgDetail ? window.__dbgDetail() :
+        'DIAG v3 (main script did not finish)\n' + navigator.userAgent + '\n' + window.__dbgErr;
     }, 500);
   });
 })();
@@ -960,20 +960,18 @@ fetch(STATIONS[0].api)
   // ── ANDROID DIAGNOSTICS (temporary) ──────────────────────────────────────────
   // The Google TV app has no debugger attached, so on Android show a tiny status line: WebView version,
   // frames/sec, audio context + element state, and the last JS error. Remove once the TV issue is found.
-  if (document.getElementById('dbg-box')) {
-    window.__dbgDetail = true;
-    var dbgEl = document.getElementById('dbg-box');
-    var dbgFrames = 0, dbgFps = 0, dbgLastErr = '';
+  if (typeof window.__dbgErr === 'string') { // set by the head script on Android only
+    var dbgFrames = 0, dbgFps = 0;
     (function countFrame() { dbgFrames++; requestAnimationFrame(countFrame); })();
     setInterval(function() { dbgFps = dbgFrames * 2; dbgFrames = 0; }, 500);
-    setInterval(function() {
+    window.__dbgDetail = function() {
       var m = navigator.userAgent.match(/Chrome\/([\d.]+)/);
       var a = audioEl;
-      dbgEl.textContent = 'DIAG v3  webview ' + (m ? m[1] : '?') + '  fps ' + dbgFps +
+      return 'DIAG v3  webview ' + (m ? m[1] : '?') + '  fps ' + dbgFps +
         '\nctx ' + (audioCtx ? audioCtx.state : 'none') + '  state ' + playerState +
         '\naudio ' + (a ? ('paused=' + a.paused + ' ready=' + a.readyState + ' net=' + a.networkState + ' err=' + (a.error ? a.error.code + ' ' + (a.error.message || '') : 'none') + ' t=' + a.currentTime.toFixed(1)) : 'none') +
         (window.__dbgErr ? '\n' + window.__dbgErr : '');
-    }, 500);
+    };
   }
 })();
 </script>
