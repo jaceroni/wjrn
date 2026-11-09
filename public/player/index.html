@@ -1,7 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add('lite');</script>
+<script>
+if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add('lite');
+// TEMP diagnostics box, created before anything else so it shows even if the main script dies. Android only.
+(function() {
+  if (!/Android|wv\)/i.test(navigator.userAgent)) return;
+  window.__dbgErr = '';
+  window.addEventListener('error', function(e) { window.__dbgErr = 'JS: ' + e.message + ' @' + (e.lineno || '?'); });
+  window.addEventListener('unhandledrejection', function(e) { window.__dbgErr = 'REJ: ' + (e.reason && e.reason.message || e.reason); });
+  document.addEventListener('DOMContentLoaded', function() {
+    var b = document.createElement('div');
+    b.id = 'dbg-box';
+    b.style.cssText = 'position:fixed;left:6vw;top:6vh;z-index:99999;font:20px/1.35 monospace;color:#9f9;background:rgba(0,0,0,0.8);padding:6px 10px;max-width:88vw;white-space:pre-wrap;pointer-events:none';
+    b.textContent = 'DIAG v3 boot';
+    document.body.appendChild(b);
+    setInterval(function() {
+      if (window.__dbgDetail) return;
+      b.textContent = 'DIAG v3 (main script did not finish)\n' + navigator.userAgent + '\n' + window.__dbgErr;
+    }, 500);
+  });
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" type="image/png" href="/assets/images/wjrn-favicon.png" />
@@ -940,22 +960,19 @@ fetch(STATIONS[0].api)
   // ── ANDROID DIAGNOSTICS (temporary) ──────────────────────────────────────────
   // The Google TV app has no debugger attached, so on Android show a tiny status line: WebView version,
   // frames/sec, audio context + element state, and the last JS error. Remove once the TV issue is found.
-  if (document.documentElement.classList.contains('lite')) {
-    var dbgEl = document.createElement('div');
-    dbgEl.style.cssText = 'position:fixed;left:6vw;top:6vh;z-index:99999;font:20px/1.35 monospace;color:#9f9;background:rgba(0,0,0,0.75);padding:4px 8px;max-width:95vw;white-space:pre-wrap;pointer-events:none';
-    document.body.appendChild(dbgEl);
+  if (document.getElementById('dbg-box')) {
+    window.__dbgDetail = true;
+    var dbgEl = document.getElementById('dbg-box');
     var dbgFrames = 0, dbgFps = 0, dbgLastErr = '';
     (function countFrame() { dbgFrames++; requestAnimationFrame(countFrame); })();
-    window.addEventListener('error', function(e) { dbgLastErr = 'JS: ' + e.message; });
-    window.addEventListener('unhandledrejection', function(e) { dbgLastErr = 'REJ: ' + (e.reason && e.reason.message || e.reason); });
     setInterval(function() { dbgFps = dbgFrames * 2; dbgFrames = 0; }, 500);
     setInterval(function() {
       var m = navigator.userAgent.match(/Chrome\/([\d.]+)/);
       var a = audioEl;
-      dbgEl.textContent = 'DIAG v2  webview ' + (m ? m[1] : '?') + '  fps ' + dbgFps +
+      dbgEl.textContent = 'DIAG v3  webview ' + (m ? m[1] : '?') + '  fps ' + dbgFps +
         '\nctx ' + (audioCtx ? audioCtx.state : 'none') + '  state ' + playerState +
         '\naudio ' + (a ? ('paused=' + a.paused + ' ready=' + a.readyState + ' net=' + a.networkState + ' err=' + (a.error ? a.error.code + ' ' + (a.error.message || '') : 'none') + ' t=' + a.currentTime.toFixed(1)) : 'none') +
-        (dbgLastErr ? '\n' + dbgLastErr : '');
+        (window.__dbgErr ? '\n' + window.__dbgErr : '');
     }, 500);
   }
 })();
