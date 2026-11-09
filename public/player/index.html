@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <script>
-if (/Android/i.test(navigator.userAgent)) document.documentElement.classList.add('lite');
 // TEMP diagnostics box, created before anything else so it shows even if the main script dies. Android only.
 (function() {
   if (!/Android|wv\)/i.test(navigator.userAgent) && !/[?&]diag=1/.test(location.search)) return; // ?diag=1 forces it on in any browser
@@ -99,12 +98,6 @@ html, body {
   100% { offset-distance: 100%; transform: scale(var(--end-scale, 1.3)) scaleX(var(--end-scale-x, 1.15)) scaleY(var(--end-scale-y, 1.6)) rotate(var(--rot-end, 0deg)); opacity: 0; }
 }
 #scene.popout-mode .backdrop-fx { display: none !important; }
-/* Lite mode: Android WebViews (the Google TV app loads this page in backdrop mode) can't keep up with the
-   blurred smoke, the big drop shadow and the masked ticker, so the ticker/VU animations stutter. Drop the
-   decor and the per-frame paint costs; the receiver itself is unchanged. */
-html.lite .backdrop-fx { display: none !important; }
-html.lite #player { box-shadow: none; }
-html.lite #ticker-wrap { mask-image: none; -webkit-mask-image: none; }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -422,7 +415,6 @@ setInterval(updateClockHands, 1000);
 (function() {
   var container = document.getElementById('incense-smoke');
   if (!container) return;
-  if (document.documentElement.classList.contains('lite')) return; // no particles to animate
   var W = 240, H = 380; // must match #incense-smoke's CSS width/height
   var originX = W / 2, originY = H - 4;
   var NUM_PARTICLES = 55;
