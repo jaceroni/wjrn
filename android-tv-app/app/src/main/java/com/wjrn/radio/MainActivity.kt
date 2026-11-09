@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        webView.loadUrl("https://radio.jacewonmusic.com/player/?app=tv&build=4")
+        webView.loadUrl("https://radio.jacewonmusic.com/player/?app=tv&build=5")
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
