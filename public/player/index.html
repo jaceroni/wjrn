@@ -415,6 +415,7 @@ setInterval(updateClockHands, 1000);
 (function() {
   var container = document.getElementById('incense-smoke');
   if (!container) return;
+  if (/Android/i.test(navigator.userAgent)) { container.style.display = 'none'; return; } // TV WebView can't keep up: 4-12fps with it (measured 2026-11-09)
   var W = 240, H = 380; // must match #incense-smoke's CSS width/height
   var originX = W / 2, originY = H - 4;
   var NUM_PARTICLES = 55;
