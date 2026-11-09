@@ -936,6 +936,28 @@ fetch(STATIONS[0].api)
     });
   }
 
+
+  // ── ANDROID DIAGNOSTICS (temporary) ──────────────────────────────────────────
+  // The Google TV app has no debugger attached, so on Android show a tiny status line: WebView version,
+  // frames/sec, audio context + element state, and the last JS error. Remove once the TV issue is found.
+  if (document.documentElement.classList.contains('lite')) {
+    var dbgEl = document.createElement('div');
+    dbgEl.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;font:14px/1.3 monospace;color:#9f9;background:rgba(0,0,0,0.75);padding:4px 8px;max-width:95vw;white-space:pre-wrap;pointer-events:none';
+    document.body.appendChild(dbgEl);
+    var dbgFrames = 0, dbgFps = 0, dbgLastErr = '';
+    (function countFrame() { dbgFrames++; requestAnimationFrame(countFrame); })();
+    window.addEventListener('error', function(e) { dbgLastErr = 'JS: ' + e.message; });
+    window.addEventListener('unhandledrejection', function(e) { dbgLastErr = 'REJ: ' + (e.reason && e.reason.message || e.reason); });
+    setInterval(function() { dbgFps = dbgFrames * 2; dbgFrames = 0; }, 500);
+    setInterval(function() {
+      var m = navigator.userAgent.match(/Chrome\/([\d.]+)/);
+      var a = audioEl;
+      dbgEl.textContent = 'webview ' + (m ? m[1] : '?') + '  fps ' + dbgFps +
+        '\nctx ' + (audioCtx ? audioCtx.state : 'none') + '  state ' + playerState +
+        '\naudio ' + (a ? ('paused=' + a.paused + ' ready=' + a.readyState + ' net=' + a.networkState + ' err=' + (a.error ? a.error.code + ' ' + (a.error.message || '') : 'none') + ' t=' + a.currentTime.toFixed(1)) : 'none') +
+        (dbgLastErr ? '\n' + dbgLastErr : '');
+    }, 500);
+  }
 })();
 </script>
 </body>
