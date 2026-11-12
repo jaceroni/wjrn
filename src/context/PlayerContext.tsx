@@ -258,6 +258,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // activeStationId (station cards/vintage player show paused while audio is actually
   // playing again — fixed 2026-07-24).
   const wantsPlaybackRef = useRef(false);
+  // Mirrors for the stall watchdog's interval closure (avoids stale state)
+  const activeStationIdRef = useRef<string | null>(null);
+  activeStationIdRef.current = activeStationId;
 
   // EQ state — remote-controlled by the vintage player's knobs
   const [eqBassCut, setEqBassCutState] = useState(false);
@@ -513,6 +516,32 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
+  // Stall watchdog for LIVE streams. A dropped connection (wifi blip, server
+  // restart, TV sleep) often fires no 'error'/'ended' event, so the UI keeps
+  // saying "playing" while audio.currentTime is frozen — and pause/play on the
+  // same dead element does nothing. If playback is supposed to be running but
+  // currentTime hasn't advanced for ~8s (or we've been stuck "connecting"/"error"
+  // that long), silently re-open the stream.
+  useEffect(() => {
+    if (onDemandItem || !activeStationId) return;
+    let lastTime = -1;
+    let stuckTicks = 0;
+    const id = setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio || !wantsPlaybackRef.current) { stuckTicks = 0; lastTime = -1; return; }
+      const progressed = audio.currentTime !== lastTime && !audio.paused;
+      lastTime = audio.currentTime;
+      if (progressed) { stuckTicks = 0; return; }
+      stuckTicks++;
+      if (stuckTicks >= 2) { // ~8s with no progress
+        stuckTicks = 0;
+        lastTime = -1;
+        reconnectLive();
+      }
+    }, 4000);
+    return () => clearInterval(id);
+  }, [activeStationId, onDemandItem]);
+
   // ---------------------------------------------------------------------------
   // Playback control
   // ---------------------------------------------------------------------------
@@ -590,6 +619,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setOnDemandDuration(0);
   };
 
+  // Re-opens the live stream on the *same* <audio> element (keeps the Web Audio
+  // graph + event handlers intact) with a cache-busting param so the browser
+  // makes a brand-new HTTP request instead of reusing a dead connection.
+  const reconnectLive = () => {
+    const audio = audioRef.current;
+    const id = activeStationIdRef.current;
+    const station = id ? STATION_STREAM_MAP[id] : null;
+    if (!audio || !station) return;
+    wantsPlaybackRef.current = true;
+    const sep = station.streamUrl.includes("?") ? "&" : "?";
+    audio.src = `${station.streamUrl}${sep}_=${Date.now()}`;
+    audio.load();
+    audio.play()
+      .then(() => { if (audioRef.current === audio) setAudioState("playing"); })
+      .catch(() => {});
+  };
+
   const togglePlayback = () => {
     if (!audioRef.current) return;
     if (audioState === "playing") {
@@ -599,6 +645,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     } else {
       wantsPlaybackRef.current = true;
       setAudioState("connecting");
+      // A live stream must never be resumed with a bare .play(): if the HTTP
+      // connection died while paused/stalled, the element just sits there dead.
+      // Re-request the stream (also lands on the live edge, not stale buffer).
+      if (!onDemandItem && activeStationId && STATION_STREAM_MAP[activeStationId]) {
+        reconnectLive();
+        return;
+      }
       audioRef.current.play()
         .then(() => setAudioState("playing"))
         .catch(() => setAudioState("error"));

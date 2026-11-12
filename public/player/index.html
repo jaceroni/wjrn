@@ -666,12 +666,31 @@ function initAudio(startIndex) {
   metaInterval = setInterval(fetchMeta, 15000);
 }
 
+// ── LIVE STREAM RECONNECT + STALL WATCHDOG ───────────────────────────────────
+// A live HTTP stream can die silently (wifi blip, server restart, TV sleep):
+// no error/ended event, currentTime just freezes, and pause/play on the same
+// element does nothing. Re-requesting the URL (cache-busted) fixes it, and also
+// resumes at the live edge instead of stale buffer.
+function reconnectStream() {
+  if (!audioEl) return;
+  var sep = STATIONS[currentStation].stream.indexOf('?') === -1 ? '?' : '&';
+  audioEl.src = STATIONS[currentStation].stream + sep + '_=' + Date.now();
+  audioEl.load();
+  audioEl.play().catch(function() {});
+}
+var wdLastTime = -1, wdStuck = 0;
+setInterval(function() {
+  if (!audioEl || isTuning || audioEl.paused) { wdLastTime = -1; wdStuck = 0; return; }
+  if (audioEl.currentTime !== wdLastTime) { wdLastTime = audioEl.currentTime; wdStuck = 0; return; }
+  if (++wdStuck >= 2) { wdStuck = 0; wdLastTime = -1; reconnectStream(); }
+}, 4000);
+
 // ── PLAY / PAUSE ──────────────────────────────────────────────────────────────
 function togglePlayPause() {
   if (!audioCtx) { initAudio(); return; }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   if (audioEl.paused) {
-    audioEl.play().catch(function() {});
+    reconnectStream();
     showArtOverlay(false);
   } else {
     audioEl.pause();
@@ -899,12 +918,12 @@ fetch(STATIONS[0].api)
         } else if (idx !== currentStation) {
           goToStation(idx);
         } else if (audioEl && audioEl.paused) {
-          audioEl.play().catch(function() {});
+          reconnectStream();
         }
       } else if (data.type === 'play') {
         if (!audioCtx) { initAudio(); return; }
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        if (audioEl && audioEl.paused) audioEl.play().catch(function() {});
+        if (audioEl && audioEl.paused) reconnectStream();
       } else if (data.type === 'pause') {
         if (audioEl && !audioEl.paused) audioEl.pause();
       } else if (data.type === 'vuLevel') {
