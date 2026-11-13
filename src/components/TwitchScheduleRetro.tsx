@@ -15,15 +15,18 @@ declare global {
 // Measured against the native twitch-card-bg(-ko).png canvas (923x388).
 // The KO variant has a transparent cutout at this exact spot so the live video shows through
 // its glass "window" — same faceplate-with-knockout technique as the vintage player.
-const SCREEN_WINDOW = { left: "47.887%", top: "19.588%", width: "41.170%", height: "50.258%" };
+// True opening of the KO PNG (x416-848, y51-296 of 923x388) — where alpha first reaches opaque,
+// not the fully-clear core, which sits inside a ~20px partial-alpha vignette and left black gaps.
+const SCREEN_WINDOW = { left: "45.070%", top: "13.144%", width: "46.804%", height: "63.144%" };
 const LEFT_PANEL = { left: "4%", right: "59%", top: "13%", bottom: "6%" };
 // The blank cabinet space below the screen (screen bottom is at 19.588+50.258=69.846%),
 // still inside the wood frame — the join button sits here, not below the whole card.
-const JOIN_BUTTON_ZONE = { left: SCREEN_WINDOW.left, width: SCREEN_WINDOW.width, top: "75%", bottom: "0%" };
+const JOIN_BUTTON_ZONE = { left: "47.887%", width: "41.170%", top: "75%", bottom: "0%" };
 
 // Measured against the native twitch-card-bg(-ko)-mobile.png canvas (582x657) — screen on top,
 // schedule content below, used below the "md" breakpoint where the wide layout has no room.
-const MOBILE_SCREEN_WINDOW = { left: "17.354%", top: "11.568%", width: "65.292%", height: "29.680%" };
+// True opening of the mobile KO PNG (x75-507, y51-296 of 582x657).
+const MOBILE_SCREEN_WINDOW = { left: "12.887%", top: "7.763%", width: "74.227%", height: "37.290%" };
 const MOBILE_CONTENT_ZONE = { left: "7%", right: "7%", top: "48%", bottom: "5%" };
 const DESKTOP_BREAKPOINT_QUERY = "(min-width: 768px)";
 
