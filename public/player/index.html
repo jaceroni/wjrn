@@ -222,6 +222,11 @@ var savedGain = 0.8, balanceState = 0; // 0=center, 1=left, 2=right
 var audioCtx = null, audioEl = null, analyser = null;
 var bassFilter = null, midFilter = null, trebleFilter = null;
 var shaper = null, panner = null, gainNode = null, noiseGain = null;
+// Android (Google TV app): play the stream straight through the <audio> element, no Web Audio graph.
+// The graph's output stage produced intermittent distortion, distorted static and low volume on the TV
+// (2026-11-15) while desktop/phone browsers were clean. Costs on the TV: EQ/balance/mono knobs are inert,
+// no tuner static, simulated VU needle.
+var directAudio = /Android/i.test(navigator.userAgent);
 var outputSilencer = null; // permanent hard-mute stage for synced instances only
 var mediaSource = null;
 
@@ -340,15 +345,18 @@ function drawVU() {
   requestAnimationFrame(drawVU);
   if (isSynced && externalVuLevel !== null) {
     vuTarget = Math.PI / 4 + externalVuLevel * (Math.PI / 2);
-  } else if (analyser && playerState === 2 && freqData) {
-    analyser.getByteFrequencyData(freqData);
-    var sum = 0;
-    for (var i = 2; i <= 12; i++) sum += freqData[i];
-    var avg = sum / 11 / 255;
+  } else if (((analyser && freqData) || directAudio) && playerState === 2) {
+    var avg = 0;
+    if (analyser && freqData) {
+      analyser.getByteFrequencyData(freqData);
+      var sum = 0;
+      for (var i = 2; i <= 12; i++) sum += freqData[i];
+      avg = sum / 11 / 255;
+    }
     
     // iOS Safari bypasses Web Audio API for live streams, meaning avg will be 0.
     // We simulate a rhythmic needle bounce so the visualizer operates on iOS.
-    if (isIOS && avg === 0) {
+    if ((isIOS || directAudio) && avg === 0) {
       var now = Date.now() / 1000;
       var base = 0.18 + Math.sin(now * 12.5) * 0.08 + Math.cos(now * 6.25) * 0.05;
       avg = base + Math.random() * 0.08;
@@ -552,6 +560,7 @@ function makeNoiseBuf() {
 }
 
 function playStatic(duration) {
+  if (directAudio) return;
   var src = audioCtx.createBufferSource();
   src.buffer = makeNoiseBuf();
   src.loop = true;
@@ -565,6 +574,33 @@ function playStatic(duration) {
   setTimeout(function() { try { src.stop(); } catch(e) {} }, duration * 1000 + 100);
 }
 
+// ── DIRECT (NO WEB AUDIO) PATH — Android ─────────────────────────────────────
+function initDirectAudio() {
+  // Stub so the many `if (!audioCtx)` "is the player started" checks keep working.
+  audioCtx = { state: 'running', currentTime: 0, resume: function() { return Promise.resolve(); } };
+  audioEl = new Audio();
+  audioEl.volume = isMuted ? 0 : 1;
+  audioEl.src = STATIONS[currentStation].stream;
+  audioEl.onplay = function() {
+    playerState = 2;
+    showArtOverlay(false);
+    restoreTicker();
+    notifyPlayStateChanged(true);
+  };
+  audioEl.onpause = function() {
+    if (playerState !== 1) {
+      playerState = 3;
+      showArtOverlay(true);
+      setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase());
+      notifyPlayStateChanged(false);
+    }
+  };
+  audioEl.play().catch(function() {});
+  notifyStationChanged();
+  fetchMeta();
+  metaInterval = setInterval(fetchMeta, 15000);
+}
+
 // ── INIT AUDIO ────────────────────────────────────────────────────────────────
 function initAudio(startIndex) {
   if (audioCtx) return;
@@ -572,6 +608,7 @@ function initAudio(startIndex) {
     currentStation = startIndex;
     setTunerTick(STATIONS[startIndex].frequency);
   }
+  if (directAudio) { initDirectAudio(); return; }
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   // A freshly-created AudioContext can be born 'suspended' when it's not the
   // direct result of a user gesture in this frame (e.g. triggered by a
@@ -790,6 +827,7 @@ document.getElementById('hz-logo').addEventListener('click', function() {
 document.getElementById('hz-volume').addEventListener('click', function() {
   isMuted = !isMuted;
   if (gainNode) gainNode.gain.value = isMuted ? 0 : savedGain;
+  if (directAudio && audioEl) audioEl.volume = isMuted ? 0 : 1;
   tickerTakeover(isMuted ? 'MUTED' : 'VOLUME – RESTORED');
   notifyControl('mute', isMuted);
 });
@@ -854,6 +892,7 @@ document.getElementById('hz-power').addEventListener('click', function() {
   if (!audioCtx) { initAudio(); return; }
   isMuted = !isMuted;
   if (gainNode) gainNode.gain.value = isMuted ? 0 : savedGain;
+  if (directAudio && audioEl) audioEl.volume = isMuted ? 0 : 1;
   tickerTakeover(isMuted ? 'POWER – OFF' : 'POWER – ON');
   notifyControl('mute', isMuted);
 });
