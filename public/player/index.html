@@ -345,7 +345,11 @@ function drawVU() {
   requestAnimationFrame(drawVU);
   if (isSynced && externalVuLevel !== null) {
     vuTarget = Math.PI / 4 + externalVuLevel * (Math.PI / 2);
-  } else if (((analyser && freqData) || directAudio) && playerState === 2) {
+  } else if ((analyser && freqData && playerState === 2) ||
+             (directAudio && audioEl && !audioEl.paused && !audioEl.ended)) {
+    // Direct (Android) mode keys off the element itself, not playerState: after a TV sleep/wake or a
+    // stream reconnect playerState could be stale while audio plays fine, which left the needle on the
+    // idle twitch below (2026-11-16).
     var avg = 0;
     if (analyser && freqData) {
       analyser.getByteFrequencyData(freqData);
@@ -593,6 +597,15 @@ function initDirectAudio() {
       showArtOverlay(true);
       setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase());
       notifyPlayStateChanged(false);
+    }
+  };
+  // Audio actually flowing again (e.g. resumed after a reconnect) — resync state if it went stale.
+  audioEl.onplaying = function() {
+    if (playerState === 3) {
+      playerState = 2;
+      showArtOverlay(false);
+      restoreTicker();
+      notifyPlayStateChanged(true);
     }
   };
   audioEl.play().catch(function() {});
