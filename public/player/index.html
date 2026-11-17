@@ -360,7 +360,12 @@ function drawVU() {
     
     // iOS Safari bypasses Web Audio API for live streams, meaning avg will be 0.
     // We simulate a rhythmic needle bounce so the visualizer operates on iOS.
-    if ((isIOS || directAudio) && avg === 0) {
+    if (directAudio) {
+      // Android/TV: no real signal, so drift the needle around mid-scale on a few slow, overlapping sine
+      // waves — no per-frame randomness (that read as jagged ticking). Smoothing below does the rest.
+      var td = Date.now() / 1000;
+      avg = 0.46 + Math.sin(td * 1.1) * 0.07 + Math.sin(td * 2.3 + 1.3) * 0.045 + Math.sin(td * 0.55 + 4) * 0.05;
+    } else if (isIOS && avg === 0) {
       var now = Date.now() / 1000;
       var base = 0.18 + Math.sin(now * 12.5) * 0.08 + Math.cos(now * 6.25) * 0.05;
       avg = base + Math.random() * 0.08;
@@ -374,7 +379,7 @@ function drawVU() {
   } else {
     vuTarget = Math.PI / 4 + (Math.random() * 0.04 - 0.02);
   }
-  var attack = (vuTarget > vuAngle) ? 0.25 : 0.04;
+  var attack = directAudio ? 0.05 : ((vuTarget > vuAngle) ? 0.25 : 0.04); // TV: soft, floaty rise/fall
   vuAngle += (vuTarget - vuAngle) * attack;
   var canvas = document.getElementById('vu-canvas');
   var ctx = canvas.getContext('2d');
