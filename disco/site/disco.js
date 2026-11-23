@@ -1206,7 +1206,7 @@ function layoutStage(){
   const bx = W / 2, by = H / 2;
   // 2. THE PICTURE MOVES TO FIT THE BALL: it is placed (and scaled up just enough to still cover the screen) so the lighter patch of
   //    grass lands S.gap ball-radii below the ball's bottom, centred horizontally under it.
-  const pyT = by + R * (1 + S.gap);                                   // where the ball's shadow lands (it stays right under the ball)
+  const pyT = by + (S.refR ? S.refR * H : R) * (1 + S.gap);                                   // where the ball's shadow lands (it stays right under the ball)
   const pyP = pyT + (S.dropY || 0) * H;                               // where the picture's patch goes: dropY slides the PICTURE down under the shadow
   let sc = Math.max(W / S.w, (H - pyP) / ((1 - S.ovalY) * S.h));      // cover the width, and everything below the patch
   if (!S.extendTop) sc = Math.max(sc, H / S.h, pyP / (S.ovalY * S.h));                         // desktop: no sky to extend, so cover the top too
@@ -1256,7 +1256,8 @@ let bgScale = 1, ballR = 0;
 function viewNow(){ const L = camera.position.length(); ballR = camFocal() / Math.sqrt(Math.max(1.0001, L*L - 1)); return Math.max(1, ballR / stage.R0); }   // 1 = fully zoomed out, the size the picture is anchored to
 function applyDepth(){
   if (!stage) return;
-  bgScale = 1 + DEPTH * (viewNow() - 1);
+  const dp = (STAGE[stage.variant] && STAGE[stage.variant].depth != null) ? STAGE[stage.variant].depth : DEPTH;      // per-picture depth (read live, so it can be tuned from the console)
+  bgScale = 1 + dp * (viewNow() - 1);
   bgEl.style.transformOrigin = `${stage.bx}px ${stage.by}px`;
   bgEl.style.transform = bgScale > 1.0005 ? `scale(${bgScale.toFixed(4)})` : '';
 }

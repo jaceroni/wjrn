@@ -56,8 +56,10 @@ window.DISCO_CONFIG = {
     desktop: {
       image: 'bg-desktop.webp', w: 1920, h: 1080,
       ovalX: 0.5, ovalY: 0.715, ovalW: 0.24, gap: 0.2,
-      dropY: 0.0926,                      // the PICTURE slides down this fraction of the screen height (~100px at 1080) under the shadow; the ball and shadow don't move
-      startR: 0.205, outRatio: 0.8        // ball radius at the start = 20.5% of the screen height; fully zoomed out = 80% of that
+      dropY: 0.023,                       // the PICTURE slides down this fraction of the screen height (~25px at 1080) under the shadow; the ball and shadow don't move
+      depth: 0.55,                        // desktop: the scene grows this fraction as fast as the ball when you zoom in (mobile keeps the shared 0.10). >= ~0.5 keeps the ball from sinking into the ground as it grows
+      refR: 0.205,                        // the shadow/patch spot is placed for a ball of this radius (fraction of H) so it doesn't move when the start size changes
+      startR: 0.164, outRatio: 1.0        // the page starts FULLY ZOOMED OUT (outRatio 1): ball radius 16.4% of the screen height (= the old fully-out size)
     }
   },
 
