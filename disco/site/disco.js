@@ -149,7 +149,7 @@ const DISCO = { value: 0 }, BALLROT = { value: new THREE.Matrix3() };
 const ROOM_VIDEO = 0.27;      // how strongly the playing video is projected onto the room in disco mode (0.27 = 27%)
 const NEON_COLS = [new THREE.Color(0xff3fa4), new THREE.Color(0x29e6ff), new THREE.Color(0xffd23f)];
 const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false });   // alpha: so the room can be see-through in disco (video projection)
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: true });   // alpha: so the room can be see-through in disco (video projection)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const scene = new THREE.Scene();
@@ -191,7 +191,7 @@ const coveMat = new THREE.ShaderMaterial({
         vec3 sc = rnd > 0.86 ? cD[0] : rnd > 0.74 ? cD[1] : rnd > 0.62 ? cD[2] : vec3(1.0);
         float att = 1.0 / (1.0 + 0.006*dot(vW, vW));
         vec3 club = vec3(0.012, 0.010, 0.018) * (1.0 + 3.0*pool) + sc * spot * 1.5 * att;
-        col = mix(col, club, uDisco);
+        col = club;   // always the club colour: the room is drawn only for disco, and its alpha (uDisco) does the fading - mixing the pale sage room in made the fade-out wash the whole picture out to cream
       }
       vec2 q = gl_FragCoord.xy/res - 0.5;
       col *= 1.0 - 0.32*dot(q,q)*1.6;                          // gentle vignette
@@ -1265,6 +1265,60 @@ addEventListener('resize', resize);
 
 /* ---------- loop ---------- */
 const clock = new THREE.Clock(), lightW = [new V(), new V(), new V()], keyW = new V(-0.45, 0.7, 0.55).normalize();
+
+// ---- distant birds (Jace, 2026-11-23): drift left/right across the sky behind the ball, on their own 2D canvas (z -2, under the shadow
+// and the WebGL canvas). Different sizes and kinds: small fast flappers (far away, faint), medium flappers, big slow soarers (nearer, darker,
+// mostly gliding), and the odd loose V-flock. Hidden in disco. Tune with DISCO_CONFIG.birds = { max, ... } or turn off with birds:false.
+const BIRDS = CONFIG.birds === false ? null : Object.assign({ max: 9 }, CONFIG.birds || {});
+const birdCv = document.getElementById('birds');
+if (BIRDS && birdCv && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const bctx = birdCv.getContext('2d'); let birds = [], lastT = performance.now(), nextSpawn = 0.5, dprB = 1, bw = 0, bh = 0;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const skyBand = () => { const H = bh; const top = 0.05 * H; let bot = 0.22 * H; if (stage) bot = Math.max(bot, stage.by - stage.R0 * 1.05); return [top, Math.max(top + 40, Math.min(bot, 0.55 * H))]; };
+  const spawn = (kind, x, y, dir, size, speed) => {
+    const far = size < 18, soar = kind === 'soar';
+    birds.push({ x, y, dir, size, speed, kind, ph: rnd(0, 6.28), rate: soar ? rnd(0.9, 1.5) : far ? rnd(6, 9) : rnd(3.2, 5), bobA: rnd(2, 7) * (size / 24), bobF: rnd(0.3, 0.8), bobP: rnd(0, 6.28),
+      alpha: soar ? rnd(0.5, 0.65) : far ? rnd(0.22, 0.34) : rnd(0.34, 0.5), glide: soar ? 0.75 : 0.0, gT: rnd(0, 6) });
+  };
+  const launch = () => {
+    const [t, b] = skyBand(), dir = Math.random() < 0.5 ? 1 : -1, y = rnd(t, b), r = Math.random();
+    const x = dir > 0 ? -60 : bw + 60;
+    if (r < 0.22) {           // a loose V-flock of small far birds
+      const n = 3 + Math.floor(Math.random() * 5), sz = rnd(9, 15), sp = rnd(26, 38);
+      for (let i = 0; i < n; i++) { const k = Math.ceil(i / 2) * (i % 2 ? 1 : -1); spawn('flap', x - dir * Math.abs(k) * sz * 2.6, y + k * sz * 1.5 + rnd(-3, 3), dir, sz * rnd(0.9, 1.1), sp * rnd(0.97, 1.03)); }
+    } else if (r < 0.45) spawn('soar', x, y, dir, rnd(34, 52), rnd(16, 26));
+    else if (r < 0.75) spawn('flap', x, y, dir, rnd(20, 32), rnd(30, 46));
+    else spawn('flap', x, y, dir, rnd(8, 14), rnd(22, 34));
+  };
+  const drawBird = (b, a) => {
+    const w = b.size / 2, f = Math.sin(b.ph), amp = b.kind === 'soar' ? (1 - b.glide) * 0.55 + 0.12 : 0.5;
+    const tipY = -f * w * amp - w * 0.12;            // wing tips swing above/below the body line
+    const midY = -f * w * amp * 0.45 - w * 0.22;
+    bctx.globalAlpha = a; bctx.lineWidth = Math.max(1, b.size * 0.085); bctx.lineCap = 'round'; bctx.lineJoin = 'round';
+    bctx.beginPath(); bctx.moveTo(-w, tipY); bctx.quadraticCurveTo(-w * 0.5, midY, 0, 0); bctx.quadraticCurveTo(w * 0.5, midY, w, tipY); bctx.stroke();
+  };
+  const birdFrame = (now) => {
+    requestAnimationFrame(birdFrame);
+    const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+    const W = innerWidth, H = innerHeight, d = Math.min(devicePixelRatio || 1, 2);
+    if (W !== bw || H !== bh || d !== dprB) { bw = W; bh = H; dprB = d; birdCv.width = Math.round(W * d); birdCv.height = Math.round(H * d); }
+    const vis = 1 - Math.min(1, disco * 2.5);        // gone as disco starts
+    bctx.setTransform(dprB, 0, 0, dprB, 0, 0); bctx.clearRect(0, 0, bw, bh);
+    if (document.hidden || vis <= 0.01) { return; }
+    nextSpawn -= dt;
+    if (nextSpawn <= 0 && birds.length < BIRDS.max) { launch(); nextSpawn = rnd(2.5, 7); }
+    bctx.strokeStyle = '#4a4636';
+    for (const b of birds) {
+      b.x += b.dir * b.speed * dt; b.ph += b.rate * dt * 6.28; b.bobP += b.bobF * dt * 6.28; b.gT += dt;
+      if (b.kind === 'soar') b.glide = 0.5 + 0.5 * Math.sin(b.gT * 0.55);        // alternates between glide and a few lazy flaps
+      bctx.save(); bctx.translate(b.x, b.y + Math.sin(b.bobP) * b.bobA); if (b.dir < 0) bctx.scale(-1, 1);
+      drawBird(b, b.alpha * vis); bctx.restore();
+    }
+    birds = birds.filter(b => b.dir > 0 ? b.x < bw + 80 : b.x > -80);
+  };
+  requestAnimationFrame(birdFrame);
+}
+
 function frame(){
   const dt = Math.min(clock.getDelta(), 0.05), time = clock.elapsedTime, now = performance.now();
   if (!Number.isFinite(camDistTarget) || !Number.isFinite(camDist)) camDist = camDistTarget = fitDist();      // never let a NaN stick
