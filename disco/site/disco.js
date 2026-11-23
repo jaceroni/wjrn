@@ -1122,7 +1122,7 @@ function frame(){
     const onBall = Math.max(0, 1 - disco*2);                    // in disco the ball is only the mirror ball: no cover, no ring
     playing.mat.opacity = onBall * (1 - (playing.yt ? playing.yt.vis : 0));   // the cover steps aside as the video fades in over it
     playing.ringMat.opacity = (0.55 + 0.45*Math.sin(time*4)) * onBall;
-    if (playing.mesh) playing.mesh.visible = playing.ring.visible = onBall > 0.01;
+    if (playing.mesh) { playing.mesh.visible = onBall > 0.01; playing.ring.visible = onBall > 0.01 && !!CONFIG.playingRing; }   // the amber ring is opt-in (playingRing in DISCO_CONFIG)
   }
 
   disco += (discoTarget - disco) * (1 - Math.exp(-dt*2.2));
