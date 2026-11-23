@@ -742,6 +742,7 @@ function drawPlaying(time){
 // The player renders at 960x540 and is scaled onto the tile. Rendering it LARGE makes YouTube's own overlays (title bar,
 // bottom strip) a small slice of the height, and YT_ZOOM then zooms into the middle of the video so those slices fall
 // outside the tile's outline and are cropped away. (The overlays can't be switched off any more, only cropped.)
+const PLAY_REVEAL_MS = CONFIG.playReveal != null ? CONFIG.playReveal : 3500;   // how long the video stays hidden after it starts, so YouTube's play/pause glyph isn't seen (ms)
 const YT_W = 960, YT_H = 540, YT_ZOOM = 1.5;
 const ytLayer = $('yt-layer');
 let ytApi = null;
@@ -803,7 +804,11 @@ function ytEnsure(){
               const d = e.target.getDuration();
               if (!p.reel.duration && d > 90) e.target.seekTo(Math.floor(Math.random() * Math.max(1, d - Math.min(60, d * 0.4))), true);   // length wasn't in the feed
             }
-            y.blocked = false; y.show = true;
+            // YouTube flashes its own big play/pause glyph over the video for the first seconds and it can't be switched off from outside the
+            // iframe. So the video stays hidden (the tile's cover shows, the sound is already playing) until that has passed, then fades in.
+            const wasBlocked = y.blocked; y.blocked = false;
+            if (wasBlocked) { y.show = true; y.showAt = performance.now() - 1000; }       // the viewer already tapped YouTube's own button: show at once
+            else if (!y.show && !y.revealT) y.revealT = setTimeout(() => { if (playing === p && p.yt === y) { y.show = true; y.showAt = performance.now(); } }, PLAY_REVEAL_MS);
           } else if (e.data === 0) stop();                        // ENDED
         },
         onError: e => { yt.lastErr = e.data; console.warn('[disco] video unavailable (YouTube error ' + e.data + ')'); if (playing && playing.yt) stop(); }
@@ -850,7 +855,7 @@ function ytStart(p){
 function ytBlocked(p){ const y = p.yt; if (!y || y.played) return; y.blocked = true; y.show = true; }
 function ytStop(p){
   const y = p.yt; if (!y) return;
-  clearTimeout(y.timer);
+  clearTimeout(y.timer); clearTimeout(y.revealT);
   try { yt.player.stopVideo(); } catch (_) {}                   // the player stays alive (hidden) for the next video
   if (yt.frame) { yt.frame.style.opacity = '0'; yt.frame.style.pointerEvents = 'none'; }
   p.yt = null;
@@ -879,7 +884,7 @@ function ytPlace(){
   f.style.transform = quadMatrix(YT_W, YT_H, q);
   // facing: fade out as the tile turns away. Behind the ball it's invisible but keeps playing (audio carries on).
   const facing = c.p.clone().transformDirection(ball.matrixWorld).dot(camera.position.clone().sub(c.center.clone().applyMatrix4(ball.matrixWorld)).normalize());
-  const vis = y.show ? Math.min(1, Math.max(0, (facing - 0.06) / 0.2)) * Math.max(0, 1 - disco*2) : 0;   // fades out as disco takes over the ball
+  const vis = y.show ? Math.min(1, Math.max(0, (facing - 0.06) / 0.2)) * Math.max(0, 1 - disco*2) * Math.min(1, (performance.now() - (y.showAt || 0)) / 600) : 0;   // fades out as disco takes over the ball
   f.style.opacity = vis.toFixed(3); y.vis = vis;
   f.style.pointerEvents = (y.blocked && vis > 0.5) ? 'auto' : 'none';
 }
