@@ -327,13 +327,24 @@ function drawLogo(){
 }
 const logoTex = new THREE.CanvasTexture(logoCanvas); logoTex.anisotropy = 4; logoTex.wrapS = logoTex.wrapT = THREE.ClampToEdgeWrapping;
 // one flat slab of sage agate per side, the lettering etched into it
+// Opal tuning (GLSL defines): body brightness; flash window widths (bigger = more/longer flashes) for the large patches (C)
+// and the small flakes (F); and how strongly each layer counts.
+const OPAL_DEFS = `
+    #define OPAL_BODY 0.94
+    #define OPAL_CW0 0.016
+    #define OPAL_CW1 0.026
+    #define OPAL_FW0 0.018
+    #define OPAL_FW1 0.030
+    #define OPAL_COARSE 0.85
+    #define OPAL_FINE 1.0
+`;
 const logoMat = new THREE.ShaderMaterial({
   uniforms: { uDisco: DISCO, lColD: { value: NEON_COLS }, mask: { value: logoTex }, keyDir: shardUniforms.keyDir, lPos: shardUniforms.lPos, lCol: shardUniforms.lCol,
     cIvory: { value: new THREE.Color(BRAND.ivory) }, cSage: { value: new THREE.Color(BRAND.sage) }, cSageLt: { value: new THREE.Color(0xC3CAAE) },
     cSageDk: { value: new THREE.Color(0x87917A) }, cFern: { value: new THREE.Color(BRAND.fern) }, cInk: { value: new THREE.Color(BRAND.ink) },
     uOpal: { value: CONFIG.logoStyle === 'agate' ? 0 : 1 } },   // logoStyle in DISCO_CONFIG: 'opal' (default) or 'agate' (the original sage stone)
   vertexShader: SHARD_VS,
-  fragmentShader: `
+  fragmentShader: OPAL_DEFS + `
     uniform sampler2D mask; uniform vec3 keyDir; uniform vec3 lPos[3]; uniform vec3 lCol[3]; uniform float uDisco; uniform vec3 lColD[3];
     uniform vec3 cIvory, cSage, cSageLt, cSageDk, cFern, cInk; uniform float uOpal;
     varying vec2 vUv; varying float vShade; varying vec3 vN; varying vec3 vP;
@@ -349,7 +360,29 @@ const logoMat = new THREE.ShaderMaterial({
         if (d < md) { md = d; bg = n + g; br = -r; } }
       return vec4(bg, br);
     }
-    vec3 spectrum(float h){ return 0.5 + 0.5*cos(6.2832*(h + vec3(0.0, 0.33, 0.67))); }
+    // play-of-colour palette, weighted like the reference stone: ~1/3 greens, then pinks/reds, oranges, yellows, a little violet/blue
+    const vec3 OPAL[12] = vec3[12](
+      vec3(0.18,0.96,0.38), vec3(0.35,0.98,0.30), vec3(0.10,0.90,0.55), vec3(0.60,0.95,0.22),
+      vec3(0.98,0.85,0.18), vec3(1.00,0.68,0.16), vec3(1.00,0.50,0.16), vec3(1.00,0.40,0.28),
+      vec3(1.00,0.30,0.50), vec3(1.00,0.32,0.62), vec3(0.62,0.38,0.98), vec3(0.22,0.55,1.00));
+    vec3 opalHue(float h){ float f = fract(h)*12.0; int i = int(floor(f)); return mix(OPAL[i], OPAL[(i+1)%12], smoothstep(0.0, 1.0, fract(f))); }
+    // One layer of crystal domains. Each patch has its own hidden crystal axis and lights up only while that axis lines up with
+    // the light/eye half-vector (Ha, Hb for two lights, already in the stone's own frame); the colour slides along the palette
+    // as the tilt changes. Returns (colour sum weighted by brightness, total brightness).
+    vec4 opalLayer(vec2 xq, vec3 Ha, vec3 Hb, float w0, float w1, float spread, float hueGain){
+      vec4 dm = vor(xq);
+      vec2 ra = h22(dm.xy + 13.0), rb = h22(dm.xy + 57.0);
+      vec3 ax = normalize(vec3((ra - 0.5)*spread + dm.zw*0.20, 1.0));
+      vec3 acc = vec3(0.0); float sum = 0.0;
+      for (int k = 0; k < 2; k++) {
+        vec3 Ht = k == 0 ? Ha : Hb;
+        float aa = dot(normalize(Ht), ax);
+        float I = exp(-(1.0 - aa) / (w0 + w1*rb.x));
+        float sh = dot(Ht.xy - ax.xy, vec2(cos(rb.y*6.2832), sin(rb.y*6.2832)));
+        acc += opalHue(rb.x*0.9 + 0.05 + sh*hueGain) * I; sum += I;
+      }
+      return vec4(acc, sum);
+    }
     void main(){
       vec3 N = normalize(vN); vec3 Vd = normalize(-vP);
       vec2 q = (vUv - 0.5) * 2.0;
@@ -364,35 +397,30 @@ const logoMat = new THREE.ShaderMaterial({
       stone *= 0.96 + 0.05*fine + 0.03*n2(q*60.0);
       vec3 flash = vec3(0.0);
       if (uOpal > 0.5) {
-        // Real opal: a milky body, and play-of-colour from many small crystal DOMAINS, each with its own hidden orientation.
-        // A domain only flashes while ITS axis lines up with the light/eye half-vector, so as the stone tilts, patches blink
-        // on and off in different places, and the colour inside a flash slides through the spectrum. At rest (no domain lined
-        // up) it is just plain milky stone: no colour painted on it.
-        vec3 body = mix(vec3(0.93, 0.90, 0.83), vec3(0.82, 0.89, 0.87), smoothstep(0.25, 0.8, n2(q*1.2 + 3.0)));
-        body *= 0.97 + 0.04*n2(q*40.0);
-        // the slab's own tangent frame, so its crystal directions can be compared with light/eye directions
+        // Real opal (reference: a translucent periwinkle body with patches of vivid, angular play-of-colour in clusters).
+        // Body: cool blue-grey with lavender and deeper translucent areas.
+        float b1 = n2(q*1.1 + 3.0), b2 = n2(q*2.3 + 8.0);
+        vec3 body = mix(mix(vec3(0.74, 0.78, 0.87), vec3(0.58, 0.62, 0.84), smoothstep(0.3, 0.7, b1)), vec3(0.48, 0.58, 0.72), smoothstep(0.55, 0.8, b2)*0.6);
+        body *= (1.0 + 0.10*(n2(q*30.0) - 0.5)) * OPAL_BODY;
+        // the slab's own tangent frame, so its crystal directions can be compared with the light/eye directions
         vec3 dp1 = dFdx(vP), dp2 = dFdy(vP); vec2 du1 = dFdx(vUv), du2 = dFdy(vUv);
         vec3 dp2p = cross(dp2, N), dp1p = cross(N, dp1);
         vec3 Tn = normalize(dp2p*du1.x + dp1p*du2.x), Bn = normalize(dp2p*du1.y + dp1p*du2.y);
-        vec2 xq = q*3.0 + 0.32*vec2(n2(q*4.0), n2(q*4.0 + 9.0));        // irregular patch shapes, ~6 across the slab
-        vec4 dm = vor(xq);
-        vec2 ra = h22(dm.xy + 13.0), rb = h22(dm.xy + 57.0);
-        vec3 ax = normalize(vec3((ra - 0.5)*1.8 + dm.zw*0.20, 1.0));     // this patch's crystal axis (+ a gentle drift across it, so a flash sweeps over the patch as you tilt)
-        vec3 acc = vec3(0.0); float sum = 0.0;
-        for (int k = 0; k < 2; k++) {                                     // the fixed key light + one of the roaming lights
-          vec3 Lk = k == 0 ? keyDir : normalize(lPos[0] - vP);
-          vec3 Hk = normalize(Lk + Vd);
-          vec3 Ht = vec3(dot(Hk, Tn), dot(Hk, Bn), dot(Hk, N));
-          float aa = dot(normalize(Ht), ax);
-          float I = exp(-(1.0 - aa) / (0.0055 + 0.009*rb.x));              // bright only while this patch is lined up
-          float sh = dot(Ht.xy - ax.xy, vec2(cos(rb.y*6.2832), sin(rb.y*6.2832)));   // signed tilt -> hue slides within one flash
-          acc += spectrum(fract(rb.x*0.7 + 0.08 + sh*2.8)) * I; sum += I;
-        }
-        vec3 fcol = acc / max(sum, 1e-3); fcol = mix(vec3(dot(fcol, vec3(0.333))), fcol, 1.35);
-        float fi = clamp(sum, 0.0, 1.0);
+        vec3 Hk = normalize(keyDir + Vd), Hr = normalize(normalize(lPos[0] - vP) + Vd);        // fixed key light + one roaming light
+        vec3 Ha = vec3(dot(Hk, Tn), dot(Hk, Bn), dot(Hk, N)), Hb = vec3(dot(Hr, Tn), dot(Hr, Bn), dot(Hr, N));
+        Ha.xy += q*0.22; Hb.xy += q*0.22;                                  // a polished dome: the surface tilts across the stone, so each part lines up at its own angle
+        // large patches (broad flash) + lots of small angular flakes (pinfire) that gather in clusters, like the real thing
+        vec4 Lc = opalLayer(q*3.0 + 0.32*vec2(n2(q*4.0), n2(q*4.0 + 9.0)), Ha, Hb, OPAL_CW0, OPAL_CW1, 1.8, 2.8);
+        vec2 xf = mat2(0.87, 0.5, -0.5, 0.87) * q * vec2(9.5, 6.5) + 0.25*vec2(n2(q*7.0), n2(q*7.0 + 4.0));
+        vec4 Lf = opalLayer(xf, Ha, Hb, OPAL_FW0, OPAL_FW1, 1.8, 2.8);
+        float zone = smoothstep(0.36, 0.60, n2(q*1.6 + 5.0));              // where the flakes cluster
+        vec3 acc = Lc.rgb*OPAL_COARSE + Lf.rgb*(0.10 + 0.90*zone)*OPAL_FINE;
+        float sum = Lc.a*OPAL_COARSE + Lf.a*(0.10 + 0.90*zone)*OPAL_FINE;
+        vec3 fcol = acc / max(sum, 1e-3);
+        float fi = smoothstep(0.08, 0.55, sum);                           // crisp, saturated cores with short soft edges
         flash = fcol * fi;
-        stone = mix(body, fcol*0.95, fi*0.85);
-        stone += vec3(0.55, 0.70, 0.85) * pow(1.0 - max(dot(N, Vd), 0.0), 3.0) * 0.08;   // faint blue sheen at glancing angles
+        stone = mix(body, fcol, fi*0.92);
+        stone += vec3(0.55, 0.70, 0.85) * pow(1.0 - max(dot(N, Vd), 0.0), 3.0) * 0.06;   // faint blue sheen at glancing angles
       }
       // the etch: lettering cut into the stone, dark and frosted, with lit/shadowed walls
       vec2 px = vec2(2.5/1024.0);
