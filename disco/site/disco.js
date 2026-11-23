@@ -146,6 +146,7 @@ function loadCovers(){
 const BRAND = { sage: 0xA5AF8F, ivory: 0xF7E7C7, fern: 0x5A734A, deepFern: 0x304227, bark: 0x6B4E35, groove: 0x3C3023, amber: 0xDF9C32, rust: 0xBA4A2A, pine: 0x1E3426, ink: 0x100E0A };
 // disco mode: shared switches for every material (0 = rock garden, 1 = full Studio 54)
 const DISCO = { value: 0 }, BALLROT = { value: new THREE.Matrix3() };
+const ROOM_MIN_ASPECT = CONFIG.roomMinAspect || 1.25;   // room video: zoom so at least a 1.25:1 picture fills the screen (hides side bars up to ~30% of the width; wider videos just lose a little top/bottom)
 const ROOM_VIDEO = 0.27;      // how strongly the playing video is projected onto the room in disco mode (0.27 = 27%)
 const NEON_COLS = [new THREE.Color(0xff3fa4), new THREE.Color(0x29e6ff), new THREE.Color(0xffd23f)];
 const canvas = $('c');
@@ -869,7 +870,7 @@ function ytPlace(){
     // bars at the sides (and a wide one with bars top/bottom), so scale from the picture's own aspect (the feed's trimmed cover size)
     // until that picture fills the screen both ways. Top/bottom (or sides) get cropped, never left empty. At least the old 1.25x
     // overscan so YouTube's edge overlays stay off-screen.
-    const rw = p.reel && p.reel.w, rh = p.reel && p.reel.h, a = (rw && rh) ? Math.min(2.4, Math.max(1, rw / rh)) : 16 / 9;
+    const rw = p.reel && p.reel.w, rh = p.reel && p.reel.h, a = Math.min(ROOM_MIN_ASPECT, (rw && rh) ? Math.min(2.4, Math.max(1, rw / rh)) : 16 / 9);   // never assume a picture WIDER than ROOM_MIN_ASPECT: bars burned into the video itself can't be seen from a single thumbnail, so always zoom enough to hide ordinary ones
     const cw = YT_W * Math.min(1, a / (16 / 9)), ch = YT_H * Math.min(1, (16 / 9) / a);        // the picture's size inside the frame
     const k = Math.max(Math.max(W / YT_W, H / YT_H) * 1.25, Math.max(W / cw, H / ch) * 1.03);
     ytLayer.style.zIndex = '-1';
