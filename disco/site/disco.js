@@ -190,12 +190,13 @@ const coveMat = new THREE.ShaderMaterial({
         float spot = smoothstep(0.3, 0.05, length(f)) * step(0.45, rnd);
         vec3 sc = rnd > 0.86 ? cD[0] : rnd > 0.74 ? cD[1] : rnd > 0.62 ? cD[2] : vec3(1.0);
         float att = 1.0 / (1.0 + 0.006*dot(vW, vW));
-        vec3 club = vec3(0.012, 0.010, 0.018) * (1.0 + 3.0*pool) + sc * spot * 1.5 * att;
+        vec3 club = vec3(0.012, 0.010, 0.018) * (1.0 + 3.0*pool) + sc * spot * 1.5 * att * uDisco * uDisco;   // the light specks fade as uDisco^2 (times the room's own alpha), so they are gone well before the end of the ramp
         col = club;   // always the club colour: the room is drawn only for disco, and its alpha (uDisco) does the fading - mixing the pale sage room in made the fade-out wash the whole picture out to cream
       }
       vec2 q = gl_FragCoord.xy/res - 0.5;
       col *= 1.0 - 0.32*dot(q,q)*1.6;                          // gentle vignette
       col += (hash(floor(gl_FragCoord.xy)) - 0.5) * 0.045;      // paper grain
+      col = clamp(col, 0.0, 1.0);                                 // keep premultiplied colour valid (rgb <= alpha after the *alpha blend)
       gl_FragColor = vec4(col, smoothstep(0.0, 1.0, uDisco) * (1.0 - ${ROOM_VIDEO.toFixed(3)} * uRoomVid));   // fully see-through normally (the stage picture shows); fades to the club in disco, and lets a projected video through
     }`
 });
