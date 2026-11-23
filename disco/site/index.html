@@ -25,7 +25,7 @@ window.DISCO_CONFIG = {
   dataBase: 'data/',               // covers live at data/covers/<id>.jpg
   // Until the Instagram feed is connected, fall back to the prototype's 130 placeholder reels so the page still works.
   // Flip to false once reels.json is live: then a missing/broken feed shows nothing instead of fake tiles.
-  placeholderFallback: true,
+  placeholderFallback: false,
   // Disco-mode music. null = the built-in synthesized placeholder loop. To use the real loop, put the file next to this
   // page and set e.g. 'disco-loop.mp3' (a seamless 8/16-bar loop; WAV or MP3).
   discoLoop: null

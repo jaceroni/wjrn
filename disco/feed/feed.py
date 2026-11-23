@@ -32,6 +32,13 @@ MIN_KEEP = 0.25                   # never trim to less than this fraction of the
 SHRINK_GUARD = 0.5                # refuse to publish a list < 50% the size of the last good one (partial result)
 
 
+# The API key is restricted to this server's IPv4 address. The VPS prefers IPv6 for Google by default, which the key's IP
+# restriction rejects (403 "Permission denied on the service"), so every connection this script makes uses IPv4.
+import socket
+_getaddrinfo = socket.getaddrinfo
+socket.getaddrinfo = lambda host, port, family=0, type=0, proto=0, flags=0: _getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
 def log(msg):
     print(f"{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')} {msg}", flush=True)
 
