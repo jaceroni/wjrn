@@ -1206,14 +1206,15 @@ function layoutStage(){
   const bx = W / 2, by = H / 2;
   // 2. THE PICTURE MOVES TO FIT THE BALL: it is placed (and scaled up just enough to still cover the screen) so the lighter patch of
   //    grass lands S.gap ball-radii below the ball's bottom, centred horizontally under it.
-  const pyT = by + R * (1 + S.gap) + (S.dropY || 0) * H;          // dropY: slide the picture (not the ball) down by this fraction of the screen height
-  let sc = Math.max(W / S.w, (H - pyT) / ((1 - S.ovalY) * S.h));                            // cover the width, and everything below the patch
-  if (!S.extendTop) sc = Math.max(sc, H / S.h, pyT / (S.ovalY * S.h));                        // desktop: no sky to extend, so cover the top too
+  const pyT = by + R * (1 + S.gap);                                   // where the ball's shadow lands (it stays right under the ball)
+  const pyP = pyT + (S.dropY || 0) * H;                               // where the picture's patch goes: dropY slides the PICTURE down under the shadow
+  let sc = Math.max(W / S.w, (H - pyP) / ((1 - S.ovalY) * S.h));      // cover the width, and everything below the patch
+  if (!S.extendTop) sc = Math.max(sc, H / S.h, pyP / (S.ovalY * S.h));                         // desktop: no sky to extend, so cover the top too
   const dw = S.w * sc, dh = S.h * sc;
-  const ty = pyT - S.ovalY * dh;
+  const ty = pyP - S.ovalY * dh;
   const tx = Math.min(0, Math.max(W - dw, W / 2 - S.ovalX * dw));
   const yo = pyT;
-  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, variant, bx, by, ox: tx + S.ovalX * dw, oy: yo, ovalW: S.ovalW * dw };
+  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, variant, bx, by, ox: bx, oy: yo, ovalW: S.ovalW * dw };
   // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
   bgEl.textContent = '';
   const K = Math.ceil(Math.max(0, tx) / dw);
