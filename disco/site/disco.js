@@ -1272,7 +1272,7 @@ const clock = new THREE.Clock(), lightW = [new V(), new V(), new V()], keyW = ne
 const CLOUDS = CONFIG.clouds === false ? null : Object.assign({ max: 6 }, CONFIG.clouds || {});
 const cloudCv = document.getElementById('clouds');
 if (CLOUDS && cloudCv && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  const cctx = cloudCv.getContext('2d'); let clouds = [], lastC = performance.now(), cw = 0, ch = 0, dprC = 1, nextC = 0;
+  const cctx = cloudCv.getContext('2d'); let cloudsSeeded = false, clouds = [], lastC = performance.now(), cw = 0, ch = 0, dprC = 1, nextC = 0;
   const rnd = (a, b) => a + Math.random() * (b - a);
   const sprites = [];
   const makeSprite = () => {
@@ -1294,9 +1294,10 @@ if (CLOUDS && cloudCv && !matchMedia('(prefers-reduced-motion: reduce)').matches
     return c;
   };
   for (let i = 0; i < 4; i++) sprites.push(makeSprite());
-  const band = () => { const top = 0.03 * ch; let bot = 0.45 * ch; if (stage) bot = Math.min(bot, Math.max(0.25 * ch, stage.by + stage.R0 * 0.2)); return [top, Math.max(top + 60, bot)]; };
+  // a cloud's visible bottom (~75% down its sprite) must stay above the ball's top + a little (about the mountain peaks), never down by the trees (limit = the ball's top, floor 20% of the height)
+  const cloudLimit = () => Math.max(0.2 * ch, (stage ? stage.by - stage.R : 0.3 * ch));
   const spawnCloud = (initial) => {
-    const [t, b] = band(), w = rnd(190, 460), dir = Math.random() < 0.7 ? 1 : -1, near = (w - 190) / 270;
+    const w = rnd(190, 460), dir = Math.random() < 0.7 ? 1 : -1, near = (w - 190) / 270, t = 0.02 * ch, b = Math.max(t + 10, cloudLimit() - 0.75 * w * 200 / 512);
     clouds.push({ sp: sprites[Math.floor(Math.random() * sprites.length)], w, h: w * 200 / 512, y: rnd(t, b), dir, speed: rnd(4, 8) + near * 6, alpha: rnd(0.35, 0.6) * (0.75 + 0.25 * near),
       x: initial ? rnd(-w * 0.3, cw) : (dir > 0 ? -w : cw) , flip: Math.random() < 0.5 });
   };
@@ -1305,13 +1306,14 @@ if (CLOUDS && cloudCv && !matchMedia('(prefers-reduced-motion: reduce)').matches
     const dt = Math.min(0.1, (now - lastC) / 1000); lastC = now;
     const W = innerWidth, H = innerHeight, d = Math.min(devicePixelRatio || 1, 2), first = !cw;
     if (W !== cw || H !== ch || d !== dprC) { cw = W; ch = H; dprC = d; cloudCv.width = Math.round(W * d); cloudCv.height = Math.round(H * d); }
-    if (first) for (let i = 0; i < 3; i++) spawnCloud(true);
+    if (stage && !cloudsSeeded) { cloudsSeeded = true; for (let i = 0; i < 3; i++) spawnCloud(true); }   // wait for the stage layout so the first clouds respect the height limit
     const vis = 1 - Math.min(1, disco * 2.5);
     cctx.setTransform(dprC, 0, 0, dprC, 0, 0); cctx.clearRect(0, 0, cw, ch);
     if (document.hidden || vis <= 0.01) return;
     nextC -= dt; if (nextC <= 0 && clouds.length < CLOUDS.max) { spawnCloud(false); nextC = rnd(6, 16); }
     for (const c of clouds) {
       c.x += c.dir * c.speed * dt;
+      c.y = Math.min(c.y, Math.max(0.02 * ch, cloudLimit() - 0.75 * c.h));     // re-clamp (screen resize / layout change)
       cctx.save(); cctx.globalAlpha = c.alpha * vis;
       if (c.flip) { cctx.translate(c.x + c.w, c.y); cctx.scale(-1, 1); cctx.drawImage(c.sp, 0, 0, c.w, c.h); } else cctx.drawImage(c.sp, c.x, c.y, c.w, c.h);
       cctx.restore();
@@ -1341,16 +1343,18 @@ if (BIRDS && birdCv && !matchMedia('(prefers-reduced-motion: reduce)').matches) 
     if (r < 0.22) {           // a loose V-flock of small far birds
       const n = 3 + Math.floor(Math.random() * 5), sz = rnd(9, 15), sp = rnd(26, 38);
       for (let i = 0; i < n; i++) { const k = Math.ceil(i / 2) * (i % 2 ? 1 : -1); spawn('flap', x - dir * Math.abs(k) * sz * 2.6, y + k * sz * 1.5 + rnd(-3, 3), dir, sz * rnd(0.9, 1.1), sp * rnd(0.97, 1.03)); }
-    } else if (r < 0.45) spawn('soar', x, y, dir, rnd(34, 52), rnd(16, 26));
-    else if (r < 0.75) spawn('flap', x, y, dir, rnd(20, 32), rnd(30, 46));
+    } else if (r < 0.45) spawn('soar', x, y, dir, rnd(22, 30), rnd(14, 22));
+    else if (r < 0.75) spawn('flap', x, y, dir, rnd(14, 22), rnd(24, 38));
     else spawn('flap', x, y, dir, rnd(8, 14), rnd(22, 34));
   };
   const drawBird = (b, a) => {
     const w = b.size / 2, f = Math.sin(b.ph), amp = b.kind === 'soar' ? (1 - b.glide) * 0.55 + 0.12 : 0.5;
-    const tipY = -f * w * amp - w * 0.12;            // wing tips swing above/below the body line
-    const midY = -f * w * amp * 0.45 - w * 0.22;
-    bctx.globalAlpha = a; bctx.lineWidth = Math.max(1, b.size * 0.085); bctx.lineCap = 'round'; bctx.lineJoin = 'round';
-    bctx.beginPath(); bctx.moveTo(-w, tipY); bctx.quadraticCurveTo(-w * 0.5, midY, 0, 0); bctx.quadraticCurveTo(w * 0.5, midY, w, tipY); bctx.stroke();
+    const tipY = -f * w * amp - w * 0.12, midY = -f * w * amp * 0.45 - w * 0.22, th = Math.max(0.9, b.size * 0.075);
+    bctx.globalAlpha = a; bctx.fillStyle = '#4a4636';      // filled wings that taper to points (a round-capped stroke read as a gummy worm up close)
+    bctx.beginPath(); bctx.moveTo(-w, tipY);
+    bctx.quadraticCurveTo(-w * 0.5, midY - th * 1.2, 0, -th * 0.5); bctx.quadraticCurveTo(w * 0.5, midY - th * 1.2, w, tipY);
+    bctx.quadraticCurveTo(w * 0.5, midY + th * 0.3, 0, th * 0.9); bctx.quadraticCurveTo(-w * 0.5, midY + th * 0.3, -w, tipY);
+    bctx.closePath(); bctx.fill();
   };
   const birdFrame = (now) => {
     requestAnimationFrame(birdFrame);
