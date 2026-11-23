@@ -915,7 +915,7 @@ function setReels(list){
   attachPlaying();
   loadCovers();
   if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
-  if (location.search.includes('stats')) window.__disco = { logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
+  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist() }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 
@@ -1025,7 +1025,8 @@ const lastFlickDir = new V();
 // Called on every qualifying flick past the 7th, so only the first one (off -> on) starts the loop, and only if no reel is
 // playing. If a reel is already playing it keeps playing and only the room changes. The loop never restarts by itself
 // after a reel takes over — it takes another full disco activation.
-function enterDisco(){ if (discoTarget === 0 && !playing) discoAudio.start(); discoTarget = 1; }
+function enterDisco(){ if (discoTarget === 0) camDistTarget = fitDist();   // always pull fully out on entering disco: see more of the room
+  if (discoTarget === 0 && !playing) discoAudio.start(); discoTarget = 1; }
 // double-tap a logo: the page's reset — stop any reel, stop the disco loop, leave disco, stop the spin, face that logo square-on
 function resetAll(k){ stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
 // light beams sweeping down from the ceiling (only visible in disco)
@@ -1138,7 +1139,7 @@ function layoutStage(){
   const dw = S.w * s, dh = S.h * s;
   const b = Math.max(S.bottom, Math.min(1, S.top + H / dh));          // which row of the picture sits on the screen's bottom edge
   const ty = H - b * dh, tx = (W - dw) / 2;
-  const R = Math.min(0.30 * dw, 0.28 * H);                            // the ball's radius on screen
+  const R = Math.min(0.26 * dw, 0.28 * H);                            // the ball's radius on screen when FULLY ZOOMED OUT: the size the picture was drawn for (diameter ~0.52 of its width, = the old zoom-out limit)
   const yh = ty + S.halo * dh, yo = ty + S.ovalY * dh;
   stage = { W, H, dw, dh, tx, ty, R, bx: W / 2, by: Math.max(yh, R + 0.07 * H), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
   // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
@@ -1156,7 +1157,7 @@ let camDist = 4, camDistTarget = 4, zoomK = 1;
 const camFocal = () => (innerHeight / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 // the camera distance at which the ball's radius on screen equals the stage's ball radius (unit sphere seen from L: radius = f / sqrt(L^2 - 1))
 function fitDist(){ return Math.sqrt((camFocal() / stage.R) ** 2 + 1) / 1.0384; }   // 1.0384 = |(0, .28, 1)|, the camera's offset direction
-function clampDist(d){ const f = fitDist(); return Math.min(f*1.7, Math.max(Math.max(1.45, f*0.32), d)); }
+function clampDist(d){ const f = fitDist(); return Math.min(f, Math.max(Math.max(1.45, f*0.32), d)); }   // f = fully zoomed out = where the page starts; you can only zoom IN from there
 function resize(){
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
@@ -1172,13 +1173,24 @@ function placeCamera(){
   const p = ORIGIN.clone().project(camera);                            // where the ball's centre lands before any shift
   camera.setViewOffset(stage.W, stage.H, (p.x + 1)/2*stage.W - stage.bx, (1 - p.y)/2*stage.H - stage.by, stage.W, stage.H);   // slide the view so the ball hovers on the stage
 }
+// Depth: the picture is a distant backdrop, so when the ball zooms in it grows a LITTLE (about DEPTH of the ball's growth), about
+// the ball's anchor point. The ball swells in front of it instead of the whole scene scaling with it. The shadow rides the pool.
+const DEPTH = STAGE.depth;
+let bgScale = 1, ballR = 0;
+function viewNow(){ const L = camera.position.length(); ballR = camFocal() / Math.sqrt(Math.max(1.0001, L*L - 1)); return Math.max(1, ballR / stage.R); }
+function applyDepth(){
+  if (!stage) return;
+  bgScale = 1 + DEPTH * (viewNow() - 1);
+  bgEl.style.transformOrigin = `${stage.bx}px ${stage.by}px`;
+  bgEl.style.transform = bgScale > 1.0005 ? `scale(${bgScale.toFixed(4)})` : '';
+}
 // the shadow sits on the picture's floor pool, sized to the ball's current on-screen radius (so it grows as you zoom), gone in disco
 function placeShadow(){
   if (!stage) return;
-  const L = camera.position.length(), Rc = camFocal() / Math.sqrt(Math.max(1.0001, L*L - 1));
-  const w = Math.min(1.5 * Rc, 1.05 * stage.ovalW), h = w * 0.26;
+  const sx = stage.bx + (stage.ox - stage.bx) * bgScale, sy = stage.by + (stage.oy - stage.by) * bgScale;     // the pool, as scaled by the depth effect
+  const w = Math.min(1.5 * ballR, 1.05 * stage.ovalW * bgScale), h = w * 0.26;
   shadowEl.style.width = w.toFixed(1) + 'px'; shadowEl.style.height = h.toFixed(1) + 'px';
-  shadowEl.style.transform = `translate(${(stage.ox - w/2).toFixed(1)}px,${(stage.oy - h/2).toFixed(1)}px)`;
+  shadowEl.style.transform = `translate(${(sx - w/2).toFixed(1)}px,${(sy - h/2).toFixed(1)}px)`;
   shadowEl.style.opacity = (1 - Math.min(1, disco*1.6)).toFixed(3);
 }
 addEventListener('resize', resize);
@@ -1225,8 +1237,8 @@ function frame(){
   DISCO.value = disco;
   coveMat.uniforms.uRoomVid.value += ((roomVideo() ? 1 : 0) - coveMat.uniforms.uRoomVid.value) * (1 - Math.exp(-dt*3));
   BALLROT.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(ball.quaternion.clone().invert()));
-  if (coveMesh) coveMesh.visible = disco > 0.002;
-  placeShadow();
+  if (coveMesh) coveMesh.visible = disco > 0.002;     // the 3D room is only drawn for disco; in the normal state only the ball is in the 3D scene
+  applyDepth(); placeShadow();
   beams.children.forEach((g, i) => { g.rotation.z = Math.sin(time*0.6 + g.userData.phase)*0.55; g.rotation.x = 0.35 + Math.cos(time*0.45 + g.userData.phase)*0.25; g.children[0].material.opacity = 0.07*disco; });
   renderer.render(scene, camera);
   ytPlace();                                                // after the scene: the video follows this frame's camera + ball
