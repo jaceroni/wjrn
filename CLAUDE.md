@@ -21,6 +21,8 @@ bash deploy.sh
 
 This builds locally, rsyncs `dist/` to the VPS, syncs nginx config, and reloads nginx. **Once edits are agreed upon in a session (the user has confirmed the change or asked for it directly), make the edits and then run `deploy.sh` as part of finishing the task — no need to ask for confirmation each time.** Claude Code handles the coding and deployment as one continuous process.
 
+**`deploy.sh` forces world-readable permissions on `dist/` before the rsync** (`find dist ... chmod 755/644`; macOS rsync has no `--chmod`). Added 2026-11-23: an uploaded image arrived with owner-only (600) permissions, rsync `-a` preserved them, and nginx served a 403 for it.
+
 SSH key: `/Users/jacebrown/Dropbox/Jacewon/Radio/newradiokey.pem`  
 Web root on server: `/var/www/wjrn-landing`
 
