@@ -742,7 +742,7 @@ function drawPlaying(time){
 // The player renders at 960x540 and is scaled onto the tile. Rendering it LARGE makes YouTube's own overlays (title bar,
 // bottom strip) a small slice of the height, and YT_ZOOM then zooms into the middle of the video so those slices fall
 // outside the tile's outline and are cropped away. (The overlays can't be switched off any more, only cropped.)
-const PLAY_REVEAL_MS = CONFIG.playReveal != null ? CONFIG.playReveal : 3500;   // how long the video stays hidden after it starts, so YouTube's play/pause glyph isn't seen (ms)
+const PLAY_REVEAL_MS = CONFIG.playReveal != null ? CONFIG.playReveal : 3000;   // how long the video stays hidden after it starts, so YouTube's play/pause glyph isn't seen (ms)
 const YT_W = 960, YT_H = 540, YT_ZOOM = 1.5;
 const ytLayer = $('yt-layer');
 let ytApi = null;
@@ -1417,7 +1417,7 @@ function frame(){
   if (playing) {
     if (!playing.yt && time-playing.last > 1/30) { drawPlaying(time); playing.last = time; }   // stand-in: placeholder reels only
     const onBall = Math.max(0, 1 - disco*2);                    // in disco the ball is only the mirror ball: no cover, no ring
-    playing.mat.opacity = onBall * (1 - (playing.yt ? playing.yt.vis : 0));   // the cover steps aside as the video fades in over it
+    playing.mat.opacity = playing.yt ? 0 : onBall;   // real videos: the ball's own tile (cover + bevel + shading) stays put underneath until the video covers it; this flat unlit stand-in is only for placeholder reels
     playing.ringMat.opacity = (0.55 + 0.45*Math.sin(time*4)) * onBall;
     if (playing.mesh) { playing.mesh.visible = onBall > 0.01; playing.ring.visible = onBall > 0.01 && !!CONFIG.playingRing; }   // the amber ring is opt-in (playingRing in DISCO_CONFIG)
   }
