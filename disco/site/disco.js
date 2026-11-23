@@ -1266,6 +1266,61 @@ addEventListener('resize', resize);
 /* ---------- loop ---------- */
 const clock = new THREE.Clock(), lightW = [new V(), new V(), new V()], keyW = new V(-0.45, 0.7, 0.55).normalize();
 
+// ---- light clouds (Jace, 2026-11-23): soft white puff-clusters drifting slowly across the sky, on a canvas BEHIND the birds (z -3, just above
+// the picture). Each cloud is a pre-rendered sprite (many overlapping soft puffs, flat shaded underside), a few variants, drawn at several
+// sizes/opacities; bigger = nearer = a touch faster. Hidden in disco. DISCO_CONFIG.clouds = { max } or clouds:false.
+const CLOUDS = CONFIG.clouds === false ? null : Object.assign({ max: 6 }, CONFIG.clouds || {});
+const cloudCv = document.getElementById('clouds');
+if (CLOUDS && cloudCv && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const cctx = cloudCv.getContext('2d'); let clouds = [], lastC = performance.now(), cw = 0, ch = 0, dprC = 1, nextC = 0;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const sprites = [];
+  const makeSprite = () => {
+    const W = 512, H = 200, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+    const n = 14 + Math.floor(Math.random() * 8);
+    for (let layer = 0; layer < 2; layer++) {          // layer 0: cool grey-blue underside, layer 1: bright tops, lifted a little
+      for (let i = 0; i < n; i++) {
+        const t = (i + Math.random() * 0.6) / n, x = 50 + t * (W - 100), hump = Math.sin(t * Math.PI);          // taller in the middle
+        const r = (22 + hump * 38) * rnd(0.7, 1.15), y = H * 0.66 - hump * rnd(8, 46) * (layer ? 1.0 : 0.4) - rnd(0, 8) + (layer ? 0 : 7);
+        const gr = g.createRadialGradient(x, y, 0, x, y, r);
+        if (layer === 0) { gr.addColorStop(0, 'rgba(170,180,190,0.30)'); gr.addColorStop(1, 'rgba(170,180,190,0)'); }
+        else { gr.addColorStop(0, 'rgba(255,255,250,0.62)'); gr.addColorStop(0.55, 'rgba(255,255,250,0.30)'); gr.addColorStop(1, 'rgba(255,255,250,0)'); }
+        g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill();
+      }
+    }
+    // flatten the base: fade everything below the cloud's bottom line
+    g.globalCompositeOperation = 'destination-out'; const fg = g.createLinearGradient(0, H * 0.70, 0, H * 0.86); fg.addColorStop(0, 'rgba(0,0,0,0)'); fg.addColorStop(1, 'rgba(0,0,0,1)');
+    g.fillStyle = fg; g.fillRect(0, H * 0.70, W, H * 0.30);
+    return c;
+  };
+  for (let i = 0; i < 4; i++) sprites.push(makeSprite());
+  const band = () => { const top = 0.03 * ch; let bot = 0.45 * ch; if (stage) bot = Math.min(bot, Math.max(0.25 * ch, stage.by + stage.R0 * 0.2)); return [top, Math.max(top + 60, bot)]; };
+  const spawnCloud = (initial) => {
+    const [t, b] = band(), w = rnd(190, 460), dir = Math.random() < 0.7 ? 1 : -1, near = (w - 190) / 270;
+    clouds.push({ sp: sprites[Math.floor(Math.random() * sprites.length)], w, h: w * 200 / 512, y: rnd(t, b), dir, speed: rnd(4, 8) + near * 6, alpha: rnd(0.35, 0.6) * (0.75 + 0.25 * near),
+      x: initial ? rnd(-w * 0.3, cw) : (dir > 0 ? -w : cw) , flip: Math.random() < 0.5 });
+  };
+  const cloudFrame = (now) => {
+    requestAnimationFrame(cloudFrame);
+    const dt = Math.min(0.1, (now - lastC) / 1000); lastC = now;
+    const W = innerWidth, H = innerHeight, d = Math.min(devicePixelRatio || 1, 2), first = !cw;
+    if (W !== cw || H !== ch || d !== dprC) { cw = W; ch = H; dprC = d; cloudCv.width = Math.round(W * d); cloudCv.height = Math.round(H * d); }
+    if (first) for (let i = 0; i < 3; i++) spawnCloud(true);
+    const vis = 1 - Math.min(1, disco * 2.5);
+    cctx.setTransform(dprC, 0, 0, dprC, 0, 0); cctx.clearRect(0, 0, cw, ch);
+    if (document.hidden || vis <= 0.01) return;
+    nextC -= dt; if (nextC <= 0 && clouds.length < CLOUDS.max) { spawnCloud(false); nextC = rnd(6, 16); }
+    for (const c of clouds) {
+      c.x += c.dir * c.speed * dt;
+      cctx.save(); cctx.globalAlpha = c.alpha * vis;
+      if (c.flip) { cctx.translate(c.x + c.w, c.y); cctx.scale(-1, 1); cctx.drawImage(c.sp, 0, 0, c.w, c.h); } else cctx.drawImage(c.sp, c.x, c.y, c.w, c.h);
+      cctx.restore();
+    }
+    clouds = clouds.filter(c => c.dir > 0 ? c.x < cw + 20 : c.x > -c.w - 20);
+  };
+  requestAnimationFrame(cloudFrame);
+}
+
 // ---- distant birds (Jace, 2026-11-23): drift left/right across the sky behind the ball, on their own 2D canvas (z -2, under the shadow
 // and the WebGL canvas). Different sizes and kinds: small fast flappers (far away, faint), medium flappers, big slow soarers (nearer, darker,
 // mostly gliding), and the odd loose V-flock. Hidden in disco. Tune with DISCO_CONFIG.birds = { max, ... } or turn off with birds:false.
@@ -1277,7 +1332,7 @@ if (BIRDS && birdCv && !matchMedia('(prefers-reduced-motion: reduce)').matches) 
   const skyBand = () => { const H = bh; const top = 0.05 * H; let bot = 0.22 * H; if (stage) bot = Math.max(bot, stage.by - stage.R0 * 1.05); return [top, Math.max(top + 40, Math.min(bot, 0.55 * H))]; };
   const spawn = (kind, x, y, dir, size, speed) => {
     const far = size < 18, soar = kind === 'soar';
-    birds.push({ x, y, dir, size, speed, kind, ph: rnd(0, 6.28), rate: soar ? rnd(0.9, 1.5) : far ? rnd(6, 9) : rnd(3.2, 5), bobA: rnd(2, 7) * (size / 24), bobF: rnd(0.3, 0.8), bobP: rnd(0, 6.28),
+    birds.push({ x, y, dir, size, speed, kind, ph: rnd(0, 6.28), rate: soar ? rnd(0.45, 0.75) : far ? rnd(1.6, 2.3) : rnd(1.1, 1.7), bobA: rnd(2, 7) * (size / 24), bobF: rnd(0.3, 0.8), bobP: rnd(0, 6.28),
       alpha: soar ? rnd(0.5, 0.65) : far ? rnd(0.22, 0.34) : rnd(0.34, 0.5), glide: soar ? 0.75 : 0.0, gT: rnd(0, 6) });
   };
   const launch = () => {
