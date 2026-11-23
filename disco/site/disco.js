@@ -1206,7 +1206,7 @@ function layoutStage(){
   const bx = W / 2, by = H / 2;
   // 2. THE PICTURE MOVES TO FIT THE BALL: it is placed (and scaled up just enough to still cover the screen) so the lighter patch of
   //    grass lands S.gap ball-radii below the ball's bottom, centred horizontally under it.
-  const pyT = by + R * (1 + S.gap);
+  const pyT = by + R * (1 + S.gap) + (S.dropY || 0) * H;          // dropY: slide the picture (not the ball) down by this fraction of the screen height
   let sc = Math.max(W / S.w, (H - pyT) / ((1 - S.ovalY) * S.h));                            // cover the width, and everything below the patch
   if (!S.extendTop) sc = Math.max(sc, H / S.h, pyT / (S.ovalY * S.h));                        // desktop: no sky to extend, so cover the top too
   const dw = S.w * sc, dh = S.h * sc;
