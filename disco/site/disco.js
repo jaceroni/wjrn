@@ -146,7 +146,7 @@ function loadCovers(){
 const BRAND = { sage: 0xA5AF8F, ivory: 0xF7E7C7, fern: 0x5A734A, deepFern: 0x304227, bark: 0x6B4E35, groove: 0x3C3023, amber: 0xDF9C32, rust: 0xBA4A2A, pine: 0x1E3426, ink: 0x100E0A };
 // disco mode: shared switches for every material (0 = rock garden, 1 = full Studio 54)
 const DISCO = { value: 0 }, BALLROT = { value: new THREE.Matrix3() };
-const ROOM_VIDEO = 0.22;      // how strongly the playing video is projected onto the room in disco mode (0.22 = 22%)
+const ROOM_VIDEO = 0.27;      // how strongly the playing video is projected onto the room in disco mode (0.27 = 27%)
 const NEON_COLS = [new THREE.Color(0xff3fa4), new THREE.Color(0x29e6ff), new THREE.Color(0xffd23f)];
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false });   // alpha: so the room can be see-through in disco (video projection)
@@ -662,7 +662,10 @@ function drawPlaying(time){
 // the tile's outline — so the video turns with the ball, is centred on the tile, and the shard is the mask. It never grows
 // or lifts off. While playing it takes no pointer events, so you can still grab and spin the ball from a playing tile.
 // Starts at a random point inside the video (its length is in reels.json) so there's never a slow intro to sit through.
-const YT_W = 640, YT_H = 360;
+// The player renders at 960x540 and is scaled onto the tile. Rendering it LARGE makes YouTube's own overlays (title bar,
+// bottom strip) a small slice of the height, and YT_ZOOM then zooms into the middle of the video so those slices fall
+// outside the tile's outline and are cropped away. (The overlays can't be switched off any more, only cropped.)
+const YT_W = 960, YT_H = 540, YT_ZOOM = 1.5;
 const ytLayer = $('yt-layer');
 let ytApi = null;
 function loadYT(){
@@ -697,48 +700,62 @@ function drawStatic(p){
   ctx.drawImage(p.cover, (cw-side)/2, (ch-side)/2, side, side, 0, 0, S, S);
   p.tex.needsUpdate = true;
 }
-function ytStart(p){
-  const reel = p.reel, c = cellsData[p.i], LO = c.parts.LO;
-  // the smallest 16:9 box, centred on the tile's outline, that covers it — in the tile's own (u,v) units
-  let u0 = 1e9, u1 = -1e9, v0 = 1e9, v1 = -1e9;
-  LO.forEach(([u, v]) => { u0 = Math.min(u0, u); u1 = Math.max(u1, u); v0 = Math.min(v0, v); v1 = Math.max(v1, v); });
-  const uc = (u0 + u1) / 2, vc = (v0 + v1) / 2, Ht = Math.max(v1 - v0, (u1 - u0) * 9 / 16) * 1.04, Wt = Ht * 16 / 9, k = YT_H / Ht;
-  const frame = document.createElement('div'); frame.className = 'yt-frame';
-  // clip to the tile's outline (a hair inside, so the amber ring stays visible around the video)
-  const clip = 'polygon(' + LO.map(([u, v]) => `${(YT_W/2 + (u*0.985 - uc)*k).toFixed(1)}px ${(YT_H/2 - (v*0.985 - vc)*k).toFixed(1)}px`).join(',') + ')';
-  frame.style.clipPath = clip;
-  ytLayer.appendChild(frame);
-  const y = p.yt = { frame, clip, uc, vc, Wt, Ht, player: null, played: false, blocked: false, show: false, timer: 0 };
-  const dur = reel.duration;
-  const randomStart = d => Math.floor(Math.random() * Math.max(1, d - Math.min(60, d * 0.4)));   // always leaves room to play
-  loadYT().then(YT => {
-    if (playing !== p) return;                                 // tapped away while the API was loading
+/* One persistent player, reused for every video. Creating a fresh iframe per tap meant a ~2s boot every time AND each new
+   player had to win autoplay on its own; a single long-lived player boots once, in the background, and once the browser has
+   let it play with sound (iOS needs one real tap on the player the first time) it stays allowed for the rest of the visit. */
+const yt = { frame: null, player: null, ready: null };
+function ytEnsure(){
+  if (yt.ready) return yt.ready;
+  yt.ready = loadYT().then(YT => new Promise(resolve => {
+    const frame = yt.frame = document.createElement('div'); frame.className = 'yt-frame'; ytLayer.appendChild(frame);
     const holder = document.createElement('div'); frame.appendChild(holder);
-    y.player = new YT.Player(holder, {
-      width: YT_W, height: YT_H, videoId: reel.id,
-      playerVars: { autoplay: 1, controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0,
-                    start: dur ? randomStart(dur) : 0, origin: location.origin },
+    yt.player = new YT.Player(holder, {
+      width: YT_W, height: YT_H,
+      playerVars: { controls: 0, disablekb: 1, fs: 0, iv_load_policy: 3, modestbranding: 1, playsinline: 1, rel: 0, cc_load_policy: 0, origin: location.origin },
       events: {
-        onReady: e => {
-          e.target.playVideo();
-          y.timer = setTimeout(() => { if (!y.played) ytBlocked(p); }, 2500);   // nothing started: the browser refused sound-on autoplay
-        },
-        onAutoplayBlocked: () => ytBlocked(p),
+        onReady: () => resolve(yt.player),
+        onAutoplayBlocked: () => { const p = playing; if (p && p.yt) ytBlocked(p); },
         onStateChange: e => {
-          if (playing !== p) return;
-          if (e.data === 1) {                                   // PLAYING
+          const p = playing, y = p && p.yt; if (!y) return;
+          let vid; try { vid = e.target.getVideoData().video_id; } catch (_) {}
+          if (vid && vid !== y.videoId) return;                   // a leftover event from the previous video
+          if (e.data === 1) {                                     // PLAYING
+            ytNoCaptions();
             if (!y.played) {
               y.played = true; clearTimeout(y.timer);
               const d = e.target.getDuration();
-              if (!dur && d > 90) e.target.seekTo(randomStart(d), true);   // length wasn't in the feed: pick the spot now
+              if (!p.reel.duration && d > 90) e.target.seekTo(Math.floor(Math.random() * Math.max(1, d - Math.min(60, d * 0.4))), true);   // length wasn't in the feed
             }
             y.blocked = false; y.show = true;
-          } else if (e.data === 0) stop();                      // ENDED
+          } else if (e.data === 0) stop();                        // ENDED
         },
-        onError: e => { console.warn('[disco] video unavailable (YouTube error ' + e.data + ')'); if (playing === p) stop(); }
+        onError: e => { console.warn('[disco] video unavailable (YouTube error ' + e.data + ')'); if (playing && playing.yt) stop(); }
       }
     });
-  }).catch(err => console.warn('[disco]', err.message));
+  })).catch(err => { yt.ready = null; console.warn('[disco]', err.message); throw err; });
+  return yt.ready;
+}
+// Captions off, whatever the viewer's YouTube settings say (cc_load_policy=0 alone doesn't override a "always show captions" account)
+function ytNoCaptions(){ try { yt.player.unloadModule('captions'); yt.player.unloadModule('cc'); } catch (_) {} }
+
+function ytStart(p){
+  const reel = p.reel, c = cellsData[p.i], LO = c.parts.LO;
+  // the smallest 16:9 box, centred on the tile's outline, that covers it — in the tile's own (u,v) units — then zoomed in
+  // (YT_ZOOM) so YouTube's title bar / bottom strip land outside the outline
+  let u0 = 1e9, u1 = -1e9, v0 = 1e9, v1 = -1e9;
+  LO.forEach(([u, v]) => { u0 = Math.min(u0, u); u1 = Math.max(u1, u); v0 = Math.min(v0, v); v1 = Math.max(v1, v); });
+  const uc = (u0 + u1) / 2, vc = (v0 + v1) / 2, Ht = Math.max(v1 - v0, (u1 - u0) * 9 / 16) * 1.04 * YT_ZOOM, Wt = Ht * 16 / 9, k = YT_H / Ht;
+  // clip to the tile's outline (a hair inside, so the amber ring stays visible around the video)
+  const clip = 'polygon(' + LO.map(([u, v]) => `${(YT_W/2 + (u*0.985 - uc)*k).toFixed(1)}px ${(YT_H/2 - (v*0.985 - vc)*k).toFixed(1)}px`).join(',') + ')';
+  const y = p.yt = { clip, uc, vc, Wt, Ht, videoId: reel.id, played: false, blocked: false, show: false, timer: 0 };
+  const dur = reel.duration;
+  const start = dur ? Math.floor(Math.random() * Math.max(1, dur - Math.min(60, dur * 0.4))) : 0;   // random spot; always leaves room to play
+  ytEnsure().then(player => {
+    if (playing !== p) return;                                  // tapped away while the player was booting
+    player.loadVideoById({ videoId: reel.id, startSeconds: start });
+    ytNoCaptions();
+    y.timer = setTimeout(() => { if (!y.played) ytBlocked(p); }, 3000);   // nothing started: the browser refused sound-on autoplay
+  }).catch(() => {});
 }
 // The browser wouldn't start the video with sound from a tap on OUR page. Don't fight the player: show it, and let the tap
 // land on YouTube's own play button (the whole tile is the target). Once it's playing it goes back to ignoring touches.
@@ -746,8 +763,9 @@ function ytBlocked(p){ const y = p.yt; if (!y || y.played) return; y.blocked = t
 function ytStop(p){
   const y = p.yt; if (!y) return;
   clearTimeout(y.timer);
-  try { if (y.player) y.player.destroy(); } catch (_) {}
-  y.frame.remove(); p.yt = null;
+  try { yt.player.stopVideo(); } catch (_) {}                   // the player stays alive (hidden) for the next video
+  if (yt.frame) { yt.frame.style.opacity = '0'; yt.frame.style.pointerEvents = 'none'; }
+  p.yt = null;
 }
 // Disco + a playing video: the ball becomes the plain mirror ball (no video on it) and the video is projected onto the room.
 // It's the SAME player (moving an iframe would reload it): re-styled to cover the viewport and sent BEHIND the transparent
@@ -756,9 +774,10 @@ const roomVideo = () => !!(playing && playing.yt && playing.yt.show && disco > 0
 function ytPlace(){
   const p = playing;
   if (!p || !p.yt) { ytLayer.style.zIndex = ''; return; }
-  const y = p.yt, c = cellsData[p.i], f = y.frame, W = innerWidth, H = innerHeight;
+  const y = p.yt, c = cellsData[p.i], f = yt.frame, W = innerWidth, H = innerHeight;
+  if (!f) return;
   if (roomVideo()) {
-    const k = Math.max(W / YT_W, H / YT_H);                    // 'cover' the viewport
+    const k = Math.max(W / YT_W, H / YT_H) * 1.25;             // 'cover' the viewport, a touch over so YouTube's edge overlays are off-screen
     ytLayer.style.zIndex = '-1';
     f.style.clipPath = 'none';
     f.style.transform = `translate(${((W - YT_W*k)/2).toFixed(1)}px,${((H - YT_H*k)/2).toFixed(1)}px) scale(${k.toFixed(4)})`;
@@ -1105,7 +1124,7 @@ Promise.all([loadFeed(), drawLogo()]).then(([list]) => {
   resize();
   if (!list.length) { frame(); return; }                    // no feed and no fallback: just the room, nothing to cut
   setReels(list);
-  setTimeout(() => loadYT().catch(() => {}), 1500);          // warm the YouTube player API so the first double-tap isn't waiting on it
+  setTimeout(() => ytEnsure().catch(() => {}), 1500);        // boot the one persistent YouTube player in the background so the first double-tap isn't waiting on it
   faceLogo(2, true);                                        // on load: a logo slab square-on, centered and level, exactly as after a logo double-tap (instant, no turn)
   frame();
 });
