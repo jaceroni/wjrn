@@ -9,7 +9,10 @@
 <style>
 :root{--pink:#ff3fa4;--cyan:#29e6ff;--amber:#ffb02e;--ink:#f4ead8}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:#B7BD9F;color:var(--ink);font-family:ui-monospace,monospace;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+/* the colour lives on <html> only: a <body> background would paint OVER the video layer that sits behind the canvas in disco mode */
+html{background:#B7BD9F}
+body{background:none}
+html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);font-family:ui-monospace,monospace;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #c.grabbing{cursor:grabbing}
 #yt-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:2}

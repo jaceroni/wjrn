@@ -146,9 +146,10 @@ function loadCovers(){
 const BRAND = { sage: 0xA5AF8F, ivory: 0xF7E7C7, fern: 0x5A734A, deepFern: 0x304227, bark: 0x6B4E35, groove: 0x3C3023, amber: 0xDF9C32, rust: 0xBA4A2A, pine: 0x1E3426, ink: 0x100E0A };
 // disco mode: shared switches for every material (0 = rock garden, 1 = full Studio 54)
 const DISCO = { value: 0 }, BALLROT = { value: new THREE.Matrix3() };
+const ROOM_VIDEO = 0.22;      // how strongly the playing video is projected onto the room in disco mode (0.22 = 22%)
 const NEON_COLS = [new THREE.Color(0xff3fa4), new THREE.Color(0x29e6ff), new THREE.Color(0xffd23f)];
 const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: false });   // alpha: so the room can be see-through in disco (video projection)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const scene = new THREE.Scene();
@@ -159,12 +160,12 @@ const ball = new THREE.Group(); scene.add(ball);
 /* the room: a seamless sage-paper cove — floor that bends up into a wall, no corners, no horizon */
 const FLOOR_Y = -1.75;
 const coveMat = new THREE.ShaderMaterial({
-  uniforms: { res: { value: new THREE.Vector2(1,1) }, camPos: { value: new V() }, uDisco: DISCO, uBallRot: BALLROT, cD: { value: NEON_COLS },
+  uniforms: { res: { value: new THREE.Vector2(1,1) }, camPos: { value: new V() }, uDisco: DISCO, uRoomVid: { value: 0 }, uBallRot: BALLROT, cD: { value: NEON_COLS },
     cSage: { value: new THREE.Color(BRAND.sage) }, cIvory: { value: new THREE.Color(BRAND.ivory) },
     cShade: { value: new THREE.Color(0x7E896A) }, cHaze: { value: new THREE.Color(0xB7BD9F) } },
   vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
   fragmentShader: `
-    uniform vec2 res; uniform vec3 camPos, cSage, cIvory, cShade, cHaze; uniform float uDisco; uniform mat3 uBallRot; uniform vec3 cD[3]; varying vec3 vW;
+    uniform vec2 res; uniform vec3 camPos, cSage, cIvory, cShade, cHaze; uniform float uDisco; uniform float uRoomVid; uniform mat3 uBallRot; uniform vec3 cD[3]; varying vec3 vW;
     float hash(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p, p+45.32); return fract(p.x*p.y); }
     float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
       return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+1.0),f.x), f.y); }
@@ -194,7 +195,7 @@ const coveMat = new THREE.ShaderMaterial({
       vec2 q = gl_FragCoord.xy/res - 0.5;
       col *= 1.0 - 0.32*dot(q,q)*1.6;                          // gentle vignette
       col += (hash(floor(gl_FragCoord.xy)) - 0.5) * 0.045;      // paper grain
-      gl_FragColor = vec4(col, 1.0);
+      gl_FragColor = vec4(col, 1.0 - ${ROOM_VIDEO.toFixed(3)} * uDisco * uRoomVid);   // see-through only in disco, only while a video is projected
     }`
 });
 {
@@ -623,7 +624,7 @@ function play(i){
   const cv = document.createElement('canvas'); cv.width = cv.height = PLAY_PX;
   const tex = new THREE.CanvasTexture(cv);
   playing = { i, reel, cover, cv, ctx: cv.getContext('2d'), tex, last: -1, t0: clock.elapsedTime,
-    mat: new THREE.MeshBasicMaterial({ map: tex }),
+    mat: new THREE.MeshBasicMaterial({ map: tex, transparent: true }),
     ringMat: new THREE.LineBasicMaterial({ color: BRAND.amber, transparent: true }) };
   attachPlaying();
   faceShard(i);
@@ -704,9 +705,10 @@ function ytStart(p){
   const uc = (u0 + u1) / 2, vc = (v0 + v1) / 2, Ht = Math.max(v1 - v0, (u1 - u0) * 9 / 16) * 1.04, Wt = Ht * 16 / 9, k = YT_H / Ht;
   const frame = document.createElement('div'); frame.className = 'yt-frame';
   // clip to the tile's outline (a hair inside, so the amber ring stays visible around the video)
-  frame.style.clipPath = 'polygon(' + LO.map(([u, v]) => `${(YT_W/2 + (u*0.985 - uc)*k).toFixed(1)}px ${(YT_H/2 - (v*0.985 - vc)*k).toFixed(1)}px`).join(',') + ')';
+  const clip = 'polygon(' + LO.map(([u, v]) => `${(YT_W/2 + (u*0.985 - uc)*k).toFixed(1)}px ${(YT_H/2 - (v*0.985 - vc)*k).toFixed(1)}px`).join(',') + ')';
+  frame.style.clipPath = clip;
   ytLayer.appendChild(frame);
-  const y = p.yt = { frame, uc, vc, Wt, Ht, player: null, played: false, blocked: false, show: false, timer: 0 };
+  const y = p.yt = { frame, clip, uc, vc, Wt, Ht, player: null, played: false, blocked: false, show: false, timer: 0 };
   const dur = reel.duration;
   const randomStart = d => Math.floor(Math.random() * Math.max(1, d - Math.min(60, d * 0.4)));   // always leaves room to play
   loadYT().then(YT => {
@@ -747,16 +749,30 @@ function ytStop(p){
   try { if (y.player) y.player.destroy(); } catch (_) {}
   y.frame.remove(); p.yt = null;
 }
+// Disco + a playing video: the ball becomes the plain mirror ball (no video on it) and the video is projected onto the room.
+// It's the SAME player (moving an iframe would reload it): re-styled to cover the viewport and sent BEHIND the transparent
+// canvas, where it shows through the see-through room (ROOM_VIDEO) but never through the opaque ball.
+const roomVideo = () => !!(playing && playing.yt && playing.yt.show && disco > 0.5);
 function ytPlace(){
-  const p = playing; if (!p || !p.yt) return;
+  const p = playing;
+  if (!p || !p.yt) { ytLayer.style.zIndex = ''; return; }
   const y = p.yt, c = cellsData[p.i], f = y.frame, W = innerWidth, H = innerHeight;
+  if (roomVideo()) {
+    const k = Math.max(W / YT_W, H / YT_H);                    // 'cover' the viewport
+    ytLayer.style.zIndex = '-1';
+    f.style.clipPath = 'none';
+    f.style.transform = `translate(${((W - YT_W*k)/2).toFixed(1)}px,${((H - YT_H*k)/2).toFixed(1)}px) scale(${k.toFixed(4)})`;
+    f.style.opacity = '1'; f.style.pointerEvents = 'none';
+    return;
+  }
+  ytLayer.style.zIndex = ''; f.style.clipPath = y.clip;
   ball.updateMatrixWorld();
   const pt = (u, v) => { const w = c.center.clone().addScaledVector(c.e1, u).addScaledVector(c.e2, v).applyMatrix4(ball.matrixWorld).project(camera); return [(w.x + 1) / 2 * W, (1 - w.y) / 2 * H]; };
   const q = [pt(y.uc - y.Wt/2, y.vc + y.Ht/2), pt(y.uc + y.Wt/2, y.vc + y.Ht/2), pt(y.uc + y.Wt/2, y.vc - y.Ht/2), pt(y.uc - y.Wt/2, y.vc - y.Ht/2)];
   f.style.transform = quadMatrix(YT_W, YT_H, q);
   // facing: fade out as the tile turns away. Behind the ball it's invisible but keeps playing (audio carries on).
   const facing = c.p.clone().transformDirection(ball.matrixWorld).dot(camera.position.clone().sub(c.center.clone().applyMatrix4(ball.matrixWorld)).normalize());
-  const vis = y.show ? Math.min(1, Math.max(0, (facing - 0.06) / 0.2)) : 0;
+  const vis = y.show ? Math.min(1, Math.max(0, (facing - 0.06) / 0.2)) * Math.max(0, 1 - disco*2) : 0;   // fades out as disco takes over the ball
   f.style.opacity = vis.toFixed(3);
   f.style.pointerEvents = (y.blocked && vis > 0.5) ? 'auto' : 'none';
 }
@@ -1064,11 +1080,14 @@ function frame(){
 
   if (playing) {
     if (!playing.yt && time-playing.last > 1/30) { drawPlaying(time); playing.last = time; }   // stand-in: placeholder reels only
-    playing.ringMat.opacity = 0.55 + 0.45*Math.sin(time*4);
+    const onBall = Math.max(0, 1 - disco*2);                    // in disco the ball is only the mirror ball: no cover, no ring
+    playing.mat.opacity = onBall; playing.ringMat.opacity = (0.55 + 0.45*Math.sin(time*4)) * onBall;
+    if (playing.mesh) playing.mesh.visible = playing.ring.visible = onBall > 0.01;
   }
 
   disco += (discoTarget - disco) * (1 - Math.exp(-dt*2.2));
   DISCO.value = disco;
+  coveMat.uniforms.uRoomVid.value += ((roomVideo() ? 1 : 0) - coveMat.uniforms.uRoomVid.value) * (1 - Math.exp(-dt*3));
   BALLROT.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(ball.quaternion.clone().invert()));
   shadow.material.opacity = 0.9 * (1 - disco);
   scene.background.setRGB(0.718*(1-disco) + 0.01*disco, 0.741*(1-disco) + 0.008*disco, 0.624*(1-disco) + 0.014*disco);
