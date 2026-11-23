@@ -358,8 +358,8 @@ const logoMat = new THREE.ShaderMaterial({
         vec3 body = mix(vec3(0.93, 0.90, 0.83), vec3(0.80, 0.88, 0.86), smoothstep(0.2, 0.8, n2(q*1.3 + 3.0)));
         body *= 0.97 + 0.04*n2(q*40.0);
         // ...with irregular patches of "fire" whose colour slides with the viewing angle, so they flash as the ball turns
-        float dom = n2(q*3.2 + 11.0)*0.65 + n2(q*7.5 + 2.0)*0.35;
-        fireAmt = smoothstep(0.42, 0.78, dom);
+        float dom = n2(q*1.35 + 11.0)*0.68 + n2(q*3.1 + 2.0)*0.32;          // broad, soft fields of colour (was ~2.4x finer)
+        fireAmt = smoothstep(0.36, 0.84, dom);
         float t = dom*2.4 + dot(N, Vd)*2.2 + dot(N, keyDir)*1.2;
         flash = 0.5 + 0.5*cos(6.2832*(t + vec3(0.0, 0.30, 0.62)));            // cycles teal / green / gold / rose
         flash = mix(vec3(dot(flash, vec3(0.333))), flash, 0.85);               // a little less saturated than raw
@@ -442,16 +442,19 @@ function cellCentroid(c){
   return s.normalize();
 }
 // seeds: 7 fixed per logo cluster (a centre + a ring of 6), N reel seeds spread over the rest, then relaxed so every shard is even
+// LOGO_CELL: how tight a logo cluster's cells are packed, as a fraction of a video shard's spacing. 1 = the original (a logo slab
+// was 7 full-size cells, ~28% of the ball at 71 videos). Smaller = a smaller slab (and smaller logo) and bigger video shards.
+const LOGO_CELL = 0.6;
 function makeSeeds(N){
-  const T = N + 28, d = Math.sqrt(8*Math.PI/(Math.sqrt(3)*T));
+  const T = N + 28*LOGO_CELL*LOGO_CELL, d = Math.sqrt(8*Math.PI/(Math.sqrt(3)*T)), dl = d*LOGO_CELL;
   const logo = [];
   LOGO_CENTERS.forEach((C, k) => {
     const e2 = LOGO_UPS[k], e1 = new V().crossVectors(e2, C);
     logo.push({ p: C.clone(), k });
     for (let j=0;j<6;j++){ const a = j*Math.PI/3 + Math.PI/6, dir = e1.clone().multiplyScalar(Math.cos(a)).addScaledVector(e2, Math.sin(a));
-      logo.push({ p: C.clone().multiplyScalar(Math.cos(d)).addScaledVector(dir, Math.sin(d)).normalize(), k }); }
+      logo.push({ p: C.clone().multiplyScalar(Math.cos(dl)).addScaledVector(dir, Math.sin(dl)).normalize(), k }); }
   });
-  const excl = Math.cos(1.5*d), near = p => Math.max(...LOGO_CENTERS.map(C => p.dot(C)));
+  const excl = Math.cos(1.5*dl + 0.35*d), near = p => Math.max(...LOGO_CENTERS.map(C => p.dot(C)));
   let pts;
   for (let M = N; ; M++){ pts = fib(M).filter(p => near(p) < excl); if (pts.length >= N) break; }
   while (pts.length > N){ let bi = 0, bv = -2; pts.forEach((p,i) => { const v = near(p); if (v > bv) { bv = v; bi = i; } }); pts.splice(bi, 1); }
@@ -761,9 +764,9 @@ function ytStart(p){
   let u0 = 1e9, u1 = -1e9, v0 = 1e9, v1 = -1e9;
   LO.forEach(([u, v]) => { u0 = Math.min(u0, u); u1 = Math.max(u1, u); v0 = Math.min(v0, v); v1 = Math.max(v1, v); });
   const uc = (u0 + u1) / 2, vc = (v0 + v1) / 2, Ht = Math.max(v1 - v0, (u1 - u0) * 9 / 16) * 1.04 * YT_ZOOM, Wt = Ht * 16 / 9, k = YT_H / Ht;
-  // clip to the tile's outline (a hair inside, so the amber ring stays visible around the video)
-  const clip = 'polygon(' + LO.map(([u, v]) => `${(YT_W/2 + (u*0.985 - uc)*k).toFixed(1)}px ${(YT_H/2 - (v*0.985 - vc)*k).toFixed(1)}px`).join(',') + ')';
-  const y = p.yt = { clip, uc, vc, Wt, Ht, videoId: reel.id, played: false, blocked: false, show: false, timer: 0 };
+  // clip to the tile's outline EXACTLY (an inset left a sliver of the cover showing round the video, which read as a glowing border)
+  const clip = 'polygon(' + LO.map(([u, v]) => `${(YT_W/2 + (u - uc)*k).toFixed(1)}px ${(YT_H/2 - (v - vc)*k).toFixed(1)}px`).join(',') + ')';
+  const y = p.yt = { clip, uc, vc, Wt, Ht, vis: 0, videoId: reel.id, played: false, blocked: false, show: false, timer: 0 };
   const dur = reel.duration;
   const start = dur ? Math.floor(Math.random() * Math.max(1, dur - Math.min(60, dur * 0.4))) : 0;   // random spot; always leaves room to play
   ytEnsure().then(player => {
@@ -808,7 +811,7 @@ function ytPlace(){
   // facing: fade out as the tile turns away. Behind the ball it's invisible but keeps playing (audio carries on).
   const facing = c.p.clone().transformDirection(ball.matrixWorld).dot(camera.position.clone().sub(c.center.clone().applyMatrix4(ball.matrixWorld)).normalize());
   const vis = y.show ? Math.min(1, Math.max(0, (facing - 0.06) / 0.2)) * Math.max(0, 1 - disco*2) : 0;   // fades out as disco takes over the ball
-  f.style.opacity = vis.toFixed(3);
+  f.style.opacity = vis.toFixed(3); y.vis = vis;
   f.style.pointerEvents = (y.blocked && vis > 0.5) ? 'auto' : 'none';
 }
 
@@ -862,6 +865,7 @@ function setReels(list){
   buildBall();
   attachPlaying();
   loadCovers();
+  if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 
 /* ---------- default disco loop ---------- */
@@ -1116,7 +1120,8 @@ function frame(){
   if (playing) {
     if (!playing.yt && time-playing.last > 1/30) { drawPlaying(time); playing.last = time; }   // stand-in: placeholder reels only
     const onBall = Math.max(0, 1 - disco*2);                    // in disco the ball is only the mirror ball: no cover, no ring
-    playing.mat.opacity = onBall; playing.ringMat.opacity = (0.55 + 0.45*Math.sin(time*4)) * onBall;
+    playing.mat.opacity = onBall * (1 - (playing.yt ? playing.yt.vis : 0));   // the cover steps aside as the video fades in over it
+    playing.ringMat.opacity = (0.55 + 0.45*Math.sin(time*4)) * onBall;
     if (playing.mesh) playing.mesh.visible = playing.ring.visible = onBall > 0.01;
   }
 
