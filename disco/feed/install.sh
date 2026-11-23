@@ -1,12 +1,14 @@
 #!/bin/bash
 # Installs the Rock Garden Disco feed on the VPS and schedules it. Run from your laptop.
 # Safe to re-run (it just updates feed.py and rewrites the one cron line).
-# Does NOT need a token yet — but the cron job will just log "No token" until you run --set-token (see README.md).
+# Usage: install.sh [station] [youtube-playlist-id]   (defaults: the-rock-garden, PLUSeDm1idbX0)
+# Works with no API key (reads the playlist's public RSS, fine under 15 videos); add a key later with --set-key (README.md).
 set -e
 cd "$(dirname "$0")"
 KEY="/Users/jacebrown/Dropbox/Jacewon/Radio/newradiokey.pem"
 HOST="ubuntu@208.113.165.231"
 STATION="${1:-the-rock-garden}"
+PLAYLIST="${2:-PLUSeDm1idbX0}"
 SSH="ssh -i $KEY -o StrictHostKeyChecking=accept-new $HOST"
 
 echo "=== Preparing folders + Pillow on the VPS ==="
@@ -19,8 +21,9 @@ echo "=== Copying feed.py ==="
 rsync -az -e "ssh -i $KEY" feed.py "$HOST:/opt/wjrn-disco-feed/feed.py"
 
 echo "=== Scheduling: every 15 minutes ==="
-LINE="*/15 * * * * /usr/bin/python3 /opt/wjrn-disco-feed/feed.py --station $STATION >> /var/lib/wjrn-disco/$STATION/feed.log 2>&1"
+LINE="*/15 * * * * /usr/bin/python3 /opt/wjrn-disco-feed/feed.py --station $STATION --playlist $PLAYLIST >> /var/lib/wjrn-disco/$STATION/feed.log 2>&1"
 $SSH "(crontab -l 2>/dev/null | grep -v 'wjrn-disco-feed/feed.py --station $STATION'; echo '$LINE') | crontab -"
 $SSH "crontab -l | grep wjrn-disco"
 
-echo "=== Done. Next: put the token on the server (README.md, step 5) ==="
+echo "=== Done. Running the first sync now ==="
+$SSH "python3 /opt/wjrn-disco-feed/feed.py --station $STATION --playlist $PLAYLIST && python3 /opt/wjrn-disco-feed/feed.py --station $STATION --playlist $PLAYLIST --status"

@@ -452,7 +452,7 @@ const SOIL_R = 1.0, LIP = 0.0045;
 let logoTri = [];
 let count = 0, cellsData = [], logoInfo = [], logoTiles = [], ballMesh = null, logoMesh = null, soilMesh = null, triShard = null, reelR = 0.17;
 let reels = [];                                      // the feed, newest first: reels[i] is tile i
-// reel shape: { id, shortcode, permalink, cover, w, h }  (or { ph: n } for a prototype placeholder)
+// reel shape: { id (YouTube video id), duration (seconds, or null if unknown), cover, w, h }  (or { ph: n } for a prototype placeholder)
 const jitter = (seed, k) => { const r = mulberry32(seed*131 + k*7 + 3); return (r()-0.5)*0.03; };   // uneven grout = hand-laid
 
 // merge each 7-cell logo cluster into ONE tile: trace the outline of the cluster
@@ -569,6 +569,11 @@ function buildBall(){
     tileInto(logoB, c, parts, L => [(L[0]-r.cx)/r.w + 0.5, (L[1]-r.cy)/r.h + 0.5], k);
     collarInto(soilB, c, parts);
   });
+  // The dark core only exists so no crack ever shows daylight. Flat tiles sit BELOW the unit sphere (a big tile's face is
+  // lower at its middle than at its corners), so on a ball with fewer/larger tiles a fixed-size core pokes through the
+  // flattest tile as a black dot. Size it to stay under every tile face.
+  const minFace = Math.min(...logoTiles.map(c => c.center.length()), ...cellsData.slice(0, count).map(c => c.center.length()));
+  inner.scale.setScalar(Math.min(1, (minFace - 0.02) / 0.86));
   triShard = reelB.owner;
   [ballMesh, logoMesh, soilMesh].forEach(m => { if (m) { ball.remove(m); m.geometry.dispose(); } });
   logoTri = logoB.owner;
@@ -677,7 +682,7 @@ async function loadFeed(){
     const res = await fetch(CONFIG.feed, { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const list = (data.reels || []).filter(r => r && r.shortcode);
+    const list = (data.reels || []).filter(r => r && r.id);
     if (!list.length) throw new Error('reels.json has no reels');
     return list;
   } catch (err) {

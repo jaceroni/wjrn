@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
-"""Rock Garden Disco — feed sync.
+"""Rock Garden Disco — feed sync (YouTube playlist -> reels.json + covers).
 
-Keeps <data-dir>/reels.json (and <data-dir>/covers/<id>.jpg) in step with the station's Instagram account.
-Runs from cron on the VPS every ~15 minutes. Needs Python 3 + Pillow (apt: python3-pil).
+Every tile on the ball is one video from a public/unlisted YouTube playlist. This script keeps
+<data-dir>/reels.json and <data-dir>/covers/<id>.jpg in step with that playlist. Cron runs it every ~15 minutes on the
+VPS. Needs Python 3 + Pillow (apt: python3-pil).
 
-Rules that matter (see the handoff doc):
-  * Playback uses permalink/shortcode and covers use thumbnail_url. Never depend on `media_url`: since 2026-07-30
-    Meta omits it for videos with licensed audio, even on your own account.
-  * Covers are downloaded and served from our own origin (WebGL needs same-origin images, and Instagram's thumbnail
-    URLs expire). ~3/4 of the reels are 16:9 clips letterboxed inside a 9:16 frame, so black bars are trimmed.
-  * reels.json is written atomically, newest first. On ANY error the last good reels.json is left untouched, and
-    an empty or suspiciously shrunken list is never published.
-  * The access token lives outside the web root and is refreshed here, well before its 60 days run out.
+Reads the playlist with a YouTube Data API key (feed.py --set-key). A key is REQUIRED: it returns the whole playlist at any
+size and records each video's length so the page can start playback at a random point. (The playlist's public RSS feed was
+tried and is NOT used: it returned 14 of a 71-video playlist, so it can't be trusted to be complete.)
+
+Rules that matter:
+  * A video that can't be embedded (or is deleted / private / live / still processing) is SKIPPED — never a blank tile. The
+    ball is cut to however many playable videos there are.
+  * Covers come from YouTube's thumbnail CDN, are cached on our own origin (WebGL needs same-origin images), and any black
+    letterbox bars are trimmed.
+  * reels.json is written atomically, newest-added first. On ANY error the last good reels.json is left untouched, and an
+    empty or suspiciously shrunken list is never published.
 
 Usage:
-  feed.py --set-token            read a long-lived token from stdin and store it (first-time setup)
-  feed.py                        sync once (this is what cron runs)
-  feed.py --status               print token age/expiry and the current reels.json summary, then exit
+  feed.py --playlist PLxxxx          sync once (this is what cron runs)
+  feed.py --set-key                  read a YouTube Data API key from stdin and store it (mode 600, outside the web root)
+  feed.py --status                   print what's published, then exit
 """
 import argparse, fcntl, io, json, os, re, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
 
-FIELDS_FULL = "id,media_type,media_product_type,permalink,shortcode,thumbnail_url,timestamp"
-FIELDS_MIN = "id,media_type,permalink,thumbnail_url,timestamp"     # fallback if Meta rejects a field on this login type
-REFRESH_AFTER_DAYS = 7            # refresh weekly: eligibility starts at 24h old, expiry is 60 days
-WARN_EXPIRY_DAYS = 14
 COVER_LONG_SIDE = 512
 BAR_LUMA = 22                     # a row/column counts as a letterbox bar if (almost) every pixel is darker than this
 BAR_STRAY = 0.01                  # ...allowing 1% stray pixels (compression noise, a watermark)
@@ -37,35 +37,33 @@ def log(msg):
 
 
 class ApiError(Exception):
-    def __init__(self, msg, code=None):
-        super().__init__(msg); self.code = code
+    def __init__(self, msg, status=None):
+        super().__init__(msg); self.status = status
 
 
-def redact(text, token):
-    return text.replace(token, "<token>") if token else text
+def redact(text, secret):
+    return text.replace(secret, "<key>") if secret else text
 
 
-def http_get(url, token=None, timeout=30, retries=3, binary=False):
+def http_get(url, secret=None, timeout=30, retries=3, binary=False):
     last = None
     for attempt in range(retries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "wjrn-disco-feed/1"})
+            req = urllib.request.Request(url, headers={"User-Agent": "wjrn-disco-feed/2"})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 data = r.read()
                 return data if binary else json.loads(data.decode("utf-8"))
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", "replace")
-            try:
-                err = json.loads(body).get("error", {})
-                last = ApiError(f"HTTP {e.code}: {err.get('message', body[:200])}", err.get("code"))
-            except ValueError:
-                last = ApiError(f"HTTP {e.code}: {body[:200]}")
-            if e.code < 500 and e.code != 429:     # a 4xx is our problem, not a blip: don't hammer
+            try: msg = json.loads(body).get("error", {}).get("message", body[:200])
+            except ValueError: msg = body[:200]
+            last = ApiError(redact(f"HTTP {e.code}: {msg}", secret), e.code)
+            if e.code < 500 and e.code != 429:     # a 4xx is a real answer, not a blip: don't hammer
                 break
         except (urllib.error.URLError, TimeoutError, ValueError, OSError) as e:
-            last = ApiError(redact(str(e), token))
+            last = ApiError(redact(str(e), secret))
         time.sleep(2 ** attempt)
-    raise last
+    raise last or ApiError("request failed")
 
 
 def atomic_write(path, data, mode=0o644):
@@ -82,91 +80,68 @@ def atomic_write(path, data, mode=0o644):
         raise
 
 
-# ---------------------------------------------------------------- token
-def now_ts(): return int(time.time())
-
-
-def load_token(path):
+# ---------------------------------------------------------------- API key
+def load_key(a):
     try:
-        with open(path) as f: return json.load(f)
+        with open(a.key_file) as f: return f.read().strip() or None
     except FileNotFoundError:
-        raise SystemExit(f"No token at {path}. Run: feed.py --set-token  (and paste the long-lived token)")
-
-
-def save_token(path, tok):
-    atomic_write(path, json.dumps(tok, indent=2).encode(), mode=0o600)
-
-
-def api_url(a, path, **params):
-    base = a.api_base.rstrip("/") + (f"/{a.api_version}" if a.api_version else "")
-    return f"{base}/{path}?" + urllib.parse.urlencode(params)
-
-
-def set_token(a):
-    token = sys.stdin.read().strip()
-    if not token: raise SystemExit("No token on stdin.")
-    me = http_get(api_url(a, "me", fields="user_id,username", access_token=token), token)
-    log(f"token OK for @{me.get('username')} ({me.get('user_id') or me.get('id')})")
-    # A token generated in the Meta dashboard is already long-lived (60 days) — treat today as its start.
-    save_token(a.token_file, {"access_token": token, "refreshed_at": now_ts(), "expires_at": now_ts() + 60 * 86400})
-    log(f"saved to {a.token_file}")
-
-
-def ensure_fresh_token(a):
-    tok = load_token(a.token_file)
-    age_days = (now_ts() - tok["refreshed_at"]) / 86400
-    if now_ts() >= tok["expires_at"]:
-        raise ApiError("Token has EXPIRED. Generate a new one in the Meta dashboard and run feed.py --set-token.")
-    if age_days >= REFRESH_AFTER_DAYS:
-        try:
-            r = http_get(api_url(a, "refresh_access_token", grant_type="ig_refresh_token", access_token=tok["access_token"]), tok["access_token"])
-            tok = {"access_token": r["access_token"], "refreshed_at": now_ts(), "expires_at": now_ts() + int(r.get("expires_in", 60 * 86400))}
-            save_token(a.token_file, tok)
-            log(f"token refreshed (valid {int(r.get('expires_in', 0)) // 86400} more days)")
-        except ApiError as e:
-            log(f"WARNING token refresh failed: {e}")
-    left = (tok["expires_at"] - now_ts()) / 86400
-    if left < WARN_EXPIRY_DAYS:
-        log(f"WARNING token expires in {left:.1f} days and is not refreshing — fix this before it dies")
-    return tok["access_token"]
-
-
-# ---------------------------------------------------------------- feed
-def fetch_media(a, token):
-    items = []
-    fields = FIELDS_FULL
-    url = api_url(a, "me/media", fields=fields, limit=100, access_token=token)
-    while url:
-        try:
-            page = http_get(url, token)
-        except ApiError as e:
-            if fields == FIELDS_FULL and e.code == 100 and not items:       # "nonexisting field": retry with the basics
-                log(f"fields rejected ({e}); retrying with the minimal set")
-                fields = FIELDS_MIN
-                url = api_url(a, "me/media", fields=fields, limit=100, access_token=token)
-                continue
-            raise
-        items += page.get("data", [])
-        url = page.get("paging", {}).get("next")
-    return items
-
-
-def parse_reel(it):
-    """Reels and videos only. Returns None for photos/carousels."""
-    if it.get("media_type") != "VIDEO" and it.get("media_product_type") != "REELS":
         return None
-    permalink = it.get("permalink") or ""
-    m = re.search(r"instagram\.com/(?:[^/]+/)?(reel|reels|p|tv)/([A-Za-z0-9_-]+)", permalink)
-    shortcode = it.get("shortcode") or (m.group(2) if m else None)
-    if not shortcode: return None
-    return {"id": str(it["id"]), "shortcode": shortcode, "permalink": permalink,
-            "timestamp": it.get("timestamp"), "thumb": it.get("thumbnail_url")}
+
+
+def set_key(a):
+    key = sys.stdin.read().strip()
+    if not key: raise SystemExit("No key on stdin.")
+    if not a.playlist: raise SystemExit("Pass --playlist too, so the key can be checked against it.")
+    http_get(yt_api(a, "playlistItems", key, part="id", playlistId=a.playlist, maxResults=1), key)
+    atomic_write(a.key_file, (key + "\n").encode(), mode=0o600)
+    log(f"key OK for playlist {a.playlist}; saved to {a.key_file}")
+
+
+def yt_api(a, path, key, **params):
+    return f"{a.api_base.rstrip('/')}/{path}?" + urllib.parse.urlencode(dict(params, key=key))
+
+
+# ---------------------------------------------------------------- reading the playlist
+def parse_duration(iso):
+    """ISO-8601 duration (PT1H2M3S) -> seconds."""
+    m = re.fullmatch(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?", iso or "")
+    if not m: return 0
+    d, h, mi, s = (int(x or 0) for x in m.groups())
+    return d * 86400 + h * 3600 + mi * 60 + s
+
+
+def fetch_via_api(a, key):
+    entries, token = [], None
+    while True:
+        params = dict(part="snippet,contentDetails,status", playlistId=a.playlist, maxResults=50)
+        if token: params["pageToken"] = token
+        page = http_get(yt_api(a, "playlistItems", key, **params), key)
+        for it in page.get("items", []):
+            vid = (it.get("contentDetails") or {}).get("videoId")
+            if vid and (it.get("status") or {}).get("privacyStatus", "public") in ("public", "unlisted"):
+                entries.append({"id": vid, "added": (it.get("snippet") or {}).get("publishedAt") or ""})
+        token = page.get("nextPageToken")
+        if not token: break
+    ids = [e["id"] for e in entries]
+    playable = {}
+    for i in range(0, len(ids), 50):                      # deleted/private videos simply don't come back from videos.list
+        det = http_get(yt_api(a, "videos", key, part="snippet,contentDetails,status", id=",".join(ids[i:i + 50])), key)
+        for v in det.get("items", []):
+            st, sn = v.get("status", {}), v.get("snippet", {})
+            dur = parse_duration(v.get("contentDetails", {}).get("duration"))
+            ok = (st.get("embeddable") is True and st.get("privacyStatus") in ("public", "unlisted")
+                  and st.get("uploadStatus", "processed") == "processed" and sn.get("liveBroadcastContent", "none") == "none" and dur > 0)
+            if ok: playable[v["id"]] = dur
+            else: log(f"skipping {v['id']}: not playable (embeddable={st.get('embeddable')}, privacy={st.get('privacyStatus')}, live={sn.get('liveBroadcastContent')})")
+    skipped = [i for i in ids if i not in playable]
+    out = [{"id": e["id"], "added": e["added"], "duration": playable[e["id"]]} for e in entries if e["id"] in playable]
+    out.sort(key=lambda r: r["added"], reverse=True)       # newest added first
+    return out, len(skipped), len(entries)
 
 
 # ---------------------------------------------------------------- covers
 def trim_bars(im):
     """Crop black letterbox/pillarbox bars. Returns the (possibly) cropped image."""
-    from PIL import Image
     g = im.convert("L"); w, h = g.size
 
     def dark(box):
@@ -197,6 +172,15 @@ def make_cover(raw):
     return out.getvalue(), im.size
 
 
+def fetch_cover(a, vid):
+    """maxres is clean 16:9 but missing on older/low-res videos; hqdefault always exists (4:3 with bars, which get trimmed)."""
+    last = None
+    for name in ("maxresdefault", "hqdefault"):
+        try: return make_cover(http_get(f"{a.img_base.rstrip('/')}/vi/{vid}/{name}.jpg", binary=True, timeout=30, retries=2))
+        except (ApiError, OSError, ValueError) as e: last = e
+    raise last or ApiError("no cover")
+
+
 def sync_covers(a, reels, prev):
     cdir = os.path.join(a.data_dir, "covers"); os.makedirs(cdir, exist_ok=True)
     prev_by_id = {r["id"]: r for r in prev}
@@ -208,17 +192,16 @@ def sync_covers(a, reels, prev):
             r["cover"], r["w"], r["h"] = old["cover"], old["w"], old["h"]       # already cached: nothing to download
             continue
         try:
-            if not r["thumb"]: raise ApiError("no thumbnail_url")
-            data, (w, h) = make_cover(http_get(r["thumb"], binary=True, timeout=30))
+            data, (w, h) = fetch_cover(a, r["id"])
             atomic_write(path, data)
             r["cover"], r["w"], r["h"] = f"covers/{r['id']}.jpg", w, h
             fresh += 1
         except Exception as e:                                                 # one bad cover must not sink the run
             r["cover"], r["w"], r["h"] = None, None, None
             failed += 1
-            log(f"cover failed for {r['id']}: {redact(str(e), '')[:160]}")
+            log(f"cover failed for {r['id']}: {str(e)[:160]}")
     keep = {f"{r['id']}.jpg" for r in reels}
-    for fn in os.listdir(cdir):                                                # archived/deleted reels: drop their covers
+    for fn in os.listdir(cdir):                                                # removed videos: drop their covers
         if fn.endswith(".jpg") and fn not in keep: os.unlink(os.path.join(cdir, fn))
     log(f"covers: {fresh} new, {failed} failed, {len(reels) - fresh - failed} cached")
 
@@ -231,46 +214,47 @@ def current_reels(a):
 
 
 def sync(a):
+    if not a.playlist: raise ApiError("No playlist given (--playlist PLxxxx)")
     prev = current_reels(a)
-    token = ensure_fresh_token(a)
-    reels = [r for r in map(parse_reel, fetch_media(a, token)) if r]
-    reels.sort(key=lambda r: r["timestamp"] or "", reverse=True)               # newest first (ISO timestamps sort as text)
+    key = load_key(a)
+    if not key: raise ApiError(f"No YouTube API key at {a.key_file}. Run: feed.py --set-key --playlist {a.playlist}  (key on stdin)")
+    reels, skipped, total = fetch_via_api(a, key)
+    log(f"playlist lists {total} items: {len(reels)} playable, {skipped} skipped")
     if not reels and prev:
-        raise ApiError(f"API returned 0 reels but {len(prev)} are published — keeping the last good list")
+        raise ApiError(f"0 playable videos but {len(prev)} are published — keeping the last good list")
     if len(prev) >= 10 and len(reels) < SHRINK_GUARD * len(prev) and not a.force:
-        raise ApiError(f"API returned {len(reels)} reels vs {len(prev)} published (looks partial) — keeping the last good list (use --force if real)")
+        raise ApiError(f"{len(reels)} playable vs {len(prev)} published (looks partial) — keeping the last good list (use --force if real)")
     if not reels:
-        raise ApiError("API returned 0 reels and nothing is published yet — not publishing an empty list")
+        raise ApiError("0 playable videos and nothing is published yet — not publishing an empty list")
     sync_covers(a, reels, prev)
-    out = {"station": a.station, "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "count": len(reels),
-           "reels": [{k: r[k] for k in ("id", "shortcode", "permalink", "cover", "w", "h", "timestamp")} for r in reels]}
+    out = {"station": a.station, "playlist": a.playlist, "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "count": len(reels),
+           "reels": [{k: r[k] for k in ("id", "duration", "cover", "w", "h")} for r in reels]}
     atomic_write(os.path.join(a.data_dir, "reels.json"), json.dumps(out, separators=(",", ":")).encode())
-    log(f"published {len(reels)} reels (was {len(prev)})")
+    log(f"published {len(reels)} videos (was {len(prev)})")
 
 
 def status(a):
-    try:
-        tok = load_token(a.token_file)
-        log(f"token: refreshed {(now_ts() - tok['refreshed_at']) / 86400:.1f}d ago, expires in {(tok['expires_at'] - now_ts()) / 86400:.1f}d")
-    except SystemExit as e: log(str(e))
-    r = current_reels(a); log(f"reels.json: {len(r)} reels in {a.data_dir}")
+    log(f"API key: {'set' if load_key(a) else 'NOT SET (required)'}")
+    r = current_reels(a); log(f"reels.json: {len(r)} videos in {a.data_dir}")
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--station", default="the-rock-garden")
-    p.add_argument("--data-dir"); p.add_argument("--state-dir")
-    p.add_argument("--token-file")
-    p.add_argument("--api-base", default=os.environ.get("IG_API_BASE", "https://graph.instagram.com"))
-    p.add_argument("--api-version", default=os.environ.get("IG_API_VERSION", ""), help="e.g. v24.0 (default: unversioned)")
-    p.add_argument("--set-token", action="store_true"); p.add_argument("--status", action="store_true")
+    p.add_argument("--playlist", help="YouTube playlist id, e.g. PLUSeDm1idbX0")
+    p.add_argument("--data-dir"); p.add_argument("--state-dir"); p.add_argument("--key-file")
+    p.add_argument("--api-base", default="https://www.googleapis.com/youtube/v3")
+    p.add_argument("--img-base", default="https://i.ytimg.com", help="thumbnail host")
+    p.add_argument("--set-key", action="store_true"); p.add_argument("--status", action="store_true")
     p.add_argument("--force", action="store_true", help="publish even if the list shrank by more than half")
     a = p.parse_args()
     a.data_dir = a.data_dir or f"/var/www/wjrn-disco-data/{a.station}"
     a.state_dir = a.state_dir or f"/var/lib/wjrn-disco/{a.station}"
-    a.token_file = a.token_file or os.path.join(a.state_dir, "token.json")
+    a.key_file = a.key_file or os.path.join(a.state_dir, "youtube-api-key")
     os.makedirs(a.state_dir, exist_ok=True, mode=0o700); os.makedirs(a.data_dir, exist_ok=True)
-    if a.set_token: return set_token(a)
+    if a.set_key:
+        try: return set_key(a)
+        except ApiError as e: raise SystemExit(f"Key check failed: {e}")
     if a.status: return status(a)
     lock = open(os.path.join(a.state_dir, "feed.lock"), "w")
     try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

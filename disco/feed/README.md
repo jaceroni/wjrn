@@ -1,41 +1,45 @@
-# Rock Garden Disco — Instagram feed
+# Rock Garden Disco — YouTube playlist feed
 
-`feed.py` keeps `reels.json` + `covers/` on the VPS in sync with the Instagram account. Cron runs it every 15 minutes.
-Tests (no real token needed): `python3 test_feed.py`.
+Every tile is one video from a YouTube playlist (Rock Garden: `PLUSeDm1idbX0`, "TRG"). `feed.py` keeps `reels.json` + `covers/`
+on the VPS in sync with it; cron runs it every 15 minutes. Tests (no real key needed): `python3 test_feed.py`.
 
-## Setting up the Meta app (one-time, ~15 min, you do this part)
+## One-time setup: a free YouTube Data API key (you, ~5 min)
 
-Meta moves these screens around, so labels may differ slightly. The goal is one thing: **a long-lived Instagram User access token with the `instagram_business_basic` permission for @therockgarden.tv.**
-Because it only reads *your own* account, the app can stay in **Development mode** — no App Review needed.
+A key is **required** — the playlist's public RSS feed was tried and returned 14 of a 71-video playlist, so it isn't used.
 
-1. **Account type.** @therockgarden.tv must be a **Professional** account (Business or Creator). Instagram app → Settings → Account type and tools.
-2. **Create the app.** <https://developers.facebook.com> → My Apps → Create App → pick the use case about managing **messaging & content on Instagram** (anything that lets you add *Instagram API with Instagram login*). Name it e.g. "WJRN Disco".
-3. **Add yourself as a tester.** App Dashboard → App roles → Roles → **Instagram Testers** → add `therockgarden.tv`. Then accept the invite **inside Instagram**: Settings → Apps and websites → Tester invites.
-4. **Generate the token.** App Dashboard → Instagram → **API setup with Instagram login** → "Generate access tokens" → add the account → **Generate token** → sign in as that account → copy the token. (This one is already long-lived: 60 days.)
-5. **Put it on the server.** Don't paste it into chat. On the VPS (type it in, it won't echo):
+1. <https://console.cloud.google.com> → create a project (e.g. "WJRN Disco").
+2. **APIs & Services → Library** → search **YouTube Data API v3** → **Enable**.
+3. **APIs & Services → Credentials → Create credentials → API key**.
+4. Click the key → **API restrictions → Restrict key → YouTube Data API v3** only. (Optional but good: **Application restrictions → IP addresses → `208.113.165.231`**, the VPS.)
+5. Save the key in a text file on your computer and tell Claude the path (it's sent to the server without being printed — don't paste it in chat), or on the VPS:
    ```bash
-   ssh -i /Users/jacebrown/Dropbox/Jacewon/Radio/newradiokey.pem ubuntu@208.113.165.231
-   read -rs T && echo "$T" | python3 /opt/wjrn-disco-feed/feed.py --set-token ; unset T
+   read -rs K && echo "$K" | python3 /opt/wjrn-disco-feed/feed.py --set-key --playlist PLUSeDm1idbX0 ; unset K
    ```
-   It checks the token against Instagram and stores it at `/var/lib/wjrn-disco/the-rock-garden/token.json` (mode 600, outside the web root).
-6. **First run + check:**
+6. First run + check:
    ```bash
-   python3 /opt/wjrn-disco-feed/feed.py --station the-rock-garden && python3 /opt/wjrn-disco-feed/feed.py --status
+   python3 /opt/wjrn-disco-feed/feed.py --station the-rock-garden --playlist PLUSeDm1idbX0 && python3 /opt/wjrn-disco-feed/feed.py --station the-rock-garden --status
    ```
 
-After that the script refreshes the token itself once a week (Meta allows it once the token is ≥24 h old and not yet expired), so it never reaches the 60-day cliff. If a refresh ever fails it logs `WARNING` lines in `/var/lib/wjrn-disco/the-rock-garden/feed.log`.
+Quota is 10,000 units/day free; a run costs about 6 units for 71 videos (≈ 600/day at every-15-minutes).
+
+## What it does
+- Reads the whole playlist, then each video's details. **Skips** anything that can't be embedded, or is deleted / private / live / still processing — never a blank tile. The ball is cut to however many playable videos there are.
+- Records each video's length so the page can start playback at a random point.
+- Downloads each cover to our own origin (WebGL needs same-origin images), trims black letterbox bars (4:3 thumbnails have them), caps the long side at 512px.
+- Newest-added first. Adding a video to the playlist adds a shard on the next page refresh after the next 15-minute check; removing one drops it.
+- Logs `playlist lists N items: X playable, Y skipped` every run — compare that N with the playlist's real size.
+
+## Safety rules
+- On any API error the last good `reels.json` stays. Writes are atomic.
+- Never publishes an empty list, or one under half the size of the current list (looks partial). `--force` overrides the second.
+- The key never appears in logs.
 
 ## Where things live on the VPS
-
 | What | Where |
 |---|---|
 | script | `/opt/wjrn-disco-feed/feed.py` |
-| token + lock + log | `/var/lib/wjrn-disco/<station>/` (700) |
-| `reels.json`, `covers/` | `/var/www/wjrn-disco-data/<station>/` — **outside** `/var/www/wjrn-landing`, because `deploy.sh` rsyncs that folder with `--delete` and would wipe them |
+| key + lock + log | `/var/lib/wjrn-disco/<station>/` (700; key is 600) |
+| `reels.json`, `covers/` | `/var/www/wjrn-disco-data/<station>/` — **outside** `/var/www/wjrn-landing`, because `deploy.sh` rsyncs that folder with `--delete` |
 | served at | `/<station>/disco/data/reels.json`, `/<station>/disco/data/covers/<id>.jpg` |
 
-## Safety rules the script enforces
-- On any API error, the last good `reels.json` stays. Nothing is half-written (atomic replace).
-- Never publishes an empty list, or one under half the size of the current list (looks partial). `--force` overrides the second.
-- Never uses `media_url`. Covers come from `thumbnail_url`, are downloaded to our own origin, and black letterbox bars are trimmed.
-- The token never appears in logs.
+`install.sh [station] [playlist-id]` installs Pillow, the folders and the cron line (it will stop at the first sync until a key is set — expected).
