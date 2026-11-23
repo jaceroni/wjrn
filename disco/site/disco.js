@@ -664,7 +664,7 @@ function facePoint(p, up, instant=false){
   else faceAnim = { from: ball.quaternion.clone(), to, t: 0 };
   return to;
 }
-function faceLogo(k){ facePoint(LOGO_CENTERS[k], LOGO_UPS[k]); }
+function faceLogo(k, instant=false){ facePoint(LOGO_CENTERS[k], LOGO_UPS[k], instant); }
 function faceShard(i, instant=false){
   return facePoint(cellsData[i].p, cellsData[i].e2, instant);
 }
@@ -971,6 +971,6 @@ Promise.all([loadFeed(), drawLogo()]).then(([list]) => {
   resize();
   if (!list.length) { frame(); return; }                    // no feed and no fallback: just the room, nothing to cut
   setReels(list);
-  faceShard(0, true);                                       // the newest reel faces the viewer on load (+Z)
+  faceLogo(2, true);                                        // on load: a logo slab square-on, centered and level, exactly as after a logo double-tap (instant, no turn)
   frame();
 });
