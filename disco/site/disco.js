@@ -196,7 +196,7 @@ const coveMat = new THREE.ShaderMaterial({
       vec2 q = gl_FragCoord.xy/res - 0.5;
       col *= 1.0 - 0.32*dot(q,q)*1.6;                          // gentle vignette
       col += (hash(floor(gl_FragCoord.xy)) - 0.5) * 0.045;      // paper grain
-      gl_FragColor = vec4(col, uDisco * (1.0 - ${ROOM_VIDEO.toFixed(3)} * uRoomVid));   // fully see-through normally (the stage picture shows); fades to the club in disco, and lets a projected video through
+      gl_FragColor = vec4(col, smoothstep(0.0, 1.0, uDisco) * (1.0 - ${ROOM_VIDEO.toFixed(3)} * uRoomVid));   // fully see-through normally (the stage picture shows); fades to the club in disco, and lets a projected video through
     }`
 });
 {
@@ -1412,7 +1412,7 @@ function frame(){
     if (playing.mesh) { playing.mesh.visible = onBall > 0.01; playing.ring.visible = onBall > 0.01 && !!CONFIG.playingRing; }   // the amber ring is opt-in (playingRing in DISCO_CONFIG)
   }
 
-  disco += (discoTarget - disco) * (1 - Math.exp(-dt*2.2));
+  { const stp = dt / 1.5, df = discoTarget - disco; disco = Math.abs(df) <= stp ? discoTarget : disco + Math.sign(df) * stp; }   // a straight 1.5s ramp: the old exponential approach left a long faint tail (club lights hanging on at ~20% for seconds, then snapping off)
   DISCO.value = disco;
   coveMat.uniforms.uRoomVid.value += ((roomVideo() ? 1 : 0) - coveMat.uniforms.uRoomVid.value) * (1 - Math.exp(-dt*3));
   BALLROT.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(ball.quaternion.clone().invert()));
