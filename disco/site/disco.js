@@ -923,7 +923,7 @@ function setReels(list){
   attachPlaying();
   loadCovers();
   if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
-  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, R0: stage.R0, RFULL: stage.RFULL, shadowBg: shadowEl.style.background, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
+  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, startDist: fitDist(), outDist: outDist(), R0: stage.R0, RFULL: stage.RFULL, shadowBg: shadowEl.style.background, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 
@@ -1033,7 +1033,7 @@ const lastFlickDir = new V();
 // Called on every qualifying flick past the 7th, so only the first one (off -> on) starts the loop, and only if no reel is
 // playing. If a reel is already playing it keeps playing and only the room changes. The loop never restarts by itself
 // after a reel takes over — it takes another full disco activation.
-function enterDisco(){ if (discoTarget === 0) camDistTarget = fitDist();   // always pull fully out on entering disco: see more of the room
+function enterDisco(){ if (discoTarget === 0) camDistTarget = outDist();   // always pull FULLY out on entering disco: see more of the room
   if (discoTarget === 0 && !playing) discoAudio.start(); discoTarget = 1; }
 // double-tap a logo: the page's reset — stop any reel, stop the disco loop, leave disco, stop the spin, face that logo square-on
 function resetAll(k){ stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
@@ -1210,8 +1210,10 @@ function layoutStage(){
 let camDist = 4, camDistTarget = 4, zoomK = 1;
 const camFocal = () => (innerHeight / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 // the camera distance at which the ball's radius on screen equals the stage's ball radius (unit sphere seen from L: radius = f / sqrt(L^2 - 1))
-function fitDist(){ return Math.sqrt((camFocal() / stage.R) ** 2 + 1) / 1.0384; }   // 1.0384 = |(0, .28, 1)|, the camera's offset direction
-function clampDist(d){ const f = fitDist(); if (!Number.isFinite(d)) d = f; return Math.min(f, Math.max(Math.max(1.45, f*0.32), d)); }   // f = fully zoomed out = where the page starts; you can only zoom IN from there
+const distFor = R => Math.sqrt((camFocal() / R) ** 2 + 1) / 1.0384;     // 1.0384 = |(0, .28, 1)|, the camera's offset direction
+function fitDist(){ return distFor(stage.R); }     // where the page STARTS (a little in from fully zoomed out: STAGE.startZoom)
+function outDist(){ return distFor(stage.R0); }    // FULLY ZOOMED OUT: the farthest you can pinch to (= the original zoom-out limit; the size the picture was drawn for)
+function clampDist(d){ const o = outDist(); if (!Number.isFinite(d)) d = fitDist(); return Math.min(o, Math.max(Math.max(1.45, o*0.32), d)); }   // zoom out as far as `o`, in to ~3.7x the fully-zoomed-out size
 function resize(){
   const w = innerWidth, h = innerHeight;
   if (!w || !h) return;                                   // a transient 0-size (browser UI changing during a pinch) must not poison the layout
@@ -1232,7 +1234,7 @@ function placeCamera(){
 // the ball's anchor point. The ball swells in front of it instead of the whole scene scaling with it. The shadow rides the pool.
 const DEPTH = STAGE.depth;
 let bgScale = 1, ballR = 0;
-function viewNow(){ const L = camera.position.length(); ballR = camFocal() / Math.sqrt(Math.max(1.0001, L*L - 1)); return Math.max(1, ballR / stage.R); }
+function viewNow(){ const L = camera.position.length(); ballR = camFocal() / Math.sqrt(Math.max(1.0001, L*L - 1)); return Math.max(1, ballR / stage.R0); }   // 1 = fully zoomed out, the size the picture is anchored to
 function applyDepth(){
   if (!stage) return;
   bgScale = 1 + DEPTH * (viewNow() - 1);
