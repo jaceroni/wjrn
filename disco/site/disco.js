@@ -605,6 +605,7 @@ function play(i){
   if (i >= count) return;                                  // logo tiles don't play
   if (playing && playing.i === i) { stop(); return; }    // double-tap the playing shard again = stop
   stop();
+  discoAudio.stop();                                       // a reel takes over from the disco loop (the loop doesn't come back on its own)
   const reel = reels[i];
   // STAND-IN until the Instagram embed is wired in (milestone 6): the reel's cover, animated, cropped to the tile
   const cover = document.createElement('canvas');
@@ -698,13 +699,103 @@ function setReels(list){
   loadCovers();
 }
 
+/* ---------- default disco loop ---------- */
+// Plays when disco mode starts with nothing else playing. Until Jace's own loop arrives this is a PLACEHOLDER that is
+// synthesized live (no audio file): 120 BPM four-on-the-floor kick, claps on 2 & 4, open + 16th hats, octave-bounce bass
+// and off-beat chord stabs over Am7 - Dm7 - G7 - Cmaj7 (two bars each = an 8-bar loop).
+// TO SWAP IN THE REAL LOOP: drop the file next to index.html and set `discoLoop: 'your-loop.mp3'` in DISCO_CONFIG.
+// It is decoded once and looped sample-accurately; the synth is not used at all then.
+const discoAudio = (() => {
+  let ctx = null, run = null, noise = null, filePromise = null;
+  const BPM = 120, STEP = 60 / BPM / 4, LEVEL = 0.7;
+  const ROOTS  = [55.0, 73.42, 49.0, 65.41];
+  const CHORDS = [[220, 261.63, 329.63, 392], [293.66, 349.23, 440, 523.25], [196, 246.94, 293.66, 349.23], [261.63, 329.63, 392, 493.88]];
+
+  // Browsers only allow audio after a user gesture, so this is called from every pointer-up (and again right when disco starts).
+  function unlock(){
+    try {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      if (CONFIG.discoLoop && !filePromise) filePromise = fetch(CONFIG.discoLoop).then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).catch(e => { console.warn('[disco] loop file failed:', e.message); return null; });
+    } catch (_) {}
+  }
+  const noiseBuf = () => {
+    if (!noise) { noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    return noise;
+  };
+  const env = (g, t, peak, attack, decay) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay); };
+
+  function kick(out, t){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(165, t); o.frequency.exponentialRampToValueAtTime(46, t + 0.13);
+    env(g, t, 1.0, 0.004, 0.36); o.connect(g).connect(out); o.start(t); o.stop(t + 0.5);
+  }
+  function burst(out, t, type, freq, q, peak, decay){
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = noiseBuf(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+    env(g, t, peak, 0.002, decay); s.connect(f).connect(g).connect(out); s.start(t, Math.random()); s.stop(t + decay + 0.05);
+  }
+  const clap = (out, t) => { burst(out, t, 'bandpass', 1500, 0.9, 0.5, 0.2); burst(out, t + 0.011, 'bandpass', 1900, 0.9, 0.4, 0.12); };
+  function bass(out, t, f, len){
+    const o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.value = f;
+    lp.type = 'lowpass'; lp.Q.value = 5; lp.frequency.setValueAtTime(1400, t); lp.frequency.exponentialRampToValueAtTime(260, t + len);
+    env(g, t, 0.55, 0.006, len); o.connect(lp).connect(g).connect(out); o.start(t); o.stop(t + len + 0.1);
+  }
+  function stab(out, t, notes){
+    notes.forEach((f, i) => [-6, 6].forEach(det => {
+      const o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det + i;
+      lp.type = 'lowpass'; lp.frequency.value = 2400;
+      env(g, t, 0.05, 0.004, 0.16); o.connect(lp).connect(g).connect(out); o.start(t); o.stop(t + 0.25);
+    }));
+  }
+  function step(out, n, t){
+    const s = n % 16, bar = Math.floor(n / 16) % 8, chord = Math.floor(bar / 2);
+    if (s % 4 === 0) kick(out, t);                                   // four on the floor
+    if (s === 4 || s === 12) clap(out, t);                           // 2 and 4
+    if (s % 4 === 2) burst(out, t, 'highpass', 7000, 0.7, 0.16, 0.14);       // open hat on the off-beat
+    else if (s % 2 === 1) burst(out, t, 'highpass', 8500, 0.7, 0.07, 0.04); // closed 16ths
+    if (s % 2 === 0) bass(out, t, ROOTS[chord] * ((s / 2) % 2 ? 2 : 1), STEP * 1.7);   // octave bounce
+    if (s % 4 === 2) stab(out, t, CHORDS[chord]);                    // chord stab on the "and" of each beat
+  }
+
+  function start(){
+    unlock(); if (!ctx || run) return;
+    const master = ctx.createGain(), comp = ctx.createDynamicsCompressor();
+    master.gain.setValueAtTime(0.0001, ctx.currentTime); master.gain.setTargetAtTime(LEVEL, ctx.currentTime, 0.25);   // gentle fade-in
+    master.connect(comp); comp.connect(ctx.destination);
+    const r = run = { master, comp, timer: 0, src: null };
+    if (CONFIG.discoLoop) {
+      filePromise.then(buf => {
+        if (run !== r || !buf) return;
+        r.src = ctx.createBufferSource(); r.src.buffer = buf; r.src.loop = true; r.src.connect(master); r.src.start();
+      });
+    } else {
+      let n = 0, next = ctx.currentTime + 0.06;
+      r.timer = setInterval(() => { while (next < ctx.currentTime + 0.25) { step(master, n++, next); next += STEP; } }, 50);
+    }
+  }
+  function stop(){
+    if (!run) return;
+    const r = run; run = null;
+    clearInterval(r.timer);
+    r.master.gain.cancelScheduledValues(ctx.currentTime); r.master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.08);   // quick fade, no click
+    setTimeout(() => { try { if (r.src) r.src.stop(); r.master.disconnect(); r.comp.disconnect(); } catch (_) {} }, 600);
+  }
+  return { unlock, start, stop };
+})();
+
 /* ---------- disco mode ---------- */
 const MAX_SPIN = 30, DISCO_SPIN = new V(0, 0.9, 0);
 let disco = 0, discoTarget = 0, streak = 0, lastFlick = 0;
 const lastFlickDir = new V();
-function enterDisco(){ discoTarget = 1; }
-// double-tap a logo: the page's reset — stop any reel, leave disco, stop the spin, face that logo square-on
-function resetAll(k){ stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
+// Called on every qualifying flick past the 7th, so only the first one (off -> on) starts the loop, and only if no reel is
+// playing. If a reel is already playing it keeps playing and only the room changes. The loop never restarts by itself
+// after a reel takes over — it takes another full disco activation.
+function enterDisco(){ if (discoTarget === 0 && !playing) discoAudio.start(); discoTarget = 1; }
+// double-tap a logo: the page's reset — stop any reel, stop the disco loop, leave disco, stop the spin, face that logo square-on
+function resetAll(k){ stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
 // light beams sweeping down from the ceiling (only visible in disco)
 const beams = new THREE.Group(); scene.add(beams);
 NEON_COLS.concat([new THREE.Color(0xffffff)]).forEach((col, i) => {
@@ -769,6 +860,7 @@ function endPointer(e){
   if (!pointers.has(e.pointerId)) return;
   pointers.delete(e.pointerId);
   if (pointers.size < 2) pinch = null;
+  if (e.type === 'pointerup') discoAudio.unlock();          // a pointer-up is a gesture the browser accepts for starting audio
   if (pointers.size > 0) return;
   canvas.classList.remove('grabbing');
   const now = performance.now();
