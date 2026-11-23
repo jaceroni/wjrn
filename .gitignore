@@ -18,3 +18,5 @@ roku-app/*.zip
 
 # Rock Garden Disco: generated copy of disco/site/ (deploy.sh rebuilds it every run)
 public/the-rock-garden/disco/
+__pycache__/
+*.pyc
