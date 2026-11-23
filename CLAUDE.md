@@ -251,6 +251,19 @@ Each team member card shows a sculpted terracotta bust (transparent-background P
 
 ---
 
+## Rock Garden Disco microsite (started 2026-11-22) — `disco/`
+
+A standalone, non-SPA page at **`/the-rock-garden/disco/`**: a spinnable "root ball" whose tiles are the reels from `@therockgarden.tv` (Three.js, one tile per reel, any count). Eventually one per station (`/bridge-city-hang-suite/disco/`, `/the-golden-boombox/disco/`) — the per-station bits are the `window.DISCO_CONFIG` block in `index.html`. Full spec lives in the handoff doc Jace supplied (ball/room/gestures/disco mode); the **prototype is `disco/prototype/index.html` — port it, don't redesign it**.
+
+- `disco/site/` = source of truth (`index.html`, `disco.js`, `embed-test.html`, vendored `vendor/three.module.js` r160, logo PNG). `deploy.sh` rsyncs it to `public/the-rock-garden/disco/` (git-ignored generated copy) before the Vite build.
+- **Feed data lives OUTSIDE the web root**: `/var/www/wjrn-disco-data/<station>/{reels.json,covers/}`, mapped in by nginx at `.../disco/data/`. `deploy.sh` runs `rsync --delete` on `/var/www/wjrn-landing`, which would wipe anything the feed script wrote there.
+- `disco/feed/feed.py` (Python + Pillow; the VPS has no Node) syncs Instagram → `reels.json` + trimmed covers every 15 min via cron; token in `/var/lib/wjrn-disco/<station>/` (600). Never uses `media_url` (Meta omits it for licensed-audio videos since 2026-07-30). Keeps last good `reels.json` on any error. `python3 disco/feed/test_feed.py` runs the suite against a mock API. `disco/feed/install.sh` + `README.md` cover server setup and the Meta app walkthrough.
+- Until `reels.json` exists, `placeholderFallback: true` makes the page show the prototype's 130 placeholder tiles; flip it to `false` once the feed is live.
+- `embed-test.html` is the phone test harness for the Instagram-embed questions (sound on one double-tap, spinning from the playing tile, licensed music, small sizes). Results decide how tile-masked playback (milestone 6) is built.
+- Local browser testing: a separate `python -m http.server` process wasn't reachable from the sandbox, but a static server **inside the same node process** as Playwright was — see how it was done in the scratchpad `smoke.mjs` if repeating.
+
+---
+
 ## Social share image
 `public/assets/images/wjrn-thumbnail.jpg` — referenced in `index.html` OG/Twitter meta tags. To update: replace the file, run `deploy.sh`. No code changes needed.
 
