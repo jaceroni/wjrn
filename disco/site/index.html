@@ -42,15 +42,23 @@ window.DISCO_CONFIG = {
   // The room is a picture. Positions are fractions of the picture, MEASURED from the file (not eyeballed): the soft halo the ball
   // hovers in, the pale floor pool its shadow lands on, and which band of the picture must stay on screen on wide screens.
   stage: {
-    image: 'bg-stage.webp', w: 1184, h: 2096,
-    halo: 0.390,                       // vertical centre of the sky glow the ball floats in (measured)
-    ovalX: 0.51, ovalY: 0.708, ovalW: 0.42,   // the lake's pale floor pool: centre and width (measured)
+    // Two pictures, chosen by what the viewer is on: 'mobile' (portrait phones / narrow or tall windows) and 'desktop' (everything else).
+    // Each one's numbers are fractions of its own picture, MEASURED from the file: the lighter patch of grass the ball rests over and its
+    // shadow lands on (ovalX/ovalY = centre, ovalW = shadow width cap), and `gap` = ball-bottom-to-patch distance in ball radii.
     startZoom: 0.25,   // where the page starts: this fraction of the way from the picture's design size to 'the ball's sides touch the screen's sides' (0 = design size)
-    lower: 0.30,                        // fraction of the ball-to-pool gap removed (ball hovers lower; 0 = original height)
-    shadow: 0.30,                       // peak opacity of the ball's anchor shadow on the floor pool (it was 0.55)
+    shadow: 0.30,                       // peak opacity of the ball's anchor shadow (it was 0.55)
     depth: 0.10,                        // how much the picture grows when the ball zooms in (0 = never, 1 = scales with the ball). Small: it is a distant backdrop.
-    top: 0.234, bottom: 0.80,           // rows kept on screen on wide screens (glow top .. just below the pool)
-    topRow: 'linear-gradient(to right,rgb(181,186,156),rgb(181,186,156),rgb(181,186,156),rgb(179,183,156),rgb(179,183,156),rgb(181,186,156),rgb(181,186,156),rgb(179,183,156),rgb(179,183,156),rgb(178,182,155),rgb(179,183,156),rgb(181,186,156),rgb(182,187,157))'    // the picture's top row, used to extend the sky upward on tall screens with no seam
+    mobile: {
+      image: 'bg-mobile.webp', w: 1080, h: 1920, mode: 'fit',   // fit the width; sky above is extended with the picture's own flat top row
+      ovalX: 0.49, ovalY: 0.72, ovalW: 0.42, gap: 0.53,
+      top: 0.0, bottom: 0.95,
+      topRow: 'linear-gradient(to right,rgb(166,172,144),rgb(167,176,147),rgb(166,175,146),rgb(164,173,144),rgb(164,173,146),rgb(166,175,148),rgb(165,175,148),rgb(161,172,142),rgb(166,175,148),rgb(166,176,149),rgb(164,174,147),rgb(164,174,147),rgb(162,172,145))'
+    },
+    desktop: {
+      image: 'bg-desktop.webp', w: 1920, h: 1080, mode: 'cover',   // fills the screen, cropping what doesn't fit; the grass patch is kept low on the screen
+      ovalX: 0.495, ovalY: 0.72, ovalW: 0.24, gap: 0.28,
+      anchorY: 0.80                       // when the picture is cropped vertically, put the grass patch about this far down the screen
+    }
   },
 
   playingRing: false,              // the original design's pulsing amber outline round the playing tile; off because it read as a glowing border

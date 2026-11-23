@@ -1195,19 +1195,27 @@ canvas.addEventListener('dblclick', e => e.preventDefault());
 const STAGE = CONFIG.stage, bgEl = $('bg'), shadowEl = $('shadow');
 { const a = STAGE.shadow; shadowEl.style.background = `radial-gradient(closest-side, rgba(38,32,22,${a}), rgba(38,32,22,${(a * 0.55).toFixed(3)}) 50%, rgba(38,32,22,0))`; }   // the ball's anchor shadow: peak opacity from the config
 let stage = null;
+const stageVariant = () => (innerWidth <= 820 || innerHeight > innerWidth * 1.05) ? 'mobile' : 'desktop';
 function layoutStage(){
-  const W = innerWidth, H = innerHeight, S = STAGE;
-  const s = Math.min(W / S.w, H / ((S.bottom - S.top) * S.h));       // phones: fit the width. Wide screens: the halo-to-floor band fills the height
-  const dw = S.w * s, dh = S.h * s;
-  const b = Math.max(S.bottom, Math.min(1, S.top + H / dh));          // which row of the picture sits on the screen's bottom edge
-  const ty = H - b * dh, tx = (W - dw) / 2;
-  // The ball's radius on screen when FULLY ZOOMED OUT (which is also where the page starts). R0 = the size the picture was drawn
-  // for (diameter ~0.52 of its width). Jace wanted it a little bigger: STAGE.startZoom (0.25) of the way from R0 to "the ball's
-  // sides touch the screen's sides" (RFULL = half of the limiting screen dimension).
-  const R0 = Math.min(0.26 * dw, 0.28 * H), RFULL = Math.min(W, H) / 2;
-  const R = R0 + S.startZoom * (RFULL - R0);
-  const yh = ty + S.halo * dh, yo = ty + S.ovalY * dh;
-  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, bx: W / 2, by: (() => { const b0 = Math.max(yh, R + 0.07 * H); return b0 + (S.lower || 0) * Math.max(0, yo - (b0 + R)); })(), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
+  const W = innerWidth, H = innerHeight, variant = stageVariant(), S = Object.assign({}, STAGE, STAGE[variant]);
+  let dw, dh, tx, ty;
+  if (S.mode === 'cover') {                                          // desktop: fill the screen, crop the overflow, keep the grass patch low
+    const s = Math.max(W / S.w, H / S.h); dw = S.w * s; dh = S.h * s; tx = (W - dw) / 2;
+    ty = Math.min(0, Math.max(H - dh, (S.anchorY || 0.8) * H - S.ovalY * dh));
+  } else {                                                           // mobile: fit the width (or the band, if the screen is wide); sky extended upward
+    const s = Math.min(W / S.w, H / ((S.bottom - S.top) * S.h));
+    dw = S.w * s; dh = S.h * s;
+    const b = Math.max(S.bottom, Math.min(1, S.top + H / dh));       // which row of the picture sits on the screen's bottom edge
+    ty = H - b * dh; tx = (W - dw) / 2;
+  }
+  const yo = ty + S.ovalY * dh;
+  // The ball's radius on screen when FULLY ZOOMED OUT (R0). Jace wanted the start a little bigger: STAGE.startZoom (0.25) of the way from
+  // R0 to "the ball's sides touch the screen's sides" (RFULL). Both are capped so the ball (with its gap above the grass patch and a
+  // little room above it) always fits between the top of the screen and the patch.
+  const cap = Math.max(40, (yo - 0.07 * H) / (2 + S.gap));
+  const R0 = Math.min(0.26 * dw, 0.28 * H, cap), RFULL = Math.min(W, H) / 2;
+  const R = Math.min(cap, R0 + S.startZoom * (RFULL - R0));
+  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, variant, bx: W / 2, by: Math.max(R + 0.07 * H, yo - R * (1 + S.gap)), ox: tx + S.ovalX * dw, oy: yo, ovalW: S.ovalW * dw };
   // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
   bgEl.textContent = '';
   const K = Math.ceil(Math.max(0, tx) / dw);
