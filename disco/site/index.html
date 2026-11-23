@@ -41,7 +41,8 @@ window.DISCO_CONFIG = {
     image: 'bg-stage.webp', w: 1184, h: 2096,
     halo: 0.390,                       // vertical centre of the sky glow the ball floats in (measured)
     ovalX: 0.51, ovalY: 0.708, ovalW: 0.42,   // the lake's pale floor pool: centre and width (measured)
-    startZoom: 0.25,                    // where the page starts: this fraction of the way from the picture's design size to 'the ball's sides touch the screen's sides' (0 = design size)
+    startZoom: 0.25,   // where the page starts: this fraction of the way from the picture's design size to 'the ball's sides touch the screen's sides' (0 = design size)
+    lower: 0.30,                        // fraction of the ball-to-pool gap removed (ball hovers lower; 0 = original height)
     shadow: 0.30,                       // peak opacity of the ball's anchor shadow on the floor pool (it was 0.55)
     depth: 0.10,                        // how much the picture grows when the ball zooms in (0 = never, 1 = scales with the ball). Small: it is a distant backdrop.
     top: 0.234, bottom: 0.80,           // rows kept on screen on wide screens (glow top .. just below the pool)

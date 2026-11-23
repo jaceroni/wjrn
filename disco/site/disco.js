@@ -1206,7 +1206,7 @@ function layoutStage(){
   const R0 = Math.min(0.26 * dw, 0.28 * H), RFULL = Math.min(W, H) / 2;
   const R = R0 + S.startZoom * (RFULL - R0);
   const yh = ty + S.halo * dh, yo = ty + S.ovalY * dh;
-  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, bx: W / 2, by: Math.max(yh, R + 0.07 * H), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
+  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, bx: W / 2, by: (() => { const b0 = Math.max(yh, R + 0.07 * H); return b0 + (S.lower || 0) * Math.max(0, yo - (b0 + R)); })(), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
   // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
   bgEl.textContent = '';
   const K = Math.ceil(Math.max(0, tx) / dw);
