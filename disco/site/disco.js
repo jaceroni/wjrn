@@ -934,7 +934,7 @@ function setReels(list){
   buildBall();
   attachPlaying();
   loadCovers();
-  if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
+  if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), pictureLeftX: Math.round(stage.tx), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
   if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, startDist: fitDist(), outDist: outDist(), R0: stage.R0, RFULL: stage.RFULL, shadowBg: shadowEl.style.background, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging, yt: (() => { try { const pl = yt.player; return pl ? { state: pl.getPlayerState(), id: (pl.getVideoData() || {}).video_id, t: Math.round(pl.getCurrentTime()), err: yt.lastErr || null } : null; } catch (_) { return null; } })(), want: playing && playing.yt ? { id: playing.yt.videoId, played: playing.yt.played, blocked: playing.yt.blocked, show: playing.yt.show } : null }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
@@ -1198,24 +1198,22 @@ let stage = null;
 const stageVariant = () => (innerWidth <= 820 || innerHeight > innerWidth * 1.05) ? 'mobile' : 'desktop';
 function layoutStage(){
   const W = innerWidth, H = innerHeight, variant = stageVariant(), S = Object.assign({}, STAGE, STAGE[variant]);
-  let dw, dh, tx, ty;
-  if (S.mode === 'cover') {                                          // desktop: fill the screen, crop the overflow, keep the grass patch low
-    const s = Math.max(W / S.w, H / S.h); dw = S.w * s; dh = S.h * s; tx = (W - dw) / 2;
-    ty = Math.min(0, Math.max(H - dh, (S.anchorY || 0.8) * H - S.ovalY * dh));
-  } else {                                                           // mobile: fit the width (or the band, if the screen is wide); sky extended upward
-    const s = Math.min(W / S.w, H / ((S.bottom - S.top) * S.h));
-    dw = S.w * s; dh = S.h * s;
-    const b = Math.max(S.bottom, Math.min(1, S.top + H / dh));       // which row of the picture sits on the screen's bottom edge
-    ty = H - b * dh; tx = (W - dw) / 2;
-  }
-  const yo = ty + S.ovalY * dh;
-  // The ball's radius on screen when FULLY ZOOMED OUT (R0). Jace wanted the start a little bigger: STAGE.startZoom (0.25) of the way from
-  // R0 to "the ball's sides touch the screen's sides" (RFULL). Both are capped so the ball (with its gap above the grass patch and a
-  // little room above it) always fits between the top of the screen and the patch.
-  const cap = Math.max(40, (yo - 0.07 * H) / (2 + S.gap));
-  const R0 = Math.min(0.26 * dw, 0.28 * H, cap), RFULL = Math.min(W, H) / 2;
-  const R = Math.min(cap, R0 + S.startZoom * (RFULL - R0));
-  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, variant, bx: W / 2, by: Math.max(R + 0.07 * H, yo - R * (1 + S.gap)), ox: tx + S.ovalX * dw, oy: yo, ovalW: S.ovalW * dw };
+  // 1. THE BALL IS ALWAYS CENTRED on the screen (horizontally and vertically), at every zoom level. Its size: R0 = fully zoomed out,
+  //    R = where the page starts (STAGE.startZoom of the way from R0 to "the ball's sides touch the screen's sides", RFULL).
+  const RFULL = Math.min(W, H) / 2;
+  let R0 = Math.min(0.26 * W, 0.28 * H), R = R0 + S.startZoom * (RFULL - R0);
+  if (S.startR) { R = S.startR * H; R0 = R * (S.outRatio || 0.8); }                         // desktop: sized as a fraction of the screen height
+  const bx = W / 2, by = H / 2;
+  // 2. THE PICTURE MOVES TO FIT THE BALL: it is placed (and scaled up just enough to still cover the screen) so the lighter patch of
+  //    grass lands S.gap ball-radii below the ball's bottom, centred horizontally under it.
+  const pyT = by + R * (1 + S.gap);
+  let sc = Math.max(W / S.w, (H - pyT) / ((1 - S.ovalY) * S.h));                            // cover the width, and everything below the patch
+  if (!S.extendTop) sc = Math.max(sc, H / S.h, pyT / (S.ovalY * S.h));                        // desktop: no sky to extend, so cover the top too
+  const dw = S.w * sc, dh = S.h * sc;
+  const ty = pyT - S.ovalY * dh;
+  const tx = Math.min(0, Math.max(W - dw, W / 2 - S.ovalX * dw));
+  const yo = pyT;
+  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, variant, bx, by, ox: tx + S.ovalX * dw, oy: yo, ovalW: S.ovalW * dw };
   // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
   bgEl.textContent = '';
   const K = Math.ceil(Math.max(0, tx) / dw);
