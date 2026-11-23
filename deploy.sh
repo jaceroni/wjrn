@@ -56,8 +56,11 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "=== Syncing built files to server ==="
-# --chmod: files that arrive with owner-only permissions (e.g. an uploaded image) would 403 under nginx; make everything world-readable
-rsync -avz --delete --chmod=D755,F644 -e "ssh -i $KEY" dist/ "$USER@$HOST:$REMOTE_DIR/"
+# Files that arrive with owner-only permissions (e.g. an uploaded image) 403 under nginx, and rsync -a preserves modes, so make
+# everything world-readable first. (macOS rsync has no --chmod.)
+find dist -type d -exec chmod 755 {} +
+find dist -type f -exec chmod 644 {} +
+rsync -avz --delete -e "ssh -i $KEY" dist/ "$USER@$HOST:$REMOTE_DIR/"
 
 if [ $? -ne 0 ]; then
   echo "Error: Failed to sync files to remote directory via rsync."
