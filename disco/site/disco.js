@@ -340,6 +340,16 @@ const logoMat = new THREE.ShaderMaterial({
     float h2(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p, p+45.32); return fract(p.x*p.y); }
     float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
       return mix(mix(h2(i),h2(i+vec2(1,0)),f.x), mix(h2(i+vec2(0,1)),h2(i+1.0),f.x), f.y); }
+    vec2 h22(vec2 p){ p = vec2(dot(p, vec2(127.1,311.7)), dot(p, vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
+    // irregular mosaic: xy = which patch this pixel is in, zw = its offset from that patch's centre
+    vec4 vor(vec2 x){
+      vec2 n = floor(x), f = fract(x); float md = 8.0; vec2 bg = vec2(0.0), br = vec2(0.0);
+      for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+        vec2 g = vec2(float(i), float(j)), r = g + h22(n + g) - f; float d = dot(r, r);
+        if (d < md) { md = d; bg = n + g; br = -r; } }
+      return vec4(bg, br);
+    }
+    vec3 spectrum(float h){ return 0.5 + 0.5*cos(6.2832*(h + vec3(0.0, 0.33, 0.67))); }
     void main(){
       vec3 N = normalize(vN); vec3 Vd = normalize(-vP);
       vec2 q = (vUv - 0.5) * 2.0;
@@ -352,19 +362,37 @@ const logoMat = new THREE.ShaderMaterial({
       stone = mix(stone, cSageLt, smoothstep(0.8, 1.0, bands)*0.55);
       stone = mix(stone, cFern, smoothstep(0.6, 0.95, n2(q*1.5 + 7.0))*0.22);
       stone *= 0.96 + 0.05*fine + 0.03*n2(q*60.0);
-      vec3 flash = vec3(0.0); float fireAmt = 0.0;
+      vec3 flash = vec3(0.0);
       if (uOpal > 0.5) {
-        // opal: a milky warm-ivory body with a faint sea-glass cast...
-        vec3 body = mix(vec3(0.93, 0.90, 0.83), vec3(0.80, 0.88, 0.86), smoothstep(0.2, 0.8, n2(q*1.3 + 3.0)));
+        // Real opal: a milky body, and play-of-colour from many small crystal DOMAINS, each with its own hidden orientation.
+        // A domain only flashes while ITS axis lines up with the light/eye half-vector, so as the stone tilts, patches blink
+        // on and off in different places, and the colour inside a flash slides through the spectrum. At rest (no domain lined
+        // up) it is just plain milky stone: no colour painted on it.
+        vec3 body = mix(vec3(0.93, 0.90, 0.83), vec3(0.82, 0.89, 0.87), smoothstep(0.25, 0.8, n2(q*1.2 + 3.0)));
         body *= 0.97 + 0.04*n2(q*40.0);
-        // ...with irregular patches of "fire" whose colour slides with the viewing angle, so they flash as the ball turns
-        float dom = n2(q*1.35 + 11.0)*0.68 + n2(q*3.1 + 2.0)*0.32;          // broad, soft fields of colour (was ~2.4x finer)
-        fireAmt = smoothstep(0.36, 0.84, dom);
-        float t = dom*2.4 + dot(N, Vd)*2.2 + dot(N, keyDir)*1.2;
-        flash = 0.5 + 0.5*cos(6.2832*(t + vec3(0.0, 0.30, 0.62)));            // cycles teal / green / gold / rose
-        flash = mix(vec3(dot(flash, vec3(0.333))), flash, 0.85);               // a little less saturated than raw
-        stone = mix(body, mix(body, flash, 0.55), fireAmt*0.62);
-        stone += vec3(0.55, 0.70, 0.85) * pow(1.0 - max(dot(N, Vd), 0.0), 3.0) * 0.10;   // soft blue sheen at glancing angles
+        // the slab's own tangent frame, so its crystal directions can be compared with light/eye directions
+        vec3 dp1 = dFdx(vP), dp2 = dFdy(vP); vec2 du1 = dFdx(vUv), du2 = dFdy(vUv);
+        vec3 dp2p = cross(dp2, N), dp1p = cross(N, dp1);
+        vec3 Tn = normalize(dp2p*du1.x + dp1p*du2.x), Bn = normalize(dp2p*du1.y + dp1p*du2.y);
+        vec2 xq = q*3.0 + 0.32*vec2(n2(q*4.0), n2(q*4.0 + 9.0));        // irregular patch shapes, ~6 across the slab
+        vec4 dm = vor(xq);
+        vec2 ra = h22(dm.xy + 13.0), rb = h22(dm.xy + 57.0);
+        vec3 ax = normalize(vec3((ra - 0.5)*1.8 + dm.zw*0.20, 1.0));     // this patch's crystal axis (+ a gentle drift across it, so a flash sweeps over the patch as you tilt)
+        vec3 acc = vec3(0.0); float sum = 0.0;
+        for (int k = 0; k < 2; k++) {                                     // the fixed key light + one of the roaming lights
+          vec3 Lk = k == 0 ? keyDir : normalize(lPos[0] - vP);
+          vec3 Hk = normalize(Lk + Vd);
+          vec3 Ht = vec3(dot(Hk, Tn), dot(Hk, Bn), dot(Hk, N));
+          float aa = dot(normalize(Ht), ax);
+          float I = exp(-(1.0 - aa) / (0.0055 + 0.009*rb.x));              // bright only while this patch is lined up
+          float sh = dot(Ht.xy - ax.xy, vec2(cos(rb.y*6.2832), sin(rb.y*6.2832)));   // signed tilt -> hue slides within one flash
+          acc += spectrum(fract(rb.x*0.7 + 0.08 + sh*2.8)) * I; sum += I;
+        }
+        vec3 fcol = acc / max(sum, 1e-3); fcol = mix(vec3(dot(fcol, vec3(0.333))), fcol, 1.35);
+        float fi = clamp(sum, 0.0, 1.0);
+        flash = fcol * fi;
+        stone = mix(body, fcol*0.95, fi*0.85);
+        stone += vec3(0.55, 0.70, 0.85) * pow(1.0 - max(dot(N, Vd), 0.0), 3.0) * 0.08;   // faint blue sheen at glancing angles
       }
       // the etch: lettering cut into the stone, dark and frosted, with lit/shadowed walls
       vec2 px = vec2(2.5/1024.0);
@@ -381,7 +409,7 @@ const logoMat = new THREE.ShaderMaterial({
       float sp = pow(max(dot(N, normalize(keyDir + Vd)), 0.0), 18.0) * 0.2;
       for (int i = 0; i < 3; i++) { vec3 L = normalize(lPos[i] - vP); sp += pow(max(dot(N, normalize(L + Vd)), 0.0), 24.0) * 0.08; }
       col += cIvory * sp * (1.0 - m) * vShade;
-      col += flash * fireAmt * 0.10 * (1.0 - m) * vShade;     // opal: the fire glows a touch through the satin
+      col += flash * 0.22 * (1.0 - m) * vShade;               // opal: the flash glows a touch through the satin
       if (uDisco > 0.001) {
         vec3 Rf = reflect(-Vd, N);
         vec3 ch = mix(vec3(0.03,0.03,0.04), vec3(0.22,0.22,0.26), Rf.y*0.5 + 0.5) + vec3(0.45,0.46,0.5)*(0.35 + 0.4*max(dot(N, keyDir), 0.0));
