@@ -865,7 +865,13 @@ function ytPlace(){
   const y = p.yt, c = cellsData[p.i], f = yt.frame, W = innerWidth, H = innerHeight;
   if (!f) return;
   if (roomVideo()) {
-    const k = Math.max(W / YT_W, H / YT_H) * 1.25;             // 'cover' the viewport, a touch over so YouTube's edge overlays are off-screen
+    // 'cover' the viewport with the video's REAL picture, not just the 16:9 player frame: a 4:3 video sits inside the frame with black
+    // bars at the sides (and a wide one with bars top/bottom), so scale from the picture's own aspect (the feed's trimmed cover size)
+    // until that picture fills the screen both ways. Top/bottom (or sides) get cropped, never left empty. At least the old 1.25x
+    // overscan so YouTube's edge overlays stay off-screen.
+    const rw = p.reel && p.reel.w, rh = p.reel && p.reel.h, a = (rw && rh) ? Math.min(2.4, Math.max(1, rw / rh)) : 16 / 9;
+    const cw = YT_W * Math.min(1, a / (16 / 9)), ch = YT_H * Math.min(1, (16 / 9) / a);        // the picture's size inside the frame
+    const k = Math.max(Math.max(W / YT_W, H / YT_H) * 1.25, Math.max(W / cw, H / ch) * 1.03);
     ytLayer.style.zIndex = '-1';
     f.style.clipPath = 'none';
     f.style.transform = `translate(${((W - YT_W*k)/2).toFixed(1)}px,${((H - YT_H*k)/2).toFixed(1)}px) scale(${k.toFixed(4)})`;
