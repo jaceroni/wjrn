@@ -1045,10 +1045,10 @@ const lastFlickDir = new V();
 // Called on every qualifying flick past the 7th, so only the first one (off -> on) starts the loop, and only if no reel is
 // playing. If a reel is already playing it keeps playing and only the room changes. The loop never restarts by itself
 // after a reel takes over — it takes another full disco activation.
-function enterDisco(){ if (discoTarget === 0) camDistTarget = outDist();   // always pull FULLY out on entering disco: see more of the room
+function enterDisco(){ if (discoTarget === 0) { zoomAnim = null; camDistTarget = outDist(); }   // always pull FULLY out on entering disco: see more of the room
   if (discoTarget === 0 && !playing) discoAudio.start(); discoTarget = 1; }
 // double-tap a logo: the page's reset — stop any reel, stop the disco loop, leave disco, stop the spin, face that logo square-on
-function resetAll(k){ camDistTarget = fitDist(); stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
+function resetAll(k){ zoomAnim = { from: camDist, to: fitDist(), t: 0 }; camDistTarget = zoomAnim.to; stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
 // light beams sweeping down from the ceiling (only visible in disco)
 const beams = new THREE.Group(); scene.add(beams);
 NEON_COLS.concat([new THREE.Color(0xffffff)]).forEach((col, i) => {
@@ -1132,7 +1132,7 @@ canvas.addEventListener('pointermove', e => {
   lastInteract = performance.now();
   if (pinch && pointers.size === 2) {
     const [a,b] = [...pointers.values()];
-    camDistTarget = clampDist(pinch.start * pinch.d / Math.max(10, Math.hypot(a.x-b.x, a.y-b.y)));
+    zoomAnim = null; camDistTarget = clampDist(pinch.start * pinch.d / Math.max(10, Math.hypot(a.x-b.x, a.y-b.y)));
     const ang = Math.atan2(b.y-a.y, b.x-a.x); let dA = ang - pinch.ang; dA = Math.atan2(Math.sin(dA), Math.cos(dA)); pinch.ang = ang;
     qTmp.setFromAxisAngle(camera.position.clone().normalize(), -dA); ball.quaternion.premultiply(qTmp);   // twist, like turning a dial
     return;
@@ -1183,7 +1183,7 @@ function tap(x, y, hit){
     else if (hit && hit.type === 'logo') resetAll(hit.k);
   } else lastTap = { x, y, t };
 }
-canvas.addEventListener('wheel', e => { e.preventDefault(); camDistTarget = clampDist(camDistTarget*Math.exp(e.deltaY*0.0012)); lastInteract = performance.now(); }, { passive: false });
+canvas.addEventListener('wheel', e => { e.preventDefault(); zoomAnim = null; camDistTarget = clampDist(camDistTarget*Math.exp(e.deltaY*0.0012)); lastInteract = performance.now(); }, { passive: false });
 canvas.addEventListener('dblclick', e => e.preventDefault());
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 
@@ -1227,6 +1227,7 @@ function layoutStage(){
   }
 }
 let camDist = 4, camDistTarget = 4, zoomK = 1;
+let zoomAnim = null;       // a timed, eased zoom (used by the logo reset so the zoom-out and the ball's turn finish together)
 const camFocal = () => (innerHeight / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 // the camera distance at which the ball's radius on screen equals the stage's ball radius (unit sphere seen from L: radius = f / sqrt(L^2 - 1))
 const distFor = R => Math.sqrt((camFocal() / R) ** 2 + 1) / 1.0384;     // 1.0384 = |(0, .28, 1)|, the camera's offset direction
@@ -1391,7 +1392,12 @@ function frame(){
   const dt = Math.min(clock.getDelta(), 0.05), time = clock.elapsedTime, now = performance.now();
   if (!Number.isFinite(camDistTarget) || !Number.isFinite(camDist)) camDist = camDistTarget = fitDist();      // never let a NaN stick
   const bq = ball.quaternion; if (!(Number.isFinite(bq.x) && Number.isFinite(bq.y) && Number.isFinite(bq.z) && Number.isFinite(bq.w))) { bq.set(0, 0, 0, 1); omega.set(0, 0, 0); }
-  camDist += (camDistTarget-camDist)*(1-Math.exp(-dt*10)); zoomK = camDistTarget/fitDist();
+  if (zoomAnim) {                                                    // same 0.85s ease-in-out as the ball's turn (faceAnim), eased in log-distance so it feels even
+    zoomAnim.t = Math.min(1, zoomAnim.t + dt/0.85);
+    camDist = Math.exp(Math.log(zoomAnim.from) + (Math.log(zoomAnim.to) - Math.log(zoomAnim.from)) * easeInOut(zoomAnim.t));
+    camDistTarget = zoomAnim.to; if (zoomAnim.t >= 1) zoomAnim = null;
+  } else camDist += (camDistTarget-camDist)*(1-Math.exp(-dt*10));
+  zoomK = camDistTarget/fitDist();
   placeCamera(); camera.updateMatrixWorld();
 
   if (faceAnim) {
