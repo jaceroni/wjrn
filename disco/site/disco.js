@@ -330,11 +330,12 @@ const logoTex = new THREE.CanvasTexture(logoCanvas); logoTex.anisotropy = 4; log
 const logoMat = new THREE.ShaderMaterial({
   uniforms: { uDisco: DISCO, lColD: { value: NEON_COLS }, mask: { value: logoTex }, keyDir: shardUniforms.keyDir, lPos: shardUniforms.lPos, lCol: shardUniforms.lCol,
     cIvory: { value: new THREE.Color(BRAND.ivory) }, cSage: { value: new THREE.Color(BRAND.sage) }, cSageLt: { value: new THREE.Color(0xC3CAAE) },
-    cSageDk: { value: new THREE.Color(0x87917A) }, cFern: { value: new THREE.Color(BRAND.fern) }, cInk: { value: new THREE.Color(BRAND.ink) } },
+    cSageDk: { value: new THREE.Color(0x87917A) }, cFern: { value: new THREE.Color(BRAND.fern) }, cInk: { value: new THREE.Color(BRAND.ink) },
+    uOpal: { value: CONFIG.logoStyle === 'agate' ? 0 : 1 } },   // logoStyle in DISCO_CONFIG: 'opal' (default) or 'agate' (the original sage stone)
   vertexShader: SHARD_VS,
   fragmentShader: `
     uniform sampler2D mask; uniform vec3 keyDir; uniform vec3 lPos[3]; uniform vec3 lCol[3]; uniform float uDisco; uniform vec3 lColD[3];
-    uniform vec3 cIvory, cSage, cSageLt, cSageDk, cFern, cInk;
+    uniform vec3 cIvory, cSage, cSageLt, cSageDk, cFern, cInk; uniform float uOpal;
     varying vec2 vUv; varying float vShade; varying vec3 vN; varying vec3 vP;
     float h2(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p, p+45.32); return fract(p.x*p.y); }
     float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -351,6 +352,20 @@ const logoMat = new THREE.ShaderMaterial({
       stone = mix(stone, cSageLt, smoothstep(0.8, 1.0, bands)*0.55);
       stone = mix(stone, cFern, smoothstep(0.6, 0.95, n2(q*1.5 + 7.0))*0.22);
       stone *= 0.96 + 0.05*fine + 0.03*n2(q*60.0);
+      vec3 flash = vec3(0.0); float fireAmt = 0.0;
+      if (uOpal > 0.5) {
+        // opal: a milky warm-ivory body with a faint sea-glass cast...
+        vec3 body = mix(vec3(0.93, 0.90, 0.83), vec3(0.80, 0.88, 0.86), smoothstep(0.2, 0.8, n2(q*1.3 + 3.0)));
+        body *= 0.97 + 0.04*n2(q*40.0);
+        // ...with irregular patches of "fire" whose colour slides with the viewing angle, so they flash as the ball turns
+        float dom = n2(q*3.2 + 11.0)*0.65 + n2(q*7.5 + 2.0)*0.35;
+        fireAmt = smoothstep(0.42, 0.78, dom);
+        float t = dom*2.4 + dot(N, Vd)*2.2 + dot(N, keyDir)*1.2;
+        flash = 0.5 + 0.5*cos(6.2832*(t + vec3(0.0, 0.30, 0.62)));            // cycles teal / green / gold / rose
+        flash = mix(vec3(dot(flash, vec3(0.333))), flash, 0.85);               // a little less saturated than raw
+        stone = mix(body, mix(body, flash, 0.55), fireAmt*0.62);
+        stone += vec3(0.55, 0.70, 0.85) * pow(1.0 - max(dot(N, Vd), 0.0), 3.0) * 0.10;   // soft blue sheen at glancing angles
+      }
       // the etch: lettering cut into the stone, dark and frosted, with lit/shadowed walls
       vec2 px = vec2(2.5/1024.0);
       float m = texture2D(mask, vUv).a;
@@ -366,6 +381,7 @@ const logoMat = new THREE.ShaderMaterial({
       float sp = pow(max(dot(N, normalize(keyDir + Vd)), 0.0), 18.0) * 0.2;
       for (int i = 0; i < 3; i++) { vec3 L = normalize(lPos[i] - vP); sp += pow(max(dot(N, normalize(L + Vd)), 0.0), 24.0) * 0.08; }
       col += cIvory * sp * (1.0 - m) * vShade;
+      col += flash * fireAmt * 0.10 * (1.0 - m) * vShade;     // opal: the fire glows a touch through the satin
       if (uDisco > 0.001) {
         vec3 Rf = reflect(-Vd, N);
         vec3 ch = mix(vec3(0.03,0.03,0.04), vec3(0.22,0.22,0.26), Rf.y*0.5 + 0.5) + vec3(0.45,0.46,0.5)*(0.35 + 0.4*max(dot(N, keyDir), 0.0));
