@@ -12,7 +12,7 @@
 /* the colour lives on <html> only: a <body> background would paint OVER the video layer that sits behind the canvas in disco mode */
 html{background:#B7BD9F}
 body{background:none}
-html,body{margin:0;height:100%;overflow:hidden;color:var(--ink);font-family:ui-monospace,monospace;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;touch-action:none;overscroll-behavior:none;color:var(--ink);font-family:ui-monospace,monospace;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 #bg{position:fixed;inset:0;z-index:-3;overflow:hidden;background:#A2AC8B}
 #bg .tile,#bg .fill{position:absolute;transform-origin:50% 50%}
 #bg .tile{background-size:100% 100%;background-repeat:no-repeat}

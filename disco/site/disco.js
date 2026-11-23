@@ -321,15 +321,21 @@ function drawLogo(){
 const logoTex = new THREE.CanvasTexture(logoCanvas); logoTex.anisotropy = 4; logoTex.wrapS = logoTex.wrapT = THREE.ClampToEdgeWrapping;
 // one flat slab of sage agate per side, the lettering etched into it
 // Opal tuning (GLSL defines): body brightness; flash window widths (bigger = more/longer flashes) for the large patches (C)
-// and the small flakes (F); and how strongly each layer counts.
+// and the small flakes (F); and how strongly each layer counts. DULLING (hue/saturation untouched): OPAL_EDGE = how bright a
+// patch is right at its boundary vs its middle (lower = softer seams); OPAL_FLASHV = flash brightness scale (RGB scaled evenly,
+// so hue + saturation stay the same); OPAL_GLOW = the extra additive glow; OPAL_GLOSS = the polished satin highlight on the stone.
 const OPAL_DEFS = `
-    #define OPAL_BODY 0.94
-    #define OPAL_CW0 0.016
-    #define OPAL_CW1 0.026
-    #define OPAL_FW0 0.018
-    #define OPAL_FW1 0.030
+    #define OPAL_BODY 1.04
+    #define OPAL_CW0 0.0205
+    #define OPAL_CW1 0.034
+    #define OPAL_FW0 0.024
+    #define OPAL_FW1 0.040
     #define OPAL_COARSE 0.85
     #define OPAL_FINE 1.0
+    #define OPAL_EDGE 0.55
+    #define OPAL_FLASHV 0.97
+    #define OPAL_GLOW 0.09
+    #define OPAL_GLOSS 0.35
 `;
 const logoMat = new THREE.ShaderMaterial({
   uniforms: { uDisco: DISCO, lColD: { value: NEON_COLS }, mask: { value: logoTex }, keyDir: shardUniforms.keyDir, lPos: shardUniforms.lPos, lCol: shardUniforms.lCol,
@@ -346,11 +352,13 @@ const logoMat = new THREE.ShaderMaterial({
       return mix(mix(h2(i),h2(i+vec2(1,0)),f.x), mix(h2(i+vec2(0,1)),h2(i+1.0),f.x), f.y); }
     vec2 h22(vec2 p){ p = vec2(dot(p, vec2(127.1,311.7)), dot(p, vec2(269.5,183.3))); return fract(sin(p)*43758.5453); }
     // irregular mosaic: xy = which patch this pixel is in, zw = its offset from that patch's centre
+    float vorE = 1.0;                                    // set by vor(): distance from this pixel to its patch's edge (0 = right on the seam)
     vec4 vor(vec2 x){
-      vec2 n = floor(x), f = fract(x); float md = 8.0; vec2 bg = vec2(0.0), br = vec2(0.0);
+      vec2 n = floor(x), f = fract(x); float md = 8.0, md2 = 8.0; vec2 bg = vec2(0.0), br = vec2(0.0);
       for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
         vec2 g = vec2(float(i), float(j)), r = g + h22(n + g) - f; float d = dot(r, r);
-        if (d < md) { md = d; bg = n + g; br = -r; } }
+        if (d < md) { md2 = md; md = d; bg = n + g; br = -r; } else if (d < md2) { md2 = d; } }
+      vorE = sqrt(md2) - sqrt(md);
       return vec4(bg, br);
     }
     // play-of-colour palette, weighted like the reference stone: ~1/3 greens, then pinks/reds, oranges, yellows, a little violet/blue
@@ -363,14 +371,14 @@ const logoMat = new THREE.ShaderMaterial({
     // the light/eye half-vector (Ha, Hb for two lights, already in the stone's own frame); the colour slides along the palette
     // as the tilt changes. Returns (colour sum weighted by brightness, total brightness).
     vec4 opalLayer(vec2 xq, vec3 Ha, vec3 Hb, float w0, float w1, float spread, float hueGain){
-      vec4 dm = vor(xq);
+      vec4 dm = vor(xq); float seam = mix(OPAL_EDGE, 1.0, smoothstep(0.0, 0.22, vorE));     // patches fade a little toward their seams: no hard cut-out edges
       vec2 ra = h22(dm.xy + 13.0), rb = h22(dm.xy + 57.0);
       vec3 ax = normalize(vec3((ra - 0.5)*spread + dm.zw*0.20, 1.0));
       vec3 acc = vec3(0.0); float sum = 0.0;
       for (int k = 0; k < 2; k++) {
         vec3 Ht = k == 0 ? Ha : Hb;
         float aa = dot(normalize(Ht), ax);
-        float I = exp(-(1.0 - aa) / (w0 + w1*rb.x));
+        float I = exp(-(1.0 - aa) / (w0 + w1*rb.x)) * seam;
         float sh = dot(Ht.xy - ax.xy, vec2(cos(rb.y*6.2832), sin(rb.y*6.2832)));
         acc += opalHue(rb.x*0.9 + 0.05 + sh*hueGain) * I; sum += I;
       }
@@ -410,9 +418,9 @@ const logoMat = new THREE.ShaderMaterial({
         vec3 acc = Lc.rgb*OPAL_COARSE + Lf.rgb*(0.10 + 0.90*zone)*OPAL_FINE;
         float sum = Lc.a*OPAL_COARSE + Lf.a*(0.10 + 0.90*zone)*OPAL_FINE;
         vec3 fcol = acc / max(sum, 1e-3);
-        float fi = smoothstep(0.08, 0.55, sum);                           // crisp, saturated cores with short soft edges
+        float fi = smoothstep(0.05, 0.62, sum);                           // saturated cores with soft edges
         flash = fcol * fi;
-        stone = mix(body, fcol, fi*0.92);
+        stone = mix(body, fcol * OPAL_FLASHV, fi*0.92);
         stone += vec3(0.55, 0.70, 0.85) * pow(1.0 - max(dot(N, Vd), 0.0), 3.0) * 0.06;   // faint blue sheen at glancing angles
       }
       // the etch: lettering cut into the stone, dark and frosted, with lit/shadowed walls
@@ -429,8 +437,8 @@ const logoMat = new THREE.ShaderMaterial({
       // polished satin on the stone only, matte inside the etch
       float sp = pow(max(dot(N, normalize(keyDir + Vd)), 0.0), 18.0) * 0.2;
       for (int i = 0; i < 3; i++) { vec3 L = normalize(lPos[i] - vP); sp += pow(max(dot(N, normalize(L + Vd)), 0.0), 24.0) * 0.08; }
-      col += cIvory * sp * (1.0 - m) * vShade;
-      col += flash * 0.22 * (1.0 - m) * vShade;               // opal: the flash glows a touch through the satin
+      col += cIvory * sp * mix(1.0, OPAL_GLOSS, uOpal) * (1.0 - m) * vShade;      // (opal: a duller, less polished satin highlight)
+      col += flash * OPAL_GLOW * (1.0 - m) * vShade;               // opal: the flash glows a touch through the satin
       if (uDisco > 0.001) {
         vec3 Rf = reflect(-Vd, N);
         vec3 ch = mix(vec3(0.03,0.03,0.04), vec3(0.22,0.22,0.26), Rf.y*0.5 + 0.5) + vec3(0.45,0.46,0.5)*(0.35 + 0.4*max(dot(N, keyDir), 0.0));
@@ -915,7 +923,7 @@ function setReels(list){
   attachPlaying();
   loadCovers();
   if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
-  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist() }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
+  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 
@@ -1054,22 +1062,61 @@ const pointers = new Map();
 let dragging = false, down = null, lastMove = null, pinch = null, lastTap = null;
 function radiusPx(){ return (innerHeight/2)/Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/camDist; }
 
+// ---- finger bookkeeping that can never get stuck ----
+// `pointers` remembers every finger that is down. If a "finger lifted" event is ever LOST (a system gesture, a pinch that drifts
+// off the glass, the browser or an iframe stealing the touch) a phantom finger would stay in there forever: every new touch then
+// reads as a 3rd finger (ignored) or a phantom pinch, and the ball ignores you until a refresh. So: phantoms are forgotten
+// when they go quiet (STALE_MS), cross-checked against the browser's own list of fingers on the glass (touch events), and
+// everything resets when the page loses focus.
+const STALE_MS = 4000;
+function startDrag(x, y){
+  down = { x, y, t: performance.now(), hit: pick(x, y), moved: false, spinBefore: omega.clone() };
+  lastMove = { x, y, t: performance.now() };
+  dragging = true; omega.set(0,0,0); faceAnim = null; canvas.classList.add('grabbing');
+}
+function startPinch(){
+  const [a,b] = [...pointers.values()];
+  pinch = { d: Math.hypot(a.x-b.x, a.y-b.y), start: camDistTarget, ang: Math.atan2(b.y-a.y, b.x-a.x) };
+  dragging = false; down = null; omega.set(0,0,0); faceAnim = null;
+}
+function resetPointers(){ pointers.clear(); pinch = null; dragging = false; down = null; canvas.classList.remove('grabbing'); }
+function forgetStale(except){
+  const now = performance.now();
+  pointers.forEach((p, id) => { if (id !== except && now - p.t > STALE_MS) pointers.delete(id); });
+  if (pointers.size < 2) pinch = null;
+  if (!pointers.size) { dragging = false; down = null; canvas.classList.remove('grabbing'); }
+}
+// the browser's own count of fingers on the glass is the truth: drop remembered fingers that no longer match any real touch
+function reconcileTouches(e){
+  const n = e.touches.length;
+  if (n === 0) { setTimeout(() => { if (pointers.size) resetPointers(); }, 40); return; }   // (after pointerup has had its turn)
+  if (pointers.size > n) {
+    const keep = new Set();
+    [...e.touches].forEach(t => { let best = null, bd = Infinity; pointers.forEach((p, id) => { if (keep.has(id)) return; const d = (p.x - t.clientX) ** 2 + (p.y - t.clientY) ** 2; if (d < bd) { bd = d; best = id; } }); if (best !== null) keep.add(best); });
+    [...pointers.keys()].forEach(id => { if (!keep.has(id)) pointers.delete(id); });
+    if (pointers.size < 2) pinch = null;
+    if (pointers.size === 0) { dragging = false; down = null; canvas.classList.remove('grabbing'); }
+    else if (pointers.size === 1 && !down) { const p = [...pointers.values()][0]; startDrag(p.x, p.y); }     // the touch that arrived while we were confused still works
+    else if (pointers.size === 2 && !pinch) startPinch();
+  }
+}
+['touchstart', 'touchend', 'touchcancel'].forEach(t => addEventListener(t, reconcileTouches, { passive: true, capture: true }));
+addEventListener('blur', resetPointers); addEventListener('pagehide', resetPointers);
+document.addEventListener('visibilitychange', () => { if (document.hidden) resetPointers(); });
+canvas.addEventListener('contextmenu', e => { e.preventDefault(); resetPointers(); });
+
 canvas.addEventListener('pointerdown', e => {
   try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
-  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  forgetStale(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
   lastInteract = performance.now();
-  if (pointers.size === 2) {
-    const [a,b] = [...pointers.values()];
-    pinch = { d: Math.hypot(a.x-b.x, a.y-b.y), start: camDistTarget, ang: Math.atan2(b.y-a.y, b.x-a.x) }; dragging = false; down = null; omega.set(0,0,0); faceAnim = null; return;
-  }
+  if (pointers.size === 2) { startPinch(); return; }
   if (pointers.size > 2) return;
-  down = { x: e.clientX, y: e.clientY, t: performance.now(), hit: pick(e.clientX, e.clientY), moved: false, spinBefore: omega.clone() };
-  lastMove = { x: e.clientX, y: e.clientY, t: performance.now() };
-  dragging = true; omega.set(0,0,0); faceAnim = null; canvas.classList.add('grabbing');
+  startDrag(e.clientX, e.clientY);
 });
 canvas.addEventListener('pointermove', e => {
   if (!pointers.has(e.pointerId)) return;
-  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
   lastInteract = performance.now();
   if (pinch && pointers.size === 2) {
     const [a,b] = [...pointers.values()];
@@ -1113,6 +1160,8 @@ function endPointer(e){
   down = null;
 }
 canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('lostpointercapture', endPointer);
+addEventListener('pointerup', endPointer); addEventListener('pointercancel', endPointer);     // in case the finger ended off the canvas (capture lost)
 canvas.addEventListener('pointercancel', endPointer);
 function tap(x, y, hit){
   const t = performance.now();
@@ -1124,7 +1173,7 @@ function tap(x, y, hit){
 }
 canvas.addEventListener('wheel', e => { e.preventDefault(); camDistTarget = clampDist(camDistTarget*Math.exp(e.deltaY*0.0012)); lastInteract = performance.now(); }, { passive: false });
 canvas.addEventListener('dblclick', e => e.preventDefault());
-document.addEventListener('gesturestart', e => e.preventDefault());
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, e => e.preventDefault()));
 
 /* ---------- the stage picture + camera fit ---------- */
 // The room is a picture (CONFIG.stage). Measured from the file: the soft halo the ball hovers in, and the pale floor pool its
@@ -1157,9 +1206,10 @@ let camDist = 4, camDistTarget = 4, zoomK = 1;
 const camFocal = () => (innerHeight / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
 // the camera distance at which the ball's radius on screen equals the stage's ball radius (unit sphere seen from L: radius = f / sqrt(L^2 - 1))
 function fitDist(){ return Math.sqrt((camFocal() / stage.R) ** 2 + 1) / 1.0384; }   // 1.0384 = |(0, .28, 1)|, the camera's offset direction
-function clampDist(d){ const f = fitDist(); return Math.min(f, Math.max(Math.max(1.45, f*0.32), d)); }   // f = fully zoomed out = where the page starts; you can only zoom IN from there
+function clampDist(d){ const f = fitDist(); if (!Number.isFinite(d)) d = f; return Math.min(f, Math.max(Math.max(1.45, f*0.32), d)); }   // f = fully zoomed out = where the page starts; you can only zoom IN from there
 function resize(){
   const w = innerWidth, h = innerHeight;
+  if (!w || !h) return;                                   // a transient 0-size (browser UI changing during a pinch) must not poison the layout
   renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
   coveMat.uniforms.res.value.set(w*renderer.getPixelRatio(), h*renderer.getPixelRatio());
   layoutStage();
@@ -1199,6 +1249,8 @@ addEventListener('resize', resize);
 const clock = new THREE.Clock(), lightW = [new V(), new V(), new V()], keyW = new V(-0.45, 0.7, 0.55).normalize();
 function frame(){
   const dt = Math.min(clock.getDelta(), 0.05), time = clock.elapsedTime, now = performance.now();
+  if (!Number.isFinite(camDistTarget) || !Number.isFinite(camDist)) camDist = camDistTarget = fitDist();      // never let a NaN stick
+  const bq = ball.quaternion; if (!(Number.isFinite(bq.x) && Number.isFinite(bq.y) && Number.isFinite(bq.z) && Number.isFinite(bq.w))) { bq.set(0, 0, 0, 1); omega.set(0, 0, 0); }
   camDist += (camDistTarget-camDist)*(1-Math.exp(-dt*10)); zoomK = camDistTarget/fitDist();
   placeCamera(); camera.updateMatrixWorld();
 
