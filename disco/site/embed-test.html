@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Embed tests — Rock Garden Disco</title>
+<style>
+:root{--bg:#1b160f;--card:#26201a;--line:#3c3023;--ink:#f4ead8;--dim:#b9ad96;--amber:#DF9C32;--fern:#5A734A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif;padding:16px;max-width:760px;margin-inline:auto}
+h1{font-size:20px;margin:0 0 4px} h2{font-size:16px;margin:0 0 6px;color:var(--amber)} h3{font-size:14px;margin:14px 0 4px}
+p,li{color:var(--dim)} code{background:#000;padding:1px 5px;border-radius:4px;color:var(--ink)}
+textarea,select,button{font:inherit;color:var(--ink);background:#000;border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{width:100%;min-height:96px} button{background:var(--fern);border-color:var(--fern);cursor:pointer;padding:10px 14px}
+button.alt{background:#000;border-color:var(--line)} button.on{outline:2px solid var(--amber)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start} .tile{width:200px;height:200px;border-radius:12px;background:repeating-linear-gradient(45deg,#3c3023,#3c3023 10px,#2e251b 10px,#2e251b 20px);display:grid;place-items:center;color:var(--dim);text-align:center;padding:8px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.box{position:relative;background:#000;overflow:hidden;border-radius:6px}
+.box iframe{border:0;display:block;transform-origin:0 0}
+.stage{perspective:900px;touch-action:none;user-select:none;-webkit-user-select:none;padding:24px 0;display:flex;justify-content:center;background:#120e0b;border-radius:10px;margin-top:8px}
+.card3d{position:relative;width:326px;height:560px;transform-style:preserve-3d}
+.card3d iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.veil{position:absolute;inset:0;background:rgba(223,156,50,.28)}
+.stat{font:13px ui-monospace,monospace;color:var(--ink);background:#000;padding:6px 8px;border-radius:6px;margin-top:6px}
+label.opt{display:block;padding:6px 0;color:var(--ink)} .q{margin-top:10px;color:var(--ink)} .note{font-size:13px}
+pre{white-space:pre-wrap;background:#000;padding:10px;border-radius:8px;font-size:12px;color:var(--ink)}
+</style>
+</head>
+<body>
+<h1>Instagram embed tests</h1>
+<p>Open this on the <b>phone</b> you care about (and again on desktop). Paste reel links below, run each test, answer the questions, then <b>Copy results</b> at the bottom and paste them back to Claude.</p>
+<p class="note">Pick at least one reel with <b>licensed music</b> and one with <b>original audio</b>, ideally one that's a <b>letterboxed 16:9 clip</b>. Put a label after a <code>|</code>, e.g. <code>https://www.instagram.com/reel/XXXX/ | licensed music</code></p>
+<textarea id="urls" placeholder="https://www.instagram.com/reel/XXXXXXXXXXX/ | licensed music&#10;https://www.instagram.com/reel/YYYYYYYYYYY/ | original audio"></textarea>
+<div class="row" style="margin-top:8px"><button id="go">Build tests</button></div>
+<div id="out"></div>
+
+<div class="card"><h2>Results</h2>
+  <textarea id="notes" placeholder="Anything else you noticed (lag, weird scrolling, buttons you couldn't hit, etc.)"></textarea>
+  <div class="row" style="margin-top:8px"><button id="copy">Copy results</button></div><pre id="report"></pre>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const results = {};                                   // results[reelKey][test] = answer
+const SAVED = 'disco-embed-test-urls';
+try { $('#urls').value = localStorage.getItem(SAVED) || ''; } catch (_) {}
+
+const parse = line => {
+  const [url, label] = line.split('|').map(s => s.trim());
+  const m = url.match(/instagram\.com\/(?:[^/]+\/)?(reel|reels|p|tv)\/([A-Za-z0-9_-]+)/);
+  if (!m) return null;
+  const kind = m[1] === 'reels' ? 'reel' : m[1];
+  return { code: m[2], label: label || '', embed: `https://www.instagram.com/${kind}/${m[2]}/embed/` };
+};
+const frame = (r, w = 326, h = 580, extra = '') => `<iframe src="${r.embed}" width="${w}" height="${h}" scrolling="no" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture" ${extra}></iframe>`;
+const choice = (key, test, q, opts) => `<div class="q">${q}</div>` + opts.map(o => `<label class="opt"><input type="radio" name="${key}-${test}" value="${o}" data-k="${key}" data-t="${test}"> ${o}</label>`).join('');
+
+$('#go').onclick = () => {
+  const lines = $('#urls').value.split('\n').map(l => l.trim()).filter(Boolean);
+  try { localStorage.setItem(SAVED, $('#urls').value); } catch (_) {}
+  const reels = lines.map(parse).filter(Boolean);
+  if (!reels.length) { $('#out').innerHTML = '<p>No valid reel links found.</p>'; return; }
+  $('#out').innerHTML = '';
+  reels.forEach((r, n) => $('#out').append(build(r, n)));
+};
+
+function build(r, n) {
+  const key = `reel${n + 1}:${r.code}${r.label ? ' (' + r.label + ')' : ''}`;
+  results[key] = results[key] || {};
+  const c = document.createElement('div'); c.className = 'card';
+  c.innerHTML = `<h2>Reel ${n + 1} — ${r.code} ${r.label ? '· ' + r.label : ''}</h2>
+
+  <h3>Test 1 · One double-tap to sound</h3>
+  <p>Double-tap the grey tile below. Make sure your phone isn't on silent.</p>
+  <div class="row"><div class="tile t1">double-tap me</div><div class="box t1box"></div></div>
+  ${choice(key, 't1', 'What happened?', ['Played with sound after the double-tap alone', 'Loaded, but I had to tap Instagram’s own play button (then sound)', 'Had to tap more than once / unmute separately', 'Played but muted until I unmuted', 'Never played'])}
+
+  <h3>Test 2 · Can I still spin it?</h3>
+  <p>Drag the card to rotate it. Try starting the drag <i>on the video</i>. The orange tint shows where the page is catching your finger; un-tinted area goes to Instagram's player.</p>
+  <div class="row modes">
+    <button class="alt" data-mode="raw">A · Video only</button><button class="alt" data-mode="ring16">B · 16px frame</button>
+    <button class="alt" data-mode="ring48">C · 48px frame</button><button class="alt" data-mode="center">D · Everything except the middle</button>
+  </div>
+  <div class="stage"><div class="card3d"></div></div>
+  <div class="stat t2stat">pick a mode</div>
+  ${choice(key, 't2', 'Which mode felt right? (spin works AND you can still play/pause)', ['A', 'B', 'C', 'D', 'None of them'])}
+  <div class="q">Did the video keep playing while the card was tilted in 3D?</div>
+  ${['Yes', 'No — it froze/blanked', 'Not sure'].map(o => `<label class="opt"><input type="radio" name="${key}-t2b" value="${o}" data-k="${key}" data-t="t2-kept-playing-in-3D"> ${o}</label>`).join('')}
+
+  <h3>Test 3 · Licensed music</h3>
+  <p>Play this reel in the embed below (tap its play button).</p>
+  <div class="box t3box"></div><button class="alt t3load" style="margin-top:6px">Load embed</button>
+  ${choice(key, 't3', 'Audio?', ['Plays with its music', 'Silent', 'Shows an “audio unavailable”/muted message', 'Video itself wouldn’t play'])}
+
+  <h3>Test 4 · Small sizes</h3>
+  <p>Instagram’s embed has a minimum width (~326px). Same embed scaled down with CSS — can you read it and hit its buttons?</p>
+  <div class="row t4row"></div><button class="alt t4load" style="margin-top:6px">Load scaled embeds</button>
+  ${[0.6, 0.45, 0.33].map(s => choice(key, 't4-' + s, `At ${Math.round(s * 100)}% (${Math.round(326 * s)}px wide)`, ['Readable & tappable', 'Readable, hard to tap', 'Unusable'])).join('')}`;
+
+  /* wire radios */
+  c.addEventListener('change', e => { const t = e.target; if (t.dataset && t.dataset.k) results[t.dataset.k][t.dataset.t] = t.value; });
+
+  /* test 1: double-tap creates the iframe inside the gesture */
+  let last = 0; const tile = $('.t1', c), box = $('.t1box', c);
+  tile.addEventListener('pointerup', () => { const now = performance.now(); if (now - last < 380 && !box.firstChild) { box.innerHTML = frame(r); tile.textContent = 'loaded →'; } last = now; });
+
+  /* test 2: drag-to-spin stage with an overlay that catches the page's drags */
+  const card3d = $('.card3d', c), stat = $('.t2stat', c); let ry = 0, rx = 0, drags = 0, mode = null;
+  const holes = { raw: null, ring16: [16, 16, 326 - 16, 560 - 16], ring48: [48, 48, 326 - 48, 560 - 48], center: [93, 190, 233, 370] };
+  c.querySelectorAll('.modes button').forEach(b => b.onclick = () => {
+    c.querySelectorAll('.modes button').forEach(x => x.classList.remove('on')); b.classList.add('on'); mode = b.dataset.mode;
+    card3d.innerHTML = frame(r, 326, 560) ;
+    const h = holes[mode];
+    if (h) { const v = document.createElement('div'); v.className = 'veil';
+      v.style.clipPath = `polygon(evenodd, 0 0, 326px 0, 326px 560px, 0 560px, 0 0, ${h[0]}px ${h[1]}px, ${h[0]}px ${h[3]}px, ${h[2]}px ${h[3]}px, ${h[2]}px ${h[1]}px, ${h[0]}px ${h[1]}px)`;
+      card3d.append(v); }
+    drags = 0; stat.textContent = `mode ${mode}: page caught 0 drags`;
+  });
+  const stage = $('.stage', c); let down = null;
+  stage.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener('pointermove', e => { if (!down) return; ry += (e.clientX - down.x) * 0.5; rx -= (e.clientY - down.y) * 0.5; down = { x: e.clientX, y: e.clientY };
+    card3d.style.transform = `rotateY(${ry}deg) rotateX(${rx}deg)`; drags++; stat.textContent = `mode ${mode}: page caught ${drags} drag moves`; });
+  stage.addEventListener('pointerup', () => { down = null; });
+
+  /* tests 3 & 4 */
+  $('.t3load', c).onclick = () => { $('.t3box', c).innerHTML = frame(r); };
+  $('.t4load', c).onclick = () => { const row = $('.t4row', c); row.innerHTML = '';
+    [0.6, 0.45, 0.33].forEach(s => { const b = document.createElement('div'); b.className = 'box'; b.style.width = 326 * s + 'px'; b.style.height = 580 * s + 'px';
+      b.innerHTML = frame(r); b.firstChild.style.transform = `scale(${s})`; row.append(b); }); };
+  return c;
+}
+
+$('#copy').onclick = async () => {
+  const lines = [`Rock Garden Disco embed tests`, `UA: ${navigator.userAgent}`, `Screen: ${screen.width}x${screen.height} @${devicePixelRatio}x · viewport ${innerWidth}x${innerHeight}`, ''];
+  for (const [k, v] of Object.entries(results)) { lines.push(k); for (const [t, a] of Object.entries(v)) lines.push(`  ${t}: ${a}`); lines.push(''); }
+  lines.push('Notes: ' + ($('#notes').value || '(none)'));
+  const text = lines.join('\n'); $('#report').textContent = text;
+  try { await navigator.clipboard.writeText(text); $('#copy').textContent = 'Copied ✓'; } catch (_) { $('#copy').textContent = 'Select the text below and copy it'; }
+};
+</script>
+</body>
+</html>

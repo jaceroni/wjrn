@@ -15,3 +15,6 @@ android-tv-app/release-keystore/
 
 # Roku channel package (build artifact, not source)
 roku-app/*.zip
+
+# Rock Garden Disco: generated copy of disco/site/ (deploy.sh rebuilds it every run)
+public/the-rock-garden/disco/

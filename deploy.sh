@@ -34,6 +34,11 @@ for f in wjrn-twitch-live-stream-tv-1280x825.png wjrn-twitch-live-stream-page-bg
   fi
 done
 
+echo "=== Syncing Rock Garden Disco microsite into public/ ==="
+# Source of truth is disco/site/. The copy under public/ is a build artifact (git-ignored), picked up by Vite into dist/.
+mkdir -p public/the-rock-garden/disco
+rsync -a --delete disco/site/ public/the-rock-garden/disco/
+
 echo "=== Building React project locally ==="
 npm run build
 
@@ -43,7 +48,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "=== Ensuring remote directories exist on DreamCompute ==="
-ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "sudo mkdir -p $REMOTE_DIR && sudo chown -R ubuntu:ubuntu $REMOTE_DIR"
+ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "sudo mkdir -p $REMOTE_DIR && sudo chown -R ubuntu:ubuntu $REMOTE_DIR && sudo mkdir -p /var/www/wjrn-disco-data/the-rock-garden/covers && sudo chown -R ubuntu:ubuntu /var/www/wjrn-disco-data"
 
 if [ $? -ne 0 ]; then
   echo "Error: Failed to connect to server or set folder permissions."
