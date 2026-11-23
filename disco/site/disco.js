@@ -923,7 +923,7 @@ function setReels(list){
   attachPlaying();
   loadCovers();
   if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
-  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
+  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, R0: stage.R0, RFULL: stage.RFULL, shadowBg: shadowEl.style.background, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 
@@ -1181,6 +1181,7 @@ canvas.addEventListener('dblclick', e => e.preventDefault());
 // and placed (phones: fit the width and extend the sky upward; wide screens: show the halo-to-floor band, mirror the picture
 // outward to fill the sides), then where the ball goes (hovering in the halo, sized to the stage, shadow on the pool).
 const STAGE = CONFIG.stage, bgEl = $('bg'), shadowEl = $('shadow');
+{ const a = STAGE.shadow; shadowEl.style.background = `radial-gradient(closest-side, rgba(38,32,22,${a}), rgba(38,32,22,${(a * 0.55).toFixed(3)}) 50%, rgba(38,32,22,0))`; }   // the ball's anchor shadow: peak opacity from the config
 let stage = null;
 function layoutStage(){
   const W = innerWidth, H = innerHeight, S = STAGE;
@@ -1188,9 +1189,13 @@ function layoutStage(){
   const dw = S.w * s, dh = S.h * s;
   const b = Math.max(S.bottom, Math.min(1, S.top + H / dh));          // which row of the picture sits on the screen's bottom edge
   const ty = H - b * dh, tx = (W - dw) / 2;
-  const R = Math.min(0.26 * dw, 0.28 * H);                            // the ball's radius on screen when FULLY ZOOMED OUT: the size the picture was drawn for (diameter ~0.52 of its width, = the old zoom-out limit)
+  // The ball's radius on screen when FULLY ZOOMED OUT (which is also where the page starts). R0 = the size the picture was drawn
+  // for (diameter ~0.52 of its width). Jace wanted it a little bigger: STAGE.startZoom (0.25) of the way from R0 to "the ball's
+  // sides touch the screen's sides" (RFULL = half of the limiting screen dimension).
+  const R0 = Math.min(0.26 * dw, 0.28 * H), RFULL = Math.min(W, H) / 2;
+  const R = R0 + S.startZoom * (RFULL - R0);
   const yh = ty + S.halo * dh, yo = ty + S.ovalY * dh;
-  stage = { W, H, dw, dh, tx, ty, R, bx: W / 2, by: Math.max(yh, R + 0.07 * H), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
+  stage = { W, H, dw, dh, tx, ty, R, R0, RFULL, bx: W / 2, by: Math.max(yh, R + 0.07 * H), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
   // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
   bgEl.textContent = '';
   const K = Math.ceil(Math.max(0, tx) / dw);
