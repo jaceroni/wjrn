@@ -56,7 +56,8 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "=== Syncing built files to server ==="
-rsync -avz --delete -e "ssh -i $KEY" dist/ "$USER@$HOST:$REMOTE_DIR/"
+# --chmod: files that arrive with owner-only permissions (e.g. an uploaded image) would 403 under nginx; make everything world-readable
+rsync -avz --delete --chmod=D755,F644 -e "ssh -i $KEY" dist/ "$USER@$HOST:$REMOTE_DIR/"
 
 if [ $? -ne 0 ]; then
   echo "Error: Failed to sync files to remote directory via rsync."
