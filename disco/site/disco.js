@@ -1048,7 +1048,7 @@ const lastFlickDir = new V();
 function enterDisco(){ if (discoTarget === 0) camDistTarget = outDist();   // always pull FULLY out on entering disco: see more of the room
   if (discoTarget === 0 && !playing) discoAudio.start(); discoTarget = 1; }
 // double-tap a logo: the page's reset — stop any reel, stop the disco loop, leave disco, stop the spin, face that logo square-on
-function resetAll(k){ stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
+function resetAll(k){ camDistTarget = fitDist(); stop(); discoAudio.stop(); discoTarget = 0; streak = 0; omega.set(0,0,0); faceLogo(k); }
 // light beams sweeping down from the ceiling (only visible in disco)
 const beams = new THREE.Group(); scene.add(beams);
 NEON_COLS.concat([new THREE.Color(0xffffff)]).forEach((col, i) => {
