@@ -707,7 +707,7 @@ function setReels(list){
 // It is decoded once and looped sample-accurately; the synth is not used at all then.
 const discoAudio = (() => {
   let ctx = null, run = null, noise = null, filePromise = null;
-  const BPM = 120, STEP = 60 / BPM / 4, LEVEL = 0.7;
+  const BPM = 120, STEP = 60 / BPM / 4, MAKEUP = 7;   // MAKEUP: synth is pushed as loud as it can go cleanly (see start())
   const ROOTS  = [55.0, 73.42, 49.0, 65.41];
   const CHORDS = [[220, 261.63, 329.63, 392], [293.66, 349.23, 440, 523.25], [196, 246.94, 293.66, 349.23], [261.63, 329.63, 392, 493.88]];
 
@@ -762,10 +762,22 @@ const discoAudio = (() => {
 
   function start(){
     unlock(); if (!ctx || run) return;
-    const master = ctx.createGain(), comp = ctx.createDynamicsCompressor();
-    master.gain.setValueAtTime(0.0001, ctx.currentTime); master.gain.setTargetAtTime(LEVEL, ctx.currentTime, 0.25);   // gentle fade-in
-    master.connect(comp); comp.connect(ctx.destination);
-    const r = run = { master, comp, timer: 0, src: null };
+    // There is deliberately NO volume setting here: the listener's own device volume is the only volume control.
+    // `master` only fades in/out and always settles at exactly 1.0. The synth is made as loud as it can be without
+    // distorting (makeup gain -> compressor -> limiter -> a clamp that only ever touches overshoot). A real loop file is
+    // played completely untouched at unity gain, exactly as it was mastered.
+    const master = ctx.createGain(), nodes = [master];
+    master.gain.setValueAtTime(0.0001, ctx.currentTime); master.gain.setTargetAtTime(1, ctx.currentTime, 0.25);   // gentle fade-in
+    if (CONFIG.discoLoop) master.connect(ctx.destination);
+    else {
+      const makeup = ctx.createGain(); makeup.gain.value = MAKEUP;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 6; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.12;
+      const lim = ctx.createDynamicsCompressor(); lim.threshold.value = -3; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.05;
+      const guard = ctx.createWaveShaper(); guard.curve = new Float32Array([-0.97, 0.97]);      // linear; only catches a stray overshoot
+      master.connect(makeup).connect(comp).connect(lim).connect(guard).connect(ctx.destination);
+      nodes.push(makeup, comp, lim, guard);
+    }
+    const r = run = { master, nodes, timer: 0, src: null };
     if (CONFIG.discoLoop) {
       filePromise.then(buf => {
         if (run !== r || !buf) return;
@@ -781,7 +793,7 @@ const discoAudio = (() => {
     const r = run; run = null;
     clearInterval(r.timer);
     r.master.gain.cancelScheduledValues(ctx.currentTime); r.master.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.08);   // quick fade, no click
-    setTimeout(() => { try { if (r.src) r.src.stop(); r.master.disconnect(); r.comp.disconnect(); } catch (_) {} }, 600);
+    setTimeout(() => { try { if (r.src) r.src.stop(); r.nodes.forEach(n => n.disconnect()); } catch (_) {} }, 600);
   }
   return { unlock, start, stop };
 })();
