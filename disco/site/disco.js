@@ -805,7 +805,7 @@ function ytEnsure(){
             y.blocked = false; y.show = true;
           } else if (e.data === 0) stop();                        // ENDED
         },
-        onError: e => { console.warn('[disco] video unavailable (YouTube error ' + e.data + ')'); if (playing && playing.yt) stop(); }
+        onError: e => { yt.lastErr = e.data; console.warn('[disco] video unavailable (YouTube error ' + e.data + ')'); if (playing && playing.yt) stop(); }
       }
     });
   })).catch(err => { yt.ready = null; console.warn('[disco]', err.message); throw err; });
@@ -830,7 +830,18 @@ function ytStart(p){
     if (playing !== p) return;                                  // tapped away while the player was booting
     player.loadVideoById({ videoId: reel.id, startSeconds: start });
     ytNoCaptions();
-    y.timer = setTimeout(() => { if (!y.played) ytBlocked(p); }, 3000);   // nothing started: the browser refused sound-on autoplay
+    // Nothing started after 3s: is the browser refusing sound-on autoplay, or is the video just slow to load? A real block leaves the
+    // player idle (unstarted/cued); a slow connection leaves it BUFFERING. Keep waiting (up to ~12s) while it buffers, so a slow
+    // load doesn't get mistaken for a block and throw up YouTube's play button.
+    let waited = 0;
+    const check = () => {
+      if (y.played || playing !== p) return;
+      waited += 3000;
+      let st = -2; try { st = yt.player.getPlayerState(); } catch (_) {}
+      if (st === 3 && waited < 12000) { y.timer = setTimeout(check, 3000); return; }       // 3 = BUFFERING
+      ytBlocked(p);
+    };
+    y.timer = setTimeout(check, 3000);
   }).catch(() => {});
 }
 // The browser wouldn't start the video with sound from a tap on OUR page. Don't fight the player: show it, and let the tap
@@ -923,7 +934,7 @@ function setReels(list){
   attachPlaying();
   loadCovers();
   if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
-  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, startDist: fitDist(), outDist: outDist(), R0: stage.R0, RFULL: stage.RFULL, shadowBg: shadowEl.style.background, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
+  if (location.search.includes('stats')) window.__disco = { view: () => { const z = viewNow(), p = ORIGIN.clone().project(camera); return { R: ballR, stageR: stage.R, startDist: fitDist(), outDist: outDist(), R0: stage.R0, RFULL: stage.RFULL, shadowBg: shadowEl.style.background, z, bgScale, center: [(p.x+1)/2*stage.W, (1-p.y)/2*stage.H], target: [stage.bx, stage.by], shadow: shadowEl.style.transform, coveVisible: !!(coveMesh && coveMesh.visible), disco, camDist, fit: fitDist(), q: [ball.quaternion.x, ball.quaternion.y, ball.quaternion.z, ball.quaternion.w], pointers: pointers.size, pinching: !!pinch, dragging, yt: (() => { try { const pl = yt.player; return pl ? { state: pl.getPlayerState(), id: (pl.getVideoData() || {}).video_id, t: Math.round(pl.getCurrentTime()), err: yt.lastErr || null } : null; } catch (_) { return null; } })(), want: playing && playing.yt ? { id: playing.yt.videoId, played: playing.yt.played, blocked: playing.yt.blocked, show: playing.yt.show } : null }; }, logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 

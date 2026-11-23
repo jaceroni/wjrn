@@ -38,15 +38,16 @@ window.DISCO_CONFIG = {
   // The room is a picture. Positions are fractions of the picture, MEASURED from the file (not eyeballed): the soft halo the ball
   // hovers in, the pale floor pool its shadow lands on, and which band of the picture must stay on screen on wide screens.
   stage: {
-    image: 'bg-stage.webp', w: 1152, h: 2048,
-    halo: 0.456,                       // vertical centre of the glow the ball floats in
-    ovalX: 0.50, ovalY: 0.755, ovalW: 0.48,   // the floor pool: centre and width
+    image: 'bg-stage.webp', w: 1184, h: 2096,
+    halo: 0.390,                       // vertical centre of the sky glow the ball floats in (measured)
+    ovalX: 0.51, ovalY: 0.708, ovalW: 0.42,   // the lake's pale floor pool: centre and width (measured)
     startZoom: 0.25,                    // where the page starts: this fraction of the way from the picture's design size to 'the ball's sides touch the screen's sides' (0 = design size)
     shadow: 0.30,                       // peak opacity of the ball's anchor shadow on the floor pool (it was 0.55)
     depth: 0.10,                        // how much the picture grows when the ball zooms in (0 = never, 1 = scales with the ball). Small: it is a distant backdrop.
-    top: 0.30, bottom: 0.82,           // rows kept on screen on wide screens (halo top .. floor pool bottom)
-    topRow: 'linear-gradient(to right,rgb(169,178,147),rgb(162,172,139),rgb(162,172,139),rgb(159,169,136),rgb(162,172,139),rgb(162,172,139),rgb(164,171,139),rgb(162,172,139),rgb(161,171,138),rgb(159,168,135),rgb(161,171,138),rgb(162,172,139),rgb(164,174,141))'    // the picture's top row, used to extend the sky upward on tall screens with no seam
+    top: 0.234, bottom: 0.80,           // rows kept on screen on wide screens (glow top .. just below the pool)
+    topRow: 'linear-gradient(to right,rgb(181,186,156),rgb(181,186,156),rgb(181,186,156),rgb(179,183,156),rgb(179,183,156),rgb(181,186,156),rgb(181,186,156),rgb(179,183,156),rgb(179,183,156),rgb(178,182,155),rgb(179,183,156),rgb(181,186,156),rgb(182,187,157))'    // the picture's top row, used to extend the sky upward on tall screens with no seam
   },
+
   playingRing: false,              // the original design's pulsing amber outline round the playing tile; off because it read as a glowing border
   logoStyle: 'opal',               // the slabs the logo is etched into: 'opal' (milky, with colour flashes) or 'agate' (the original sage stone)
   feed: 'data/reels.json',         // written by the feed script on the server (kept outside the deploy tree)
