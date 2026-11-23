@@ -153,12 +153,13 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true,
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xB7BD9F);
+scene.background = null;     // transparent: the stage picture (#bg) shows behind the canvas; the 3D room only appears in disco mode
 const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 200);
 const ball = new THREE.Group(); scene.add(ball);
 
 /* the room: a seamless sage-paper cove — floor that bends up into a wall, no corners, no horizon */
 const FLOOR_Y = -1.75;
+let coveMesh = null;
 const coveMat = new THREE.ShaderMaterial({
   uniforms: { res: { value: new THREE.Vector2(1,1) }, camPos: { value: new V() }, uDisco: DISCO, uRoomVid: { value: 0 }, uBallRot: BALLROT, cD: { value: NEON_COLS },
     cSage: { value: new THREE.Color(BRAND.sage) }, cIvory: { value: new THREE.Color(BRAND.ivory) },
@@ -195,7 +196,7 @@ const coveMat = new THREE.ShaderMaterial({
       vec2 q = gl_FragCoord.xy/res - 0.5;
       col *= 1.0 - 0.32*dot(q,q)*1.6;                          // gentle vignette
       col += (hash(floor(gl_FragCoord.xy)) - 0.5) * 0.045;      // paper grain
-      gl_FragColor = vec4(col, 1.0 - ${ROOM_VIDEO.toFixed(3)} * uDisco * uRoomVid);   // see-through only in disco, only while a video is projected
+      gl_FragColor = vec4(col, uDisco * (1.0 - ${ROOM_VIDEO.toFixed(3)} * uRoomVid));   // fully see-through normally (the stage picture shows); fades to the club in disco, and lets a projected video through
     }`
 });
 {
@@ -208,17 +209,9 @@ const coveMat = new THREE.ShaderMaterial({
   prof.forEach(([z,y]) => { pos.push(-X, y, z, X, y, z); });
   for (let k=0;k<prof.length-1;k++){ const a = k*2; idx.push(a, a+1, a+2, a+1, a+3, a+2); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3)); g.setIndex(idx);
-  const cove = new THREE.Mesh(g, coveMat); cove.material.side = THREE.DoubleSide; scene.add(cove);
+  const cove = new THREE.Mesh(g, coveMat); cove.material.side = THREE.DoubleSide; scene.add(cove); coveMesh = cove;
 }
-// soft contact shadow on the floor, so the ball reads as floating
-const shadow = (() => {
-  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
-  const g = x.createRadialGradient(128,128,0,128,128,128);
-  g.addColorStop(0,'rgba(48,66,39,0.6)'); g.addColorStop(0.4,'rgba(48,66,39,0.3)'); g.addColorStop(1,'rgba(48,66,39,0)');
-  x.fillStyle = g; x.fillRect(0,0,256,256);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
-  m.rotation.x = -Math.PI/2; m.position.y = FLOOR_Y + 0.003; scene.add(m); return m;
-})();
+// the ball's contact shadow is a soft DOM ellipse placed on the stage picture's floor pool (see placeShadow)
 
 /* satin glass: soft warm sheen, no mirror glare, no neon */
 const WARM = [new THREE.Color(BRAND.ivory), new THREE.Color(BRAND.amber), new THREE.Color(0xDCE3C8)];
@@ -921,6 +914,8 @@ function setReels(list){
   buildBall();
   attachPlaying();
   loadCovers();
+  if (location.search.includes('stats')) setTimeout(() => { const L = camera.position.length(), p = ORIGIN.clone().project(camera); console.log('[disco] stage', JSON.stringify({ viewport: [stage.W, stage.H], picture: [Math.round(stage.dw), Math.round(stage.dh)], pictureTopY: Math.round(stage.ty), ballTarget: [Math.round(stage.bx), Math.round(stage.by), Math.round(stage.R)], ballActual: [Math.round((p.x+1)/2*stage.W), Math.round((1-p.y)/2*stage.H), Math.round(camFocal()/Math.sqrt(L*L-1))], poolCentre: [Math.round(stage.ox), Math.round(stage.oy)], poolWidth: Math.round(stage.ovalW) })); }, 400);
+  if (location.search.includes('stats')) window.__disco = { logoPoints: () => LOGO_CENTERS.map((C, k) => { ball.updateMatrixWorld(); const w = C.clone().multiplyScalar(logoTiles[k].h).applyMatrix4(ball.matrixWorld), n = C.clone().transformDirection(ball.matrixWorld), p = w.clone().project(camera); return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, facing: n.dot(camera.position.clone().sub(w).normalize()) }; }) };   // test-only (?stats): where each logo slab is on screen
   if (location.search.includes('stats')) console.log('[disco] stats', JSON.stringify({ reels: count, videoTileR: +reelR.toFixed(4), logoSlabR: +(logoTiles.reduce((a, c) => a + c.R, 0) / 4).toFixed(4) }));
 }
 
@@ -1130,17 +1125,62 @@ canvas.addEventListener('wheel', e => { e.preventDefault(); camDistTarget = clam
 canvas.addEventListener('dblclick', e => e.preventDefault());
 document.addEventListener('gesturestart', e => e.preventDefault());
 
-/* ---------- camera fit ---------- */
+/* ---------- the stage picture + camera fit ---------- */
+// The room is a picture (CONFIG.stage). Measured from the file: the soft halo the ball hovers in, and the pale floor pool its
+// shadow lands on, sit at fixed fractions of the picture. layoutStage() works out, for this screen, how the picture is scaled
+// and placed (phones: fit the width and extend the sky upward; wide screens: show the halo-to-floor band, mirror the picture
+// outward to fill the sides), then where the ball goes (hovering in the halo, sized to the stage, shadow on the pool).
+const STAGE = CONFIG.stage, bgEl = $('bg'), shadowEl = $('shadow');
+let stage = null;
+function layoutStage(){
+  const W = innerWidth, H = innerHeight, S = STAGE;
+  const s = Math.min(W / S.w, H / ((S.bottom - S.top) * S.h));       // phones: fit the width. Wide screens: the halo-to-floor band fills the height
+  const dw = S.w * s, dh = S.h * s;
+  const b = Math.max(S.bottom, Math.min(1, S.top + H / dh));          // which row of the picture sits on the screen's bottom edge
+  const ty = H - b * dh, tx = (W - dw) / 2;
+  const R = Math.min(0.30 * dw, 0.28 * H);                            // the ball's radius on screen
+  const yh = ty + S.halo * dh, yo = ty + S.ovalY * dh;
+  stage = { W, H, dw, dh, tx, ty, R, bx: W / 2, by: Math.max(yh, R + 0.07 * H), ox: W / 2 + (S.ovalX - 0.5) * dw, oy: yo, ovalW: S.ovalW * dw };
+  // the picture, then mirrored copies outward so the sides never stop abruptly; sky extended upward where the picture is shorter than the screen
+  bgEl.textContent = '';
+  const K = Math.ceil(Math.max(0, tx) / dw);
+  for (let k = -K; k <= K; k++) {
+    const flip = Math.abs(k) % 2 === 1 ? 'scaleX(-1)' : '';
+    if (ty > 0) { const f = document.createElement('div'); f.className = 'fill'; f.style.cssText = `left:${(tx + k*dw).toFixed(1)}px;top:0;width:${dw.toFixed(1)}px;height:${(ty + 1).toFixed(1)}px;background:${S.topRow};transform:${flip}`; bgEl.appendChild(f); }
+    const t = document.createElement('div'); t.className = 'tile';
+    t.style.cssText = `left:${(tx + k*dw).toFixed(1)}px;top:${ty.toFixed(1)}px;width:${dw.toFixed(1)}px;height:${dh.toFixed(1)}px;background-image:url(${S.image});transform:${flip}`;
+    bgEl.appendChild(t);
+  }
+}
 let camDist = 4, camDistTarget = 4, zoomK = 1;
-function fitDist(){ const vf = THREE.MathUtils.degToRad(camera.fov), hf = 2*Math.atan(Math.tan(vf/2)*camera.aspect); return (camera.aspect < 0.75 ? 1.12 : 1.3)/Math.sin(Math.min(vf,hf)/2); }
+const camFocal = () => (innerHeight / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+// the camera distance at which the ball's radius on screen equals the stage's ball radius (unit sphere seen from L: radius = f / sqrt(L^2 - 1))
+function fitDist(){ return Math.sqrt((camFocal() / stage.R) ** 2 + 1) / 1.0384; }   // 1.0384 = |(0, .28, 1)|, the camera's offset direction
 function clampDist(d){ const f = fitDist(); return Math.min(f*1.7, Math.max(Math.max(1.45, f*0.32), d)); }
 function resize(){
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
   coveMat.uniforms.res.value.set(w*renderer.getPixelRatio(), h*renderer.getPixelRatio());
+  layoutStage();
   camDistTarget = clampDist(fitDist()*zoomK); camDist = camDistTarget; placeCamera();
 }
-function placeCamera(){ camera.position.set(0, camDist*0.28, camDist); camera.lookAt(0,-0.18,0); camera.updateMatrixWorld(); }
+const ORIGIN = new V();
+function placeCamera(){
+  camera.position.set(0, camDist*0.28, camDist); camera.lookAt(0,-0.18,0); camera.updateMatrixWorld();
+  if (!stage) return;
+  camera.clearViewOffset();
+  const p = ORIGIN.clone().project(camera);                            // where the ball's centre lands before any shift
+  camera.setViewOffset(stage.W, stage.H, (p.x + 1)/2*stage.W - stage.bx, (1 - p.y)/2*stage.H - stage.by, stage.W, stage.H);   // slide the view so the ball hovers on the stage
+}
+// the shadow sits on the picture's floor pool, sized to the ball's current on-screen radius (so it grows as you zoom), gone in disco
+function placeShadow(){
+  if (!stage) return;
+  const L = camera.position.length(), Rc = camFocal() / Math.sqrt(Math.max(1.0001, L*L - 1));
+  const w = Math.min(1.5 * Rc, 1.05 * stage.ovalW), h = w * 0.26;
+  shadowEl.style.width = w.toFixed(1) + 'px'; shadowEl.style.height = h.toFixed(1) + 'px';
+  shadowEl.style.transform = `translate(${(stage.ox - w/2).toFixed(1)}px,${(stage.oy - h/2).toFixed(1)}px)`;
+  shadowEl.style.opacity = (1 - Math.min(1, disco*1.6)).toFixed(3);
+}
 addEventListener('resize', resize);
 
 /* ---------- loop ---------- */
@@ -1185,8 +1225,8 @@ function frame(){
   DISCO.value = disco;
   coveMat.uniforms.uRoomVid.value += ((roomVideo() ? 1 : 0) - coveMat.uniforms.uRoomVid.value) * (1 - Math.exp(-dt*3));
   BALLROT.value.setFromMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(ball.quaternion.clone().invert()));
-  shadow.material.opacity = 0.9 * (1 - disco);
-  scene.background.setRGB(0.718*(1-disco) + 0.01*disco, 0.741*(1-disco) + 0.008*disco, 0.624*(1-disco) + 0.014*disco);
+  if (coveMesh) coveMesh.visible = disco > 0.002;
+  placeShadow();
   beams.children.forEach((g, i) => { g.rotation.z = Math.sin(time*0.6 + g.userData.phase)*0.55; g.rotation.x = 0.35 + Math.cos(time*0.45 + g.userData.phase)*0.25; g.children[0].material.opacity = 0.07*disco; });
   renderer.render(scene, camera);
   ytPlace();                                                // after the scene: the video follows this frame's camera + ball
