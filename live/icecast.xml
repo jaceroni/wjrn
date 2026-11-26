@@ -1,0 +1,34 @@
+<icecast>
+  <location>WJRN</location>
+  <admin>admin@localhost</admin>
+  <limits>
+    <clients>150</clients>
+    <sources>1</sources>
+    <queue-size>524288</queue-size>
+    <burst-on-connect>1</burst-on-connect>
+    <burst-size>65535</burst-size>
+    <source-timeout>60</source-timeout>
+  </limits>
+  <authentication>
+    <source-password>__SOURCE_PASSWORD__</source-password>
+    <admin-user>admin</admin-user>
+    <admin-password>__ADMIN_PASSWORD__</admin-password>
+  </authentication>
+  <hostname>radio.jacewonmusic.com</hostname>
+  <listen-socket>
+    <port>18000</port>
+    <bind-address>127.0.0.1</bind-address>
+  </listen-socket>
+  <paths>
+    <basedir>/usr/share/icecast2</basedir>
+    <logdir>/var/log/wjrn-live</logdir>
+    <webroot>/usr/share/icecast2/web</webroot>
+    <adminroot>/usr/share/icecast2/admin</adminroot>
+  </paths>
+  <logging>
+    <accesslog>access.log</accesslog>
+    <errorlog>error.log</errorlog>
+    <loglevel>2</loglevel>
+    <logsize>10000</logsize>
+  </logging>
+</icecast>

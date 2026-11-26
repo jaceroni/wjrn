@@ -1,0 +1,14 @@
+[Unit]
+Description=WJRN live relay - Twitch audio to Icecast
+After=wjrn-live-icecast.service network-online.target
+Wants=wjrn-live-icecast.service
+
+[Service]
+User=wjrnlive
+EnvironmentFile=/etc/wjrn-live/env
+ExecStart=/usr/bin/python3 /opt/wjrn-live/relay.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
