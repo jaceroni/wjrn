@@ -1,0 +1,12 @@
+[Unit]
+Description=WJRN live relay - start listeners on a clean MP3 frame
+After=wjrn-live-icecast.service
+
+[Service]
+User=wjrnlive
+ExecStart=/usr/bin/python3 /opt/wjrn-live/align.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
