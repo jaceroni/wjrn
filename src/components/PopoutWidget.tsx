@@ -6,15 +6,15 @@ import logoBchs from "../assets/images/miniplayer-logo-bchs.svg";
 import logoGbs  from "../assets/images/miniplayer-logo-gbs.svg";
 
 const STATION_LOGOS: Record<string, string> = {
-  wjrn: logoWjrn, rock_garden: logoTrg, bridge_city: logoBchs, golden_boombox: logoGbs,
+  wjrn: logoWjrn, wjrn_live: logoWjrn, rock_garden: logoTrg, bridge_city: logoBchs, golden_boombox: logoGbs,
 };
 const STATION_COLORS: Record<string, string> = {
-  wjrn: "#d7b158", rock_garden: "#74b338", bridge_city: "#ff0066", golden_boombox: "#e2ac00",
+  wjrn: "#d7b158", wjrn_live: "#ff3333", rock_garden: "#74b338", bridge_city: "#ff0066", golden_boombox: "#e2ac00",
 };
 const STATION_NAMES: Record<string, string> = {
-  wjrn: "WJRN", rock_garden: "THE ROCK GARDEN", bridge_city: "BRIDGE CITY HANG SUITE", golden_boombox: "THE GOLDEN BOOMBOX",
+  wjrn: "WJRN", wjrn_live: "LIVE BROADCAST — 92.3", rock_garden: "THE ROCK GARDEN", bridge_city: "BRIDGE CITY HANG SUITE", golden_boombox: "THE GOLDEN BOOMBOX",
 };
-const CYCLE: readonly string[] = ["wjrn", "rock_garden", "bridge_city", "golden_boombox"];
+const CYCLE: readonly string[] = ["wjrn", "wjrn_live", "rock_garden", "bridge_city", "golden_boombox"];
 
 const VIZ_H = [35,70,50,90,60,80,45,75,55,85,65,95,50,70,40,80,60,90,45,75];
 
@@ -39,8 +39,9 @@ export default function PopoutWidget({ onClose }: Props) {
   const isConnecting = audioState === "connecting";
 
   const cycleStation = () => {
-    const idx  = CYCLE.indexOf(stationId);
-    const next = CYCLE[(idx + 1) % CYCLE.length];
+    const dial = CYCLE.filter((id) => id !== "wjrn_live" || metadata.wjrn_live.isOnline || stationId === id);
+    const idx  = dial.indexOf(stationId);
+    const next = dial[(idx + 1) % dial.length];
     toggleStation(next as string);
   };
 
@@ -144,7 +145,7 @@ export default function PopoutWidget({ onClose }: Props) {
 
         {/* Play / Pause */}
         <button
-          onClick={() => toggleStation(stationId)}
+          onClick={() => toggleStation(stationId === "wjrn_live" && !metadata.wjrn_live.isOnline ? "rock_garden" : stationId)}
           className="w-14 h-14 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-lg"
           style={{ backgroundColor: accent, boxShadow: `0 0 20px ${accent}44` }}
         >

@@ -8,6 +8,7 @@ import logoGbs  from "../assets/images/miniplayer-logo-gbs.svg";
 
 const STATION_LOGOS: Record<string, string> = {
   wjrn:          logoWjrn,
+  wjrn_live:     logoWjrn,
   rock_garden:   logoTrg,
   bridge_city:   logoBchs,
   golden_boombox: logoGbs,
@@ -16,6 +17,7 @@ const STATION_LOGOS: Record<string, string> = {
 // Station display metadata used only for the mini-player bar
 const STATION_NAMES: Record<string, string> = {
   wjrn: "WJRN",
+  wjrn_live: "LIVE BROADCAST — 92.3",
   rock_garden: "THE ROCK GARDEN",
   bridge_city: "BRIDGE CITY HANG SUITE",
   golden_boombox: "THE GOLDEN BOOMBOX",
@@ -23,6 +25,7 @@ const STATION_NAMES: Record<string, string> = {
 
 const STATION_SLUGS: Record<string, string> = {
   wjrn: "/",
+  wjrn_live: "/",
   rock_garden: "/the-rock-garden",
   bridge_city: "/bridge-city-hang-suite",
   golden_boombox: "/the-golden-boombox",
@@ -30,12 +33,13 @@ const STATION_SLUGS: Record<string, string> = {
 
 const STATION_COLORS: Record<string, string> = {
   wjrn: "#d7b158",
+  wjrn_live: "#ff3333",
   rock_garden: "#74b338",
   bridge_city: "#ff0066",
   golden_boombox: "#e2ac00",
 };
 
-const CYCLE: readonly string[] = ["wjrn", "rock_garden", "bridge_city", "golden_boombox"];
+const CYCLE: readonly string[] = ["wjrn", "wjrn_live", "rock_garden", "bridge_city", "golden_boombox"];
 
 export default function MiniPlayer() {
   const {
@@ -71,14 +75,17 @@ export default function MiniPlayer() {
     // On-demand: just pause/resume — don't switch to live
     if (isOnDemand) {
       togglePlayback();
+    } else if (displayStationId === "wjrn_live" && !metadata.wjrn_live.isOnline) {
+      toggleStation("rock_garden"); // the show is over
     } else {
       toggleStation(displayStationId);
     }
   };
 
   const handleNextStation = () => {
-    const idx  = CYCLE.indexOf(displayStationId || "wjrn");
-    const next = CYCLE[(idx + 1) % CYCLE.length];
+    const dial = CYCLE.filter((id) => id !== "wjrn_live" || metadata.wjrn_live.isOnline || displayStationId === id);
+    const idx  = dial.indexOf(displayStationId || "wjrn");
+    const next = dial[(idx + 1) % dial.length];
     toggleStation(next);
   };
 
@@ -153,7 +160,7 @@ export default function MiniPlayer() {
         {/* Controls */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Station page link */}
-          {displayStationId && displayStationId !== "wjrn" && (
+          {displayStationId && !displayStationId.startsWith("wjrn") && (
             <a
               href={STATION_SLUGS[displayStationId]}
               onClick={(e) => {

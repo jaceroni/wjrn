@@ -15,6 +15,12 @@ const STATION_STREAM_MAP: Record<string, { streamUrl: string; shortcode: string;
     shortcode: "wjrn",
     name: "WJRN",
   },
+  // Live Twitch audio relay (see live/). Not an AzuraCast station; playable only while /live/status.json says so.
+  wjrn_live: {
+    streamUrl: "https://radio.jacewonmusic.com/listen/wjrn_live/radio.mp3",
+    shortcode: "wjrn_live",
+    name: "LIVE BROADCAST",
+  },
   rock_garden: {
     streamUrl: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3",
     shortcode: "the_rock_garden",
@@ -95,6 +101,16 @@ const INITIAL_METADATA: Record<string, NowPlaying> = {
     listeners: fakeListenerCount("wjrn"),
     isPlayingLive: false,
     isOnline: true,
+    nextTrack: null,
+  },
+  wjrn_live: {
+    trackTitle: "Live Broadcast",
+    trackArtist: "Twitch.tv/jacewonmusic",
+    album: "Live",
+    artUrl: defaultArt,
+    listeners: 0,
+    isPlayingLive: true,
+    isOnline: false,
     nextTrack: null,
   },
   rock_garden: {
@@ -465,6 +481,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
 
           // Default all to offline first
           Object.keys(next).forEach((id) => {
+            if (id === "wjrn_live") return; // not an AzuraCast station — the relay status poll owns it
             next[id] = {
               ...next[id],
               isOnline: false,
@@ -516,6 +533,35 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
+  // Live relay status (92.3) — puts the live slot on and off the air.
+  const [isRelayLive, setIsRelayLive] = useState(false);
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const res = await fetch(`${AZURACAST_HOST}/live/status.json`, { cache: "no-store" });
+        const live = !!(await res.json()).live;
+        setIsRelayLive(live);
+        setMetadata((prev) => ({
+          ...prev,
+          wjrn_live: { ...INITIAL_METADATA.wjrn_live, isOnline: live },
+        }));
+      } catch {
+        // keep the last known state on a network blip
+      }
+    };
+    poll();
+    const id = setInterval(poll, 10000);
+    return () => clearInterval(id);
+  }, []);
+
+  // The show ended while someone was listening: carry on with the next station on the dial.
+  const wasRelayLiveRef = useRef(false);
+  useEffect(() => {
+    const ended = wasRelayLiveRef.current && !isRelayLive;
+    wasRelayLiveRef.current = isRelayLive;
+    if (ended && activeStationId === "wjrn_live") toggleStation("rock_garden");
+  }, [isRelayLive, activeStationId]);
+
   // Stall watchdog for LIVE streams. A dropped connection (wifi blip, server
   // restart, TV sleep) often fires no 'error'/'ended' event, so the UI keeps
   // saying "playing" while audio.currentTime is frozen — and pause/play on the
@@ -551,7 +597,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!station) return;
 
     // Block offline stations
-    if (metadata[stationId] && !metadata[stationId].isOnline) {
+    // (The live slot is exempt: the embedded player can see it go on air before this page's poll does.)
+    if (stationId !== "wjrn_live" && metadata[stationId] && !metadata[stationId].isOnline) {
       console.warn(`Playback blocked: ${stationId} is offline.`);
       return;
     }

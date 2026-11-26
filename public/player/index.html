@@ -153,6 +153,17 @@ var STATIONS = [
     description: "THIS IS WJRN – HOSTED BY JACEWON – BROADCASTING LIVE FROM CALIFORNIA – HOME OF THE ROCK GARDEN, BRIDGE CITY HANG SUITE, & GOLDEN BOOMBOX SESSIONS  "
   },
   {
+    // Live Twitch audio (see live/). On the dial only while /live/status.json says it's live; skipped otherwise.
+    key: "wjrn_live",
+    live: true,
+    name: "Live Broadcast",
+    frequency: 92.3,
+    stream: "https://radio.jacewonmusic.com/listen/wjrn_live/radio.mp3",
+    art: "/assets/images/jacewon-thumbnail.jpg",
+    tuning: "TUNING TO 92.3 MHZ — LIVE BROADCAST ON TWITCH.TV",
+    description: "THIS IS A LIVE BROADCAST – JOIN US NOW ON TWITCH.TV/JACEWONMUSIC  "
+  },
+  {
     key: "rock_garden",
     name: "The Rock Garden",
     frequency: 95.5,
@@ -249,6 +260,7 @@ function setTickerStatic(text) {
     el.style.position = 'relative';
     el.style.left = 'auto';
     el.style.transform = 'translateX(0)';
+    el.style.fontSize = '';
     el.textContent = text;
   }
   tickerMode = 'A';
@@ -270,6 +282,7 @@ function setTickerScroll(text, mode) {
     tickerMode = mode;
     lastTickerTime = null;
     // Measure single-copy width then repeat for seamless loop
+    el.style.fontSize = '';
     el.textContent = text;
     var singleW = el.scrollWidth || 1;
     var repeats = Math.ceil(460 / singleW) + 1;
@@ -294,6 +307,11 @@ function tickerTakeover(text) {
 function restoreTicker() {
   if (playerState === 1) { setTickerStatic('CLICK ARTWORK OR TUNER TO BEGIN PLAYBACK'); return; }
   if (playerState === 3) { setTickerStatic('PAUSED – ' + STATIONS[currentStation].name.toUpperCase()); return; }
+  if (STATIONS[currentStation].live) {
+    // No track metadata for the live show: settle on its message, but let a tuning message finish first.
+    if (!tickerTakeoverTimer) setTickerScroll(STATIONS[currentStation].description, 'C');
+    return;
+  }
   if (tickerPreTakeover === 'C') {
     setTickerScroll(STATIONS[currentStation].description, 'C');
   } else {
@@ -305,6 +323,7 @@ function restoreTicker() {
 }
 
 function buildMetaText() {
+  if (STATIONS[currentStation].live) return STATIONS[currentStation].description;
   if (!currentTitle && !currentArtist) {
     return STATIONS[currentStation].name.toUpperCase() + ' –  ';
   }
@@ -513,6 +532,11 @@ function showArtOverlay(show) {
 
 // ── METADATA ──────────────────────────────────────────────────────────────────
 function fetchMeta() {
+  var live = STATIONS[currentStation].live ? STATIONS[currentStation] : null;
+  if (live) {
+    if (currentArtUrl !== live.art) { currentArtUrl = live.art; updateArt(live.art); }
+    return;
+  }
   fetch(STATIONS[currentStation].api)
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -757,9 +781,12 @@ function togglePlayPause() {
 function goToStation(targetIndex) {
   if (isTuning || !audioCtx || targetIndex === currentStation) return;
   isTuning = true;
+  var leavingLive = !!STATIONS[currentStation].live;
   currentStation = targetIndex;
   var st = STATIONS[currentStation];
-  tickerTakeover('TUNING TO ' + st.frequency + ' MHz – ' + st.name.toUpperCase());
+  if (leavingLive) tickerMode = 'B'; // so the next station settles on track info, not its description
+  tickerTakeover(st.tuning || 'TUNING TO ' + st.frequency + ' MHz – ' + st.name.toUpperCase());
+  if (st.tuning) fitTicker();
   playStatic(1.5);
   setTunerTick(st.frequency);
   vuTarget = Math.PI / 4;
@@ -780,10 +807,60 @@ function goToStation(targetIndex) {
 function switchStation(dir) {
   if (isTuning) return;
   var d = (dir !== undefined) ? dir : 1;
-  var target = (currentStation + d + STATIONS.length) % STATIONS.length;
+  var target = nextAvailable(currentStation, d);
   if (!audioCtx) { initAudio(target); return; }
   goToStation(target);
 }
+
+// ── LIVE SLOT (92.3) ─────────────────────────────────────────────────────────
+var liveOn = false;
+
+// Next station in direction d, skipping the live slot while it's off air.
+function nextAvailable(from, d) {
+  var i = from;
+  do { i = (i + d + STATIONS.length) % STATIONS.length; } while (STATIONS[i].live && !liveOn);
+  return i;
+}
+
+// The live tuning message is a little wider than the ticker window: shrink it just enough to fit.
+function fitTicker() {
+  var el = document.getElementById('ticker-text');
+  el.style.fontSize = '';
+  if (el.scrollWidth > 430) el.style.fontSize = (14 * 430 / el.scrollWidth).toFixed(2) + 'px';
+}
+
+// The show ended while this slot is tuned in: move on to the next station so nobody sits in silence.
+// A synced (homepage) copy doesn't decide for itself — the page's own player moves and tells it.
+function leaveLive() {
+  if (isSynced || !STATIONS[currentStation].live) return;
+  if (isTuning) { setTimeout(leaveLive, 500); return; }
+  var next = nextAvailable(currentStation, 1);
+  // Playing, or cut off because the stream ended: keep playing on the next station.
+  if (!audioCtx || playerState !== 3 || audioEl.ended) {
+    if (audioCtx) { goToStation(next); } else { currentStation = next; setTunerTick(STATIONS[next].frequency); }
+    return;
+  }
+  // Paused by the listener: retune quietly and stay paused.
+  currentStation = next;
+  setTunerTick(STATIONS[next].frequency);
+  audioEl.src = STATIONS[next].stream;
+  currentTitle = ''; currentArtist = ''; currentArtUrl = '';
+  setTickerStatic('PAUSED – ' + STATIONS[next].name.toUpperCase());
+  notifyStationChanged();
+  fetchMeta();
+}
+
+function pollLive() {
+  fetch('/live/status.json', { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      liveOn = !!d.live;
+      if (!liveOn) leaveLive();
+    })
+    .catch(function() {}); // keep the last known state on a network blip
+}
+pollLive();
+setInterval(pollLive, 10000);
 
 // ── RESPONSIVE SCALING ────────────────────────────────────────────────────────
 function scalePlayer() {
