@@ -121,6 +121,7 @@ export default function NebulaHomepage({
     setEqMono,
     setEqBalance,
     analyserRef,
+    markReceiverPlayback,
     isMiniPlayerVisible,
     totalListeners,
   } = usePlayer();
@@ -227,6 +228,7 @@ export default function NebulaHomepage({
         if (data.station && data.station !== activeStationId) {
           toggleStation(data.station);
         }
+        if (data.byUser) markReceiverPlayback();
         return;
       }
       if (data.type === "playStateChanged") {
@@ -245,6 +247,7 @@ export default function NebulaHomepage({
         } else if (isSameStationActive && audioState === "playing") {
           togglePlayback();
         }
+        if (data.byUser) markReceiverPlayback();
         return;
       }
       if (data.type === "eqControl") {
@@ -289,6 +292,7 @@ export default function NebulaHomepage({
     audioState,
     toggleStation,
     togglePlayback,
+    markReceiverPlayback,
     setIsMuted,
     setEqBassCut,
     setEqMidCut,

@@ -206,15 +206,21 @@ var isPopout = window.location.search.includes('popout=true');
 // don't play the same stream out loud at once.
 var isSynced = window.location.search.includes('sync=1');
 
+// Lets the homepage tell a listener's own action on this receiver apart from an echo of something it asked for.
+var userActionAt = 0;
+function byUser() { return Date.now() - userActionAt < 5000; }
+document.addEventListener('click', function() { userActionAt = Date.now(); }, true);
+document.addEventListener('keydown', function() { userActionAt = Date.now(); }, true);
+
 function notifyStationChanged() {
   try {
-    window.parent.postMessage({ source: 'wjrn-player', type: 'stationChanged', station: STATIONS[currentStation].key }, '*');
+    window.parent.postMessage({ source: 'wjrn-player', type: 'stationChanged', station: STATIONS[currentStation].key, byUser: byUser() }, '*');
   } catch (e) {}
 }
 
 function notifyPlayStateChanged(playing) {
   try {
-    window.parent.postMessage({ source: 'wjrn-player', type: 'playStateChanged', playing: playing, station: STATIONS[currentStation].key }, '*');
+    window.parent.postMessage({ source: 'wjrn-player', type: 'playStateChanged', playing: playing, station: STATIONS[currentStation].key, byUser: byUser() }, '*');
   } catch (e) {}
 }
 
@@ -537,9 +543,11 @@ function fetchMeta() {
     if (currentArtUrl !== live.art) { currentArtUrl = live.art; updateArt(live.art); }
     return;
   }
+  var asked = currentStation;
   fetch(STATIONS[currentStation].api)
     .then(function(r) { return r.json(); })
     .then(function(d) {
+      if (asked !== currentStation) return;
       var np = d && d.now_playing && d.now_playing.song;
       if (np && (np.title || np.artist)) {
         currentTitle = np.title || '';
@@ -558,6 +566,7 @@ function fetchMeta() {
       }
     })
     .catch(function() {
+      if (asked !== currentStation) return;
       currentTitle = 'LIVE STREAM';
       currentArtist = STATIONS[currentStation].name.toUpperCase();
       if ((tickerMode === 'B' || (playerState === 2 && tickerMode === 'A' && !tickerTakeoverTimer)) && tickerPreTakeover !== 'C') {
@@ -621,6 +630,7 @@ function initDirectAudio() {
     notifyPlayStateChanged(true);
   };
   audioEl.onpause = function() {
+    if (STATIONS[currentStation].live && audioEl.ended) return; // show over, not a listener pause
     if (playerState !== 1) {
       playerState = 3;
       showArtOverlay(true);
@@ -650,6 +660,8 @@ function initAudio(startIndex) {
     currentStation = startIndex;
     setTunerTick(STATIONS[startIndex].frequency);
   }
+  var st = STATIONS[currentStation];
+  if (st.tuning) { tickerTakeover(st.tuning); fitTicker(); }
   if (directAudio) { initDirectAudio(); return; }
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   // A freshly-created AudioContext can be born 'suspended' when it's not the
@@ -730,6 +742,7 @@ function initAudio(startIndex) {
   };
 
   audioEl.onpause = function() {
+    if (STATIONS[currentStation].live && audioEl.ended) return; // show over, not a listener pause
     if (playerState !== 1) {
       playerState = 3;
       showArtOverlay(true);
@@ -768,6 +781,7 @@ setInterval(function() {
 function togglePlayPause() {
   if (!audioCtx) { initAudio(); return; }
   if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioEl.paused && liveOn && !STATIONS[currentStation].live) { lockedTune(); return; }
   if (audioEl.paused) {
     reconnectStream();
     showArtOverlay(false);
@@ -806,14 +820,18 @@ function goToStation(targetIndex) {
 
 function switchStation(dir) {
   if (isTuning) return;
+  if (liveOn) { lockedTune(); return; }
   var d = (dir !== undefined) ? dir : 1;
   var target = nextAvailable(currentStation, d);
   if (!audioCtx) { initAudio(target); return; }
   goToStation(target);
 }
 
-// ── LIVE SLOT (92.3) ─────────────────────────────────────────────────────────
+// ── LIVE TAKEOVER (92.3) ─────────────────────────────────────────────────────
+// While the show is on air this receiver plays only the live broadcast. The slot is off the dial otherwise.
 var liveOn = false;
+var LIVE_INDEX = 1;
+var returnStation = 0; // where to go when the show ends (WJRN if the listener arrived during it)
 
 // Next station in direction d, skipping the live slot while it's off air.
 function nextAvailable(from, d) {
@@ -829,25 +847,53 @@ function fitTicker() {
   if (el.scrollWidth > 430) el.style.fontSize = (14 * 430 / el.scrollWidth).toFixed(2) + 'px';
 }
 
-// The show ended while this slot is tuned in: move on to the next station so nobody sits in silence.
-// A synced (homepage) copy doesn't decide for itself — the page's own player moves and tells it.
-function leaveLive() {
-  if (isSynced || !STATIONS[currentStation].live) return;
-  if (isTuning) { setTimeout(leaveLive, 500); return; }
-  var next = nextAvailable(currentStation, 1);
-  // Playing, or cut off because the stream ended: keep playing on the next station.
-  if (!audioCtx || playerState !== 3 || audioEl.ended) {
-    if (audioCtx) { goToStation(next); } else { currentStation = next; setTunerTick(STATIONS[next].frequency); }
+// Any tuning control during a show: go to the live broadcast, or if already there, static and straight back.
+function lockedTune() {
+  if (isTuning) return;
+  if (!audioCtx) { initAudio(LIVE_INDEX); return; }
+  if (currentStation !== LIVE_INDEX) { goToStation(LIVE_INDEX); return; }
+  isTuning = true;
+  tickerTakeover(STATIONS[LIVE_INDEX].tuning);
+  fitTicker();
+  playStatic(1.5);
+  setTimeout(function() { isTuning = false; }, 1600);
+}
+
+// Move the dial without starting playback (nothing playing yet, or paused).
+function quietTune(index) {
+  currentStation = index;
+  setTunerTick(STATIONS[index].frequency);
+  currentTitle = ''; currentArtist = ''; currentArtUrl = '';
+  if (audioEl) {
+    audioEl.src = STATIONS[index].stream;
+    playerState = 3;
+    showArtOverlay(true);
+    setTickerStatic('PAUSED – ' + STATIONS[index].name.toUpperCase());
+  }
+  fetchMeta();
+}
+
+// A synced (homepage) copy only ever moves quietly: the page's own player moves real listeners and tells it.
+function enterLive() {
+  if (!liveOn || STATIONS[currentStation].live) return;
+  if (isSynced) {
+    if (!audioCtx || audioEl.paused) quietTune(LIVE_INDEX);
     return;
   }
-  // Paused by the listener: retune quietly and stay paused.
-  currentStation = next;
-  setTunerTick(STATIONS[next].frequency);
-  audioEl.src = STATIONS[next].stream;
-  currentTitle = ''; currentArtist = ''; currentArtUrl = '';
-  setTickerStatic('PAUSED – ' + STATIONS[next].name.toUpperCase());
-  notifyStationChanged();
-  fetchMeta();
+  if (isTuning) { setTimeout(enterLive, 500); return; }
+  returnStation = audioCtx ? currentStation : 0;
+  if (!audioCtx || playerState === 3) { quietTune(LIVE_INDEX); } else { goToStation(LIVE_INDEX); }
+}
+
+function leaveLive() {
+  if (liveOn || !STATIONS[currentStation].live) return;
+  if (isTuning) { setTimeout(leaveLive, 500); return; }
+  if (isSynced) {
+    if (!audioCtx || audioEl.paused) quietTune(returnStation);
+    return;
+  }
+  // Paused by the listener: retune quietly and stay paused. Otherwise keep playing.
+  if (!audioCtx || (playerState === 3 && !audioEl.ended)) { quietTune(returnStation); } else { goToStation(returnStation); }
 }
 
 function pollLive() {
@@ -855,7 +901,7 @@ function pollLive() {
     .then(function(r) { return r.json(); })
     .then(function(d) {
       liveOn = !!d.live;
-      if (!liveOn) leaveLive();
+      if (liveOn) { enterLive(); } else { leaveLive(); }
     })
     .catch(function() {}); // keep the last known state on a network blip
 }
@@ -885,6 +931,7 @@ document.getElementById('hz-tuning-knob').addEventListener('click', function() {
 // WJRN preset — jumps straight to the unlisted 24/7 instrumental default (station
 // index 0), regardless of whatever's currently tuned in, instead of cycling.
 document.getElementById('hz-preset').addEventListener('click', function() {
+  if (liveOn) { lockedTune(); return; }
   if (playerState === 1) { initAudio(0); } else { goToStation(0); }
 });
 
@@ -1016,6 +1063,7 @@ fetch(STATIONS[0].api)
   .then(function(d) {
     var art = d && d.now_playing && d.now_playing.song && d.now_playing.song.art;
     if (art) {
+      if (currentStation !== 0 || currentArtUrl) return;
       currentArtUrl = art;
       document.getElementById('art-a').src = art;
     }
@@ -1047,6 +1095,7 @@ fetch(STATIONS[0].api)
           if (STATIONS[i].key === data.station) { idx = i; break; }
         }
         if (idx === -1) return;
+        if (idx !== currentStation && !isTuning) userActionAt = 0; // the page is moving the dial, not the listener
         if (!audioCtx) {
           initAudio(idx);
         } else if (idx !== currentStation) {

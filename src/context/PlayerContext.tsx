@@ -186,6 +186,7 @@ interface PlayerContextValue {
   toggleStation: (stationId: string) => void;
   togglePlayback: () => void;
   stopPlayback: () => void;
+  markReceiverPlayback: () => void;
   audioRef: React.MutableRefObject<HTMLAudioElement | null>;
   // Real-time frequency data for whatever is actually audible right now —
   // lets any UI (e.g. the embedded vintage player) drive a truthful VU meter
@@ -554,12 +555,31 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
-  // The show ended while someone was listening: carry on with the next station on the dial.
+  // Show starting and ending (see the vintage player's matching takeover in public/player/index.html).
   const wasRelayLiveRef = useRef(false);
+  // True while the current playback was started or controlled from the vintage receiver.
+  const playedViaReceiverRef = useRef(false);
+  const returnStationRef = useRef<string | null>(null);
+  const markReceiverPlayback = () => { playedViaReceiverRef.current = true; };
   useEffect(() => {
     const ended = wasRelayLiveRef.current && !isRelayLive;
+    const started = !wasRelayLiveRef.current && isRelayLive;
     wasRelayLiveRef.current = isRelayLive;
-    if (ended && activeStationId === "wjrn_live") toggleStation("rock_garden");
+    const viaReceiver = playedViaReceiverRef.current;
+    if (ended && activeStationId === "wjrn_live") {
+      // Back to where they were (WJRN if they arrived during the show); a paused listener isn't restarted.
+      if (audioState === "idle") stopPlayback();
+      else toggleStation(returnStationRef.current ?? "wjrn");
+    } else if (
+      // Takeover: whoever is listening on the vintage receiver moves to the show. Cards and station pages don't.
+      started && viaReceiver && wantsPlaybackRef.current && !onDemandItem &&
+      activeStationId && activeStationId !== "wjrn_live"
+    ) {
+      toggleStation("wjrn_live");
+    } else {
+      return;
+    }
+    playedViaReceiverRef.current = viaReceiver;
   }, [isRelayLive, activeStationId]);
 
   // Stall watchdog for LIVE streams. A dropped connection (wifi blip, server
@@ -602,6 +622,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       console.warn(`Playback blocked: ${stationId} is offline.`);
       return;
     }
+
+    playedViaReceiverRef.current = false; // the receiver re-marks itself right after calling this
+    if (stationId === "wjrn_live" && activeStationId !== "wjrn_live") returnStationRef.current = activeStationId;
 
     // Switching to live always clears on-demand
     setOnDemandItem(null);
@@ -786,6 +809,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         toggleStation,
         togglePlayback,
         stopPlayback,
+        markReceiverPlayback,
         audioRef,
         analyserRef,
         onDemandItem,
