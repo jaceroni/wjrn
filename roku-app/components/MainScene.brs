@@ -66,15 +66,26 @@ sub init()
 
     ' Define stations (matching PlayerContext.tsx and public/player/index.html)
     m.stations = [
-      { name: "WJRN", freq: 89.1, stream: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3", tickX: 682, shortcode: "wjrn" },
-      { name: "THE ROCK GARDEN", freq: 95.5, stream: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3", tickX: 815, shortcode: "the_rock_garden" },
-      { name: "BRIDGE CITY HANG SUITE", freq: 102.7, stream: "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3", tickX: 965, shortcode: "bridge_city_hang_suite" },
-      { name: "THE GOLDEN BOOMBOX", freq: 105.9, stream: "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3", tickX: 1031, shortcode: "golden_boombox_sessions" }
+      { name: "WJRN", freq: 89.1, stream: "https://radio.jacewonmusic.com/listen/wjrn/radio.mp3", tickX: 682, shortcode: "wjrn", live: false },
+      ' Live Twitch audio. On the dial only while a show is on air, and then it is the only thing on the dial.
+      { name: "LIVE BROADCAST", freq: 92.3, stream: "https://radio.jacewonmusic.com/listen/wjrn_live/radio.mp3", tickX: 748, shortcode: "", live: true, tuning: "TUNING TO 92.3 MHZ — LIVE BROADCAST ON TWITCH.TV", message: "THIS IS A LIVE BROADCAST – JOIN US NOW ON TWITCH.TV/JACEWONMUSIC" },
+      { name: "THE ROCK GARDEN", freq: 95.5, stream: "https://radio.jacewonmusic.com/listen/the_rock_garden/radio.mp3", tickX: 815, shortcode: "the_rock_garden", live: false },
+      { name: "BRIDGE CITY HANG SUITE", freq: 102.7, stream: "https://radio.jacewonmusic.com/listen/bridge_city_hang_suite/radio.mp3", tickX: 965, shortcode: "bridge_city_hang_suite", live: false },
+      { name: "THE GOLDEN BOOMBOX", freq: 105.9, stream: "https://radio.jacewonmusic.com/listen/golden_boombox_sessions/radio.mp3", tickX: 1031, shortcode: "golden_boombox_sessions", live: false }
     ]
 
     m.nowPlayingTask = invalid
     m.activeStationIndex = 0
+    m.liveIndex = 1
+    m.liveOn = false
+    m.returnIndex = 0 ' where to go when a show ends (WJRN if the listener arrived during it)
+    m.userPaused = false
+    m.needsRestart = false ' paused listener was retuned: play must open the stream, not resume
     tuneToStation(m.activeStationIndex)
+
+    m.liveStatusTask = CreateObject("roSGNode", "LiveStatusTask")
+    m.liveStatusTask.observeField("live", "onLiveStatusChange")
+    m.liveStatusTask.control = "RUN"
 end sub
 
 ' Remote controller event handler
@@ -83,13 +94,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
 
     if press then
         if (key = "right" or key = "fastforward")
-            m.activeStationIndex = (m.activeStationIndex + 1) mod m.stations.count()
-            tuneToStation(m.activeStationIndex)
+            changeStation(1)
             handled = true
         else if (key = "left" or key = "rewind")
-            m.activeStationIndex = m.activeStationIndex - 1
-            if m.activeStationIndex < 0 then m.activeStationIndex = m.stations.count() - 1
-            tuneToStation(m.activeStationIndex)
+            changeStation(-1)
             handled = true
         else if (key = "OK" or key = "play")
             togglePlayback()
@@ -100,6 +108,77 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     return handled
 end function
 
+' ── Live takeover ────────────────────────────────────────────────────────────
+' Mirrors the takeover in public/player/index.html.
+sub changeStation(direction as Integer)
+    if m.liveOn
+        ' During a show every tuning press is static and straight back to the broadcast.
+        m.activeStationIndex = m.liveIndex
+    else
+        count = m.stations.count()
+        m.activeStationIndex = (m.activeStationIndex + direction + count) mod count
+        if m.activeStationIndex = m.liveIndex
+            m.activeStationIndex = (m.activeStationIndex + direction + count) mod count
+        end if
+    end if
+    tuneToStation(m.activeStationIndex)
+end sub
+
+sub onLiveStatusChange()
+    m.liveOn = m.liveStatusTask.live
+    print "WJRN live status changed: "; m.liveOn
+
+    if m.liveOn
+        if m.activeStationIndex = m.liveIndex then return
+        m.returnIndex = m.activeStationIndex
+        target = m.liveIndex
+    else
+        if m.activeStationIndex <> m.liveIndex then return
+        target = m.returnIndex
+    end if
+
+    m.activeStationIndex = target
+    ' A paused listener is moved without starting playback.
+    if m.userPaused
+        quietTune(target)
+    else
+        tuneToStation(target)
+    end if
+end sub
+
+sub quietTune(index as Integer)
+    station = m.stations[index]
+    m.lastMetaText = ""
+    m.tuneGeneration = m.tuneGeneration + 1
+    m.pendingStation = invalid
+    m.needsRestart = true
+    m.audioPlayer.control = "stop"
+    animateTunerTick(station.tickX)
+    setTickerText("PAUSED – " + station.name)
+    startNowPlaying(station)
+end sub
+
+sub startNowPlaying(station as Object)
+    ' Clear remote art so the always-present base/fallback poster shows through instead of
+    ' a blank gap while new art loads (Poster nodes don't retain the old image mid-load).
+    m.albumArtRemote.uri = ""
+
+    ' Stop the previous polling task, and ignore anything it still delivers
+    if m.nowPlayingTask <> invalid
+        m.nowPlayingTask.unobserveField("metadata")
+        m.nowPlayingTask.control = "STOP"
+        m.nowPlayingTask = invalid
+    end if
+
+    ' The live broadcast has no track info: it keeps the default art and its own message.
+    if station.shortcode = "" then return
+
+    m.nowPlayingTask = CreateObject("roSGNode", "NowPlayingTask")
+    m.nowPlayingTask.observeField("metadata", "onMetadataChange")
+    m.nowPlayingTask.shortcode = station.shortcode
+    m.nowPlayingTask.control = "RUN"
+end sub
+
 sub tuneToStation(index as Integer)
     station = m.stations[index]
     print "WJRN tuneToStation: "; station.name; " shortcode="; station.shortcode
@@ -108,6 +187,8 @@ sub tuneToStation(index as Integer)
     ' even on the rare chance its title+artist string happens to match the previous
     ' station's (the "TUNING TO..." text below is set directly, not through this guard).
     m.lastMetaText = ""
+    m.userPaused = false
+    m.needsRestart = false
 
     ' Kick off the audio sequence FIRST, before touching anything else. Confirmed on-device:
     ' when this was moved after creating/starting the NowPlayingTask (a Task node spinning up
@@ -131,21 +212,13 @@ sub tuneToStation(index as Integer)
     animateTunerTick(station.tickX)
 
     ' Update status on the ticker
-    setTickerText("TUNING TO " + station.name + " (" + station.freq.toStr() + " FM)...")
-
-    ' Clear remote art so the always-present base/fallback poster shows through instead of
-    ' a blank gap while new art loads (Poster nodes don't retain the old image mid-load).
-    m.albumArtRemote.uri = ""
-
-    ' Stop the previous polling task and start a fresh one for this station
-    if m.nowPlayingTask <> invalid
-        m.nowPlayingTask.control = "STOP"
+    if station.live = true
+        setTickerText(station.tuning)
+    else
+        setTickerText("TUNING TO " + station.name + " (" + station.freq.toStr() + " FM)...")
     end if
 
-    m.nowPlayingTask = CreateObject("roSGNode", "NowPlayingTask")
-    m.nowPlayingTask.observeField("metadata", "onMetadataChange")
-    m.nowPlayingTask.shortcode = station.shortcode
-    m.nowPlayingTask.control = "RUN"
+    startNowPlaying(station)
 
     ' Needle drops back to zero the moment a station change is requested — it kicks back
     ' up in onAudioPlayerStateChange, once the new stream actually confirms state="playing",
@@ -216,20 +289,38 @@ sub onAudioPlayerStateChange()
     end if
     ' Needle kicks up only once the stream is genuinely confirmed playing, not just when
     ' tuning was requested.
-    if m.audioPlayer.state = "playing" then startVU()
+    if m.audioPlayer.state = "playing"
+        startVU()
+        ' Live broadcast: settle on its message once it is audible.
+        station = m.stations[m.activeStationIndex]
+        if station.live = true and m.pendingStation = invalid and m.lastMetaText <> station.message
+            m.lastMetaText = station.message
+            setTickerText(station.message)
+        end if
+    end if
     advanceTuneSequence()
 end sub
 
 sub togglePlayback()
-    state = m.audioPlayer.state
-    if state = "playing"
+    station = m.stations[m.activeStationIndex]
+    if m.audioPlayer.state = "playing" and not m.userPaused
+        m.userPaused = true
         m.audioPlayer.control = "pause"
-        setTickerText("PAUSED – " + m.stations[m.activeStationIndex].name)
+        setTickerText("PAUSED – " + station.name)
         stopVU()
     else
-        m.audioPlayer.control = "resume"
-        setTickerText("PLAYING – " + m.stations[m.activeStationIndex].name)
-        startVU()
+        ' A live broadcast is reopened rather than resumed, so it comes back at the live moment.
+        restart = m.needsRestart or (m.userPaused and station.live = true)
+        m.userPaused = false
+        m.needsRestart = false
+        m.lastMetaText = ""
+        setTickerText("PLAYING – " + station.name)
+        if restart
+            startLiveStream(station)
+        else
+            m.audioPlayer.control = "resume"
+            startVU()
+        end if
     end if
 end sub
 
@@ -239,6 +330,7 @@ sub onMetadataChange()
     if metadata = invalid then return
 
     station = m.stations[m.activeStationIndex]
+    if station.live = true then return
     title = metadata.title
     artist = metadata.artist
     artUrl = metadata.artUrl
@@ -257,7 +349,8 @@ sub onMetadataChange()
     ' landed at a different point in the cycle each time, which is exactly the "glitches
     ' partway through, no fixed pattern" stutter reported. Only restart the scroll when the
     ' text actually changed.
-    if newText <> m.lastMetaText
+    ' While paused the ticker keeps saying so.
+    if newText <> m.lastMetaText and not m.userPaused
         m.lastMetaText = newText
         setTickerText(newText)
     end if
